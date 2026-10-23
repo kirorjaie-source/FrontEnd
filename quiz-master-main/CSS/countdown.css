@@ -1,0 +1,97 @@
+/* ===========================================================================
+   countdown.css — شاشة "Get Ready!" (المدرّس + اللاعبين).
+   دائرة منقطة ناقصة، الرقم في النص، خلفية أزرق ← أبيض، وأشكال الاختيارات حواليها.
+   كل المقاسات نسبية (vw / vh) فبتتظبط لوحدها على الموبايل وعلى شاشة المدرّس.
+   =========================================================================== */
+
+.cd-overlay {
+  --cd-size: min(72vw, 58vh);   /* قطر الدائرة */
+  --cd-u: min(1vw, 1vh);        /* وحدة قياس الأشكال */
+
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--cd-u) * 5);
+  overflow: hidden;
+  font-family: "Montserrat", "Inter", sans-serif;
+  /* الخلفية: أزرق من فوق وبيفتح لحد الأبيض تحت */
+  background: linear-gradient(180deg, #0F5FC4 0%, #2E7FDC 55%, #FFFFFF 100%);
+}
+.cd-overlay.cd-on { display: flex; }
+
+/* أثناء العدّ: كل عناصر الصفحة التانية (كارت النتيجة، الفوتر، العناوين...) تختفي والشاشة تظهر لوحدها */
+body.cd-active > *:not(.cd-overlay) { display: none !important; }
+
+.cd-title {
+  color: #fff;
+  font-weight: 900;
+  font-size: clamp(34px, min(10vw, 9vh), 72px);
+  line-height: 1;
+  text-shadow: 0 3px 0 rgba(11, 30, 54, .18);
+}
+
+/* الدائرة المنقطة + الرقم */
+.cd-ring-box {
+  position: relative;
+  width: var(--cd-size);
+  height: var(--cd-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cd-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  animation: cd-spin 14s linear infinite;   /* شيل السطر ده لو عاوزها ثابتة */
+}
+.cd-number {
+  position: relative;
+  color: #fff;
+  font-weight: 900;
+  font-size: calc(var(--cd-size) * .5);
+  line-height: 1;
+  text-shadow: 0 4px 0 rgba(11, 30, 54, .18);
+}
+.cd-number.cd-pop { animation: cd-pop .5s ease-out; }
+
+.cd-label {
+  margin: 0;
+  color: #0B1E36;
+  font-weight: 800;
+  font-size: clamp(18px, min(5.6vw, 4.2vh), 30px);
+}
+.cd-label:empty { display: none; }
+
+/* الأشكال المتوزعة: الحجم = --s وحدة، واللون --c، والدوران --r، والشفافية --o */
+.cd-shape {
+  position: absolute;
+  width: calc(var(--cd-u) * var(--s));
+  height: calc(var(--cd-u) * var(--s));
+  background: var(--c);
+  opacity: var(--o, .9);
+  transform: rotate(var(--r, 0deg));
+  pointer-events: none;
+}
+.cd-circle { border-radius: 50%; }
+.cd-square { border-radius: 3px; }
+.cd-tri    { clip-path: polygon(50% 8%, 92% 88%, 8% 88%); }
+
+/* أشكال إضافية بتظهر بس على الشاشات العريضة (شاشة المدرّس) */
+.cd-wide { display: none; }
+@media (min-aspect-ratio: 4/3) { .cd-wide { display: block; } }
+
+@keyframes cd-spin { to { transform: rotate(360deg); } }
+@keyframes cd-pop {
+  0%   { transform: scale(.6); opacity: .4; }
+  60%  { transform: scale(1.12); opacity: 1; }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cd-ring, .cd-number.cd-pop { animation: none; }
+}

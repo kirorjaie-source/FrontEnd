@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Game Lobby | Church Quiz</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../CSS/lobbyn.css">
+  
+  <!-- مكتبة توليد QR Code -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+  <!-- شاشة التحميل الأولية -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-box">
+      <h1>Get ready to join</h1>
+      <div class="loading-bar-container">
+        <div class="loading-bar-text">Loading Game PIN...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- خلفية اللوبي -->
+  <div class="lobby-wrapper">
+    
+    <!-- الشريط العلوي (ألوان المشروع) -->
+    <header class="lobby-header">
+      <div class="header-content">
+        <div class="join-info">
+          <span>Join at <strong class="join-host">---</strong><br>or scan the QR code</span>
+        </div>
+        
+        <div class="pin-section">
+          <span class="pin-label">Game PIN:</span>
+          <strong class="pin-number" id="display-pin">------</strong>
+        </div>
+
+        <div class="qr-small" id="qr-trigger" title="Click to enlarge">
+          <div id="qrcode-small"></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- منطقة الوسط -->
+    <main class="lobby-main">
+      <div class="lobby-brand">
+        <h1>Church Quiz!</h1>
+        <p id="quiz-title-display" style="color: var(--gold); font-size: 1.5rem; font-family: 'Inter', sans-serif; margin-top: 5px; font-weight: bold;"></p>
+      </div>
+
+      <div class="players-container" id="players-list">
+        <div class="waiting-badge">Waiting for participants...</div>
+      </div>
+    </main>
+
+    <!-- زر البدء (مفتوح دائماً) -->
+    <div class="start-btn-container">
+      <div class="player-count">
+        <span class="icon">👤</span> <span id="player-count-num">0</span>
+      </div>
+      <button id="btn-start-game" class="btn-start">Start</button>
+    </div>
+
+  </div>
+
+  <!-- نافذة الـ QR المكبرة -->
+  <div id="qr-modal" class="qr-modal-overlay" style="display: none;">
+    <div class="qr-modal-content">
+      <button class="qr-close-btn" id="qr-close-btn">✕</button>
+      <div class="qr-modal-header">
+        <div class="qr-modal-info">
+          <span>Join at <strong class="join-host" style="color: var(--navy)">---</strong></span>
+          <span>with Game PIN:</span>
+        </div>
+        <div class="qr-modal-pin" id="modal-display-pin">------</div>
+      </div>
+      <div class="qr-large-wrapper">
+        <div id="qrcode-large"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⚠️ الترتيب مهم: SignalR الأول، بعدين apin.js، بعدين lobbyn.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+  <script src="../JS/apin.js"></script>
+  <script src="../JS/lobbyn.js"></script>
+</body>
+</html>

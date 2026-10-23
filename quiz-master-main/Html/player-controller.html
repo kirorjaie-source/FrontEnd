@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>جهاز التحكم | Church Quiz Gamepad</title>
+  
+  <link rel="stylesheet" href="../CSS/player-controller.css">
+  
+  <!-- استدعاء ملفات المؤثرات الصوتية بالترتيب الصحيح -->
+  <script src="../JS/audio-engine.js" defer></script>
+  <script src="../JS/player-sounds.js" defer></script>
+  <script src="../JS/player-controller.js" defer></script>
+</head>
+<body>
+
+  <!-- شريط معلومات المتسابق -->
+  <header class="player-header">
+    <div class="player-badge">
+      <span class="player-avatar" id="avatarDisplay">👤</span>
+      <span id="nameDisplay">Player</span>
+    </div>
+    <div class="player-score" id="scoreDisplay">0 نقطة</div>
+  </header>
+
+  <main class="main-screen">
+    <!-- الحالة الأولى: شاشة الانتظار -->
+    <section class="status-card" id="waitingCard">
+      <div class="waiting-spinner">⏳</div>
+      <h2 class="status-title">أنت في غرفة الانتظار!</h2>
+      <p class="status-desc" id="waitingDesc">انظر إلى شاشة العرض الرئيسية.. ستبدأ المسابقة فوراً.</p>
+    </section>
+
+    <!-- الحالة الثانية: شاشة تم إرسال الإجابة -->
+    <section class="status-card" id="answeredScreen" style="display: none;">
+      <div class="check-icon">✓</div>
+      <h2 class="status-title">تم إرسال إجابتك!</h2>
+      <p class="status-desc">انتظر انتهاء الوقت لمعرفة النتيجة على شاشة العرض...</p>
+    </section>
+
+    <!-- الحالة الثالثة: نتيجة الإجابة الفورية (صح / خطأ) -->
+    <section class="status-card" id="resultFeedbackScreen" style="display: none;">
+      <div id="feedbackIcon" class="feedback-icon"></div>
+      <h2 id="feedbackTitle" class="status-title"></h2>
+      <p id="feedbackDesc" class="status-desc"></p>
+    </section>
+
+    <!-- الحالة الرابعة: أزرار الأشكال الأربعة (Gamepad) -->
+    <section class="gamepad-grid" id="gamepadGrid">
+      <button class="gamepad-btn btn-red" id="btnRed" aria-label="خيار المثلث الأحمر">▲</button>
+      <button class="gamepad-btn btn-blue" id="btnBlue" aria-label="خيار المعين الأزرق">◆</button>
+      <button class="gamepad-btn btn-yellow" id="btnYellow" aria-label="خيار الدائرة الصفراء">●</button>
+      <button class="gamepad-btn btn-green" id="btnGreen" aria-label="خيار المربع الأخضر">■</button>
+    </section>
+  </main>
+
+</body>
+</html>

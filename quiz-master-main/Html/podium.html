@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>منصة التتويج النهائية | Church Quiz Podium</title>
+  <link rel="stylesheet" href="../CSS/podium.css">
+  
+  <!-- استدعاء المكتبة الاحتفالية مرة واحدة فقط -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  
+  <!-- السكربتات المحدثة بالترتيب السليم -->
+  <script src="../JS/audio-engine.js" defer></script>
+  <script src="../JS/celebration-fx.js" defer></script>
+  <script src="../JS/podium-controller.js" defer></script>
+</head>
+<body>
+  <div class="podium-screen">
+    <header class="quiz-header">
+      <div class="quiz-title-box" id="quizTitle">نتائج المسابقة النهائية</div>
+      <button class="exit-btn" onclick="window.location.href='admin.html'">لوحة التحكم ✕</button>
+    </header>
+
+    <main class="podium-stage">
+      <section class="podium-column rank-2" id="rank-2-col">
+        <div class="character-holder">
+          <div class="points-pill" id="points-2">0 نقطة</div>
+          <div class="avatar" id="avatar-2">🐼</div>
+          <span class="player-name" id="name-2">--</span>
+        </div>
+        <div class="pedestal pedestal-2">
+          <div class="badge-polygon">2</div>
+        </div>
+      </section>
+
+      <section class="podium-column rank-1" id="rank-1-col">
+        <div class="spotlight" id="winnerSpotlight"></div>
+        <div class="character-holder">
+          <div class="crown-icon">👑</div>
+          <div class="points-pill" id="points-1">0 نقطة</div>
+          <div class="avatar winner-avatar" id="avatar-1">🐊</div>
+          <span class="player-name winner-name" id="name-1">--</span>
+        </div>
+        <div class="pedestal pedestal-1">
+          <div class="badge-polygon">1</div>
+        </div>
+      </section>
+
+      <section class="podium-column rank-3" id="rank-3-col">
+        <div class="character-holder">
+          <div class="points-pill" id="points-3">0 نقطة</div>
+          <div class="avatar" id="avatar-3">🦁</div>
+          <span class="player-name" id="name-3">--</span>
+        </div>
+        <div class="pedestal pedestal-3">
+          <div class="badge-polygon">3</div>
+        </div>
+      </section>
+    </main>
+
+    <div id="no-results-alert" style="display: none;" class="no-results-toast">
+      لا توجد نتائج مسجلة حتى الآن في هذه الجلسة.
+    </div>
+
+    <footer class="crowd-section">
+      <div class="crowd-avatar">🐸</div>
+      <div class="crowd-avatar">🐻</div>
+      <div class="crowd-avatar">🐧</div>
+      <div class="crowd-avatar">🐶</div>
+      <div class="crowd-avatar">🐱</div>
+      <div class="crowd-avatar">🦊</div>
+    </footer>
+  </div>
+</body>
+</html>

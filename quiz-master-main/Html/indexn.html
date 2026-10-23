@@ -1,0 +1,143 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0B1E36">
+  <title>Church Quiz</title>
+  <link rel="stylesheet" href="../CSS/stylen.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="cross" aria-label="Church Quiz">✝</div>
+    <button class="language-btn" id="language_btn" type="button">
+      عربي / EN
+    </button>
+  </header>
+
+  <main>
+    <section id="home_screen" class="screen active">
+      <div class="hero">
+        <div class="hero-content">
+          <div class="eyebrow" id="eyebrow">LEARN • PLAY • GROW</div>
+          <h1>Church <span>Quiz</span></h1>
+          <h2 id="welcome_title">Create Your Account</h2>
+          <p id="welcome_text">
+            Create your account and grow together in faith.
+          </p>
+
+          <form id="registerForm" class="register-form">
+            <label for="fullName">Your name *</label>
+            <input
+              id="fullName"
+              name="fullName"
+              type="text"
+              placeholder="Enter your full name"
+              autocomplete="name"
+              maxlength="100"
+              required
+            >
+
+            <label for="email">Email address *</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="Enter your email"
+              autocomplete="email"
+              required
+            >
+
+            <label for="password">Password *</label>
+            <div class="password-wrapper">
+              <input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="Create a password"
+                autocomplete="new-password"
+                minlength="6"
+                required
+              >
+              <button
+                id="togglePassword"
+                class="eye-btn"
+                type="button"
+                aria-label="Show password"
+                aria-pressed="false"
+              >◉</button>
+            </div>
+
+            <div class="role-heading">
+              Choose Your Role <b>*</b>
+            </div>
+
+            <div class="role-options">
+              <label class="role-option">
+                <input
+                  type="radio"
+                  name="requestedRole"
+                  value="Creator"
+                  required
+                >
+                <span class="role-info">
+                  <strong>Creator</strong>
+                  <small>Create quizzes</small>
+                </span>
+              </label>
+
+              <label class="role-option">
+                <input
+                  type="radio"
+                  name="requestedRole"
+                  value="Player"
+                  required
+                >
+                <span class="role-info">
+                  <strong>Player</strong>
+                  <small>Play quizzes</small>
+                </span>
+              </label>
+            </div>
+
+            <div
+              id="authMessage"
+              class="auth-message"
+              role="status"
+              aria-live="polite"
+            ></div>
+
+            <button
+              id="register_btn"
+              class="primary-btn"
+              type="submit"
+            >
+              Create Account <span>→</span>
+            </button>
+          </form>
+
+          <p class="login-link">
+            Already have an account?
+            <a href="loginn.html">Log in</a>
+          </p>
+        </div>
+
+        <div class="hero-art">
+          <img
+            src="Gemini_Generated_Image_eqn1boeqn1boeqn1.jpg"
+            alt="Church Quiz"
+            class="hero-image"
+          >
+          <div class="floating-star star-one">✦</div>
+          <div class="floating-star star-two">✧</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="../JS/apin.js"></script>
+   <script src="../JS/scriptn.js"></script>
+</body>
+</html>

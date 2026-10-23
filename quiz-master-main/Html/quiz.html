@@ -1,0 +1,80 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0B1E36">
+  <title>Take Quiz | Church Quiz</title>
+  <link rel="stylesheet" href="../CSS/quiz.css">
+  <script src="../JS/quiz.js" defer></script>
+</head>
+<body>
+  <header class="quiz-header">
+    <a class="brand" href="index.html">
+      <span class="cross">✝</span>
+      <span>Church Quiz<small>QUIZ TIME</small></span>
+    </a>
+    <span id="quiz-category" class="category">Bible Knowledge</span>
+  </header>
+
+  <main class="quiz-container">
+    <section id="quiz-panel" class="quiz-card">
+      <div class="quiz-intro">
+        <p class="eyebrow">YOUR CHALLENGE</p>
+        <h1 id="quiz-title">Loading quiz...</h1>
+        <p id="quiz-description"></p>
+      </div>
+
+      <div class="progress-info">
+        <span id="question-number">Question 1</span>
+        <span id="timer">Time: --</span>
+      </div>
+
+      <div class="progress-track">
+        <div id="progress-bar" class="progress-bar"></div>
+      </div>
+
+      <section id="question-area">
+        <h2 id="question-text"></h2>
+        <div id="answer-list" class="answer-list"></div>
+      </section>
+
+      <p id="quiz-message" class="message" role="status"></p>
+
+      <div class="quiz-actions">
+        <button id="previous-button" class="button secondary">
+          ← Previous
+        </button>
+        <button id="next-button" class="button primary">
+          Next →
+        </button>
+        <button id="submit-button" class="button primary" hidden>
+          Submit Answers
+        </button>
+      </div>
+    </section>
+
+    <section id="result-panel" class="quiz-card result-card" hidden>
+      <div class="result-icon">✦</div>
+      <p class="eyebrow">QUIZ COMPLETED</p>
+      <h1 id="result-heading">Well done!</h1>
+      <p class="result-score" id="result-score"></p>
+      <p id="result-description"></p>
+      <a class="button primary result-link" href="index.html">
+        Back to website
+      </a>
+    </section>
+
+    <section id="error-panel" class="quiz-card" hidden>
+      <h1>Quiz unavailable</h1>
+      <p id="error-message"></p>
+      <a class="button primary result-link" href="participant.html">
+        Back to registration
+      </a>
+    </section>
+  </main>
+
+  <footer class="quiz-footer">Learn, Play, Grow ✝</footer>
+</body>
+</html>

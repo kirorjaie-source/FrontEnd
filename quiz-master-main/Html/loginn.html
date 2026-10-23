@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | Church Quiz</title>
+  
+  <!-- مسارات الـ CSS والـ JS الموحدة (تأكد من مطابقة أسماء الملفات) -->
+  <link rel="stylesheet" href="../CSS/loginn.css">
+  <script src="../JS/apin.js" defer></script>
+  <script src="../JS/loginn.js" defer></script>
+</head>
+<body>
+  <main class="login-page">
+    <section class="login-card">
+      <a class="back-link" href="index.html">← Back to Home</a>
+
+      <div class="logo">✦</div>
+      <p class="eyebrow">WELCOME BACK</p>
+      <h1>Church Quiz</h1>
+      <p class="subtitle">Sign in to continue your journey.</p>
+
+      <form id="loginForm">
+        <label for="email">Email address *</label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          placeholder="you@example.com"
+          autocomplete="email"
+          required
+        >
+
+        <label for="password">Password *</label>
+        <div class="password-wrapper">
+          <input
+            id="password"
+            name="password"
+            type="password"
+            placeholder="Enter your password"
+            autocomplete="current-password"
+            required
+          >
+          <button
+            type="button"
+            id="togglePassword"
+            aria-label="Show password"
+          >◉</button>
+        </div>
+
+        <p id="loginMessage" class="message" role="status" aria-live="polite"></p>
+
+        <button class="login-button" type="submit">Sign In</button>
+      </form>
+
+      <p class="signup-text">
+        Don't have an account?
+        <!-- التوجيه لصفحة إنشاء الحساب بشكل صحيح -->
+        <a href="indexn.html">Create Account</a>
+      </p>
+    </section>
+  </main>
+</body>
+</html>

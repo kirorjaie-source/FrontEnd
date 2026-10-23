@@ -1,0 +1,134 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: #0B1E36;
+  color: #ffffff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* الشريط العلوي */
+.player-header {
+  padding: 14px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(16, 38, 64, 0.95);
+  border-bottom: 1px solid rgba(229, 184, 105, 0.25);
+}
+
+.player-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.player-avatar {
+  font-size: 1.6rem;
+}
+
+.player-score {
+  color: #FFD285;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+/* الحاوية المركزية */
+.main-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+}
+
+/* بطاقات الحالة */
+.status-card {
+  text-align: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(229, 184, 105, 0.25);
+  border-radius: 20px;
+  padding: 35px 25px;
+  max-width: 400px;
+  width: 100%;
+}
+
+.waiting-spinner {
+  font-size: 3.5rem;
+  margin-bottom: 16px;
+  animation: spin 3s infinite linear;
+}
+
+.status-title {
+  font-size: 1.4rem;
+  color: #FFD285;
+  margin-bottom: 10px;
+}
+
+.status-desc {
+  color: #A9BCCD;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.check-icon,
+.feedback-icon {
+  font-size: 4.5rem;
+  margin-bottom: 12px;
+}
+
+.check-icon {
+  color: #22c55e;
+}
+
+/* شبكة أزرار التحكم Gamepad */
+.gamepad-grid {
+  display: none;
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 12px;
+  padding: 4px;
+}
+
+.gamepad-btn {
+  border: none;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4.5rem;
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+  transition: transform 0.1s ease, filter 0.1s ease;
+}
+
+.gamepad-btn:active {
+  transform: scale(0.93);
+  filter: brightness(1.2);
+}
+
+.btn-red { background: #e21b3c; }
+.btn-blue { background: #1368ce; }
+.btn-yellow { background: #d89e00; }
+.btn-green { background: #26890c; }
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

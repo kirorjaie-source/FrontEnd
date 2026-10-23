@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+  <meta name="theme-color" content="#0B1E36">
+  <title>Play | Church Quiz</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../CSS/playern.css">
+  <link rel="stylesheet" href="../CSS/countdown.css">
+</head>
+<body>
+  <div class="player-screen">
+    <div class="brand-logo" id="main-logo">Church Quiz!</div>
+    <div class="join-card" id="join-card">
+      <input type="text" id="pin-input" inputmode="numeric" placeholder="Game PIN" autocomplete="off" maxlength="6" class="hidden">
+      <input type="text" id="nickname-input" placeholder="Enter your nickname" autocomplete="off" maxlength="15" autofocus>
+      <button id="btn-join" class="btn-join">OK, go!</button>
+      <div id="error-msg" class="error-msg"></div>
+    </div>
+    <div class="waiting-card hidden" id="waiting-card">
+      <div class="avatar-large-box"><span class="avatar-emoji">🦊</span></div>
+      <h1 id="player-name-display" class="player-name-tilted">Name</h1>
+      <p class="waiting-text">You're in! See your nickname<br>on screen?</p>
+    </div>
+    <div class="get-ready-card hidden" id="get-ready-card">
+      <h1 class="ready-title">Get Ready!</h1>
+      <div class="ready-loader"></div>
+      <p class="loading-text">Loading...</p>
+    </div>
+    <div class="answer-pad hidden" id="answer-pad">
+      <div class="pad-header">
+        <div class="q-number" id="pad-q-num">1</div>
+        <div class="q-type-badge"><span class="q-type-icon" id="pad-q-icon">▦</span><span id="pad-q-type">Quiz</span></div>
+        <div style="width: 45px;"></div> 
+      </div>
+      <div class="pad-grid" id="pad-grid">
+        <button class="pad-btn bg-red" data-index="0"><span class="shape">▲</span></button>
+        <button class="pad-btn bg-blue" data-index="1"><span class="shape">◆</span></button>
+        <button class="pad-btn bg-yellow" data-index="2"><span class="shape">●</span></button>
+        <button class="pad-btn bg-green" data-index="3"><span class="shape">■</span></button>
+      </div>
+    </div>
+    <div class="result-card hidden" id="result-card">
+      <div class="result-banner" id="result-banner">Correct</div>
+      <div class="avatar-large-box" style="margin-top: 20px;"><span class="avatar-emoji">🦊</span></div>
+      <div class="score-gained-box"><span id="score-gained-text">+ 0</span></div>
+      <p class="podium-text" id="podium-text">You're on the podium!</p>
+    </div>
+  </div>
+  <div class="player-footer hidden" id="player-footer">
+    <div class="footer-left">
+      <div class="player-avatar-mini">🦊</div>
+      <div class="player-info">
+        <div class="player-name-bottom" id="footer-player-name">Name</div>
+        <div class="player-score" id="footer-player-score">0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⚠️ الترتيب مهم: SignalR الأول، بعدين apin.js، بعدين playern.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+  <script src="../JS/countdown.js"></script>
+  <script src="../JS/apin.js"></script>
+  <script src="../JS/playern.js"></script>
+</body>
+</html>

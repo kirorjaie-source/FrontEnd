@@ -1,0 +1,406 @@
+/* =================================
+   CHURCH QUIZ - CLEAN JOIN PAGE
+================================= */
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    background:
+        radial-gradient(
+            ellipse at 80% 15%,
+            rgba(37, 69, 100, 0.38),
+            transparent 45%
+        ),
+        radial-gradient(
+            ellipse at 15% 90%,
+            rgba(90, 56, 37, 0.15),
+            transparent 35%
+        ),
+        #0B1E36;
+}
+
+/* Hide page elements outside the form */
+.navbar,
+.welcome-section,
+.footer {
+    display: none !important;
+}
+
+/* Center the form */
+.container {
+    width: 100%;
+    max-width: none;
+    min-height: 100vh;
+    margin: 0;
+    padding: 32px 20px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* White card */
+.form-card {
+    width: 100%;
+    max-width: 430px;
+    min-width: 0;
+    margin: 0;
+
+    padding: 36px 34px;
+    background: #FFFFFF;
+    color: #0B1E36;
+
+    border: 1px solid rgba(229, 184, 105, 0.65);
+    border-radius: 20px;
+
+    box-shadow: 0 24px 65px rgba(0, 0, 0, 0.28);
+}
+
+/* Form heading */
+.form-header {
+    text-align: center;
+    margin: 0 0 28px;
+}
+
+.card-cross {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 16px;
+
+    display: grid;
+    place-items: center;
+
+    border: 1px solid #F0E1C1;
+    border-radius: 14px;
+    background: #FCF7ED;
+
+    color: #D9A94F;
+    font-size: 25px;
+}
+
+.form-eyebrow {
+    margin: 0 0 8px;
+    color: #B48636;
+
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+.form-header h2,
+.success-panel h2 {
+    margin: 0;
+    color: #0B1E36;
+
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 30px;
+    line-height: 1.25;
+    font-weight: 600;
+}
+
+.form-description {
+    margin: 10px 0 0;
+    color: #8591A1;
+
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+/* Room code */
+.room-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    margin: 0 0 22px;
+    padding: 13px 14px;
+
+    border: 1px solid #F0E1C1;
+    border-radius: 10px;
+    background: #FFFCF6;
+}
+
+.room-banner span {
+    color: #9B865F;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.7px;
+}
+
+.room-banner strong {
+    color: #0B1E36;
+    font-size: 13px;
+    letter-spacing: 1px;
+    overflow-wrap: anywhere;
+}
+
+/* Fields */
+.form-group {
+    margin: 0 0 20px;
+}
+
+.form-group label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    margin: 0 0 9px;
+    color: #26364A;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.required {
+    color: #D9A94F;
+}
+
+.optional {
+    margin-left: auto;
+    color: #9BA5B2;
+
+    font-size: 9px;
+    letter-spacing: 0.7px;
+}
+
+.form-group input {
+    display: block;
+    width: 100%;
+    height: 48px;
+
+    margin: 0;
+    padding: 0 13px;
+
+    border: 1px solid #E2E7ED;
+    border-radius: 9px;
+
+    background: #FFFFFF;
+    color: #0B1E36;
+
+    font-family: 'DM Sans', Arial, sans-serif;
+    font-size: 13px;
+
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input::placeholder {
+    color: #A5AFBC;
+}
+
+.form-group input:focus {
+    border-color: #D9A94F;
+    box-shadow: 0 0 0 3px rgba(217, 169, 79, 0.13);
+}
+
+.field-hint {
+    display: block;
+    margin: 7px 0 0 2px;
+
+    color: #8591A1;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+.error {
+    display: block;
+    margin: 6px 0 0;
+
+    color: #BD4545;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.form-message {
+    min-height: 16px;
+    margin: 0 0 10px;
+
+    color: #BD4545;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+/* Start button */
+.start-button {
+    width: 100%;
+    min-height: 49px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    margin: 3px 0 0;
+    padding: 13px 18px;
+
+    border: 1px solid #E5B869;
+    border-radius: 10px;
+
+    background: #E5B869;
+    color: #0B1E36;
+
+    font-family: 'DM Sans', Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+
+    transition: background 0.2s, transform 0.2s;
+}
+
+.start-button:hover {
+    background: #FFD285;
+    border-color: #FFD285;
+    transform: translateY(-1px);
+}
+
+.start-button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.arrow {
+    font-size: 19px;
+    line-height: 1;
+}
+
+.privacy-note {
+    margin: 15px 0 0;
+    color: #9BA5B2;
+
+    font-size: 10px;
+    line-height: 1.6;
+    text-align: center;
+}
+
+/* Success screen */
+.success-panel {
+    padding: 0;
+    text-align: center;
+}
+
+.success-icon {
+    width: 54px;
+    height: 54px;
+    margin: 0 auto 18px;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 50%;
+    background: #FCF6E9;
+    color: #D9A94F;
+
+    font-size: 27px;
+}
+
+.summary {
+    margin: 22px 0;
+    padding: 14px;
+
+    border: 1px solid #E7EBF0;
+    border-radius: 10px;
+    background: #FFFFFF;
+    text-align: left;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+
+    padding: 11px 0;
+    border-bottom: 1px solid #F0F2F5;
+
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.summary-row:last-child {
+    border-bottom: none;
+}
+
+.summary-row span {
+    color: #8591A1;
+}
+
+.summary-row strong {
+    max-width: 65%;
+    color: #0B1E36;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.edit-button {
+    width: 100%;
+    min-height: 45px;
+    padding: 12px;
+
+    border: 1px solid #EBD8B3;
+    border-radius: 9px;
+
+    background: #FFFFFF;
+    color: #B48636;
+
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.edit-button:hover {
+    background: #FFFCF6;
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+    .container {
+        padding: 22px 16px;
+    }
+
+    .form-card {
+        max-width: 390px;
+        padding: 29px 22px;
+        border-radius: 16px;
+    }
+
+    .form-header {
+        margin-bottom: 25px;
+    }
+
+    .form-header h2,
+    .success-panel h2 {
+        font-size: 27px;
+    }
+
+    .form-group {
+        margin-bottom: 18px;
+    }
+
+    .form-group input {
+        height: 47px;
+    }
+}
+
+@media (max-height: 650px) and (min-width: 481px) {
+    .container {
+        align-items: flex-start;
+        padding-top: 24px;
+        padding-bottom: 24px;
+    }
+
+    .form-card {
+        padding-top: 25px;
+        padding-bottom: 25px;
+    }
+
+    .form-header {
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 14px;
+    }
+}
+.room-banner {
+  display: none !important;
+}

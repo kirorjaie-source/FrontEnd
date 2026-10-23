@@ -1,0 +1,86 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0B1E36">
+
+  <title>Leaderboard | Church Quiz</title>
+
+  <link rel="stylesheet" href="../CSS/leaderboard.css">
+  <script src="../JS/leaderboard.js" defer></script>
+</head>
+
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html">
+      <span class="brand-cross">✝</span>
+      <span>
+        Church Quiz
+        <small>LEADERBOARD</small>
+      </span>
+    </a>
+
+    <a class="back-link" href="index.html">
+      ← Back to website
+    </a>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <span class="eyebrow">LEARN · PLAY · GROW</span>
+      <div class="hero-trophy" aria-hidden="true">🏆</div>
+      <h1>Hall of Champions</h1>
+      <p>Celebrating our top performers.</p>
+      <div class="gold-line"></div>
+    </section>
+
+    <section
+      class="podium"
+      id="podium"
+      aria-label="Top three participants"
+      aria-live="polite"
+    >
+      <div class="loading">Loading leaderboard...</div>
+    </section>
+
+    <section class="ranking-section">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">THE CHAMPIONS</span>
+          <h2>Top 3 Players</h2>
+          <p class="section-description">
+            Each participant's best result.
+          </p>
+        </div>
+
+        <button
+          class="refresh-button"
+          id="refresh-button"
+          type="button"
+        >
+          ↻ Refresh
+        </button>
+      </div>
+
+      <div
+        id="leaderboard-message"
+        class="message"
+        role="status"
+      ></div>
+
+      <div
+        id="leaderboard-list"
+        class="leaderboard-list"
+      ></div>
+
+      <p class="updated-note" id="updated-note"></p>
+    </section>
+  </main>
+
+  <footer>
+    <span>✝</span> Church Quiz · Learn, Play, Grow
+  </footer>
+</body>
+</html>

@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0B1E36">
+
+  <title>Admin Dashboard | Church Quiz</title>
+
+  <link rel="stylesheet" href="../CSS/adminn.css">
+  <script src="../JS/apin.js" defer></script>
+  <script src="../JS/adminn.js" defer></script>
+</head>
+
+<body>
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <a class="brand" href="adminn.html">
+      <span class="brand-cross">✝</span>
+      <span>
+        <b>Church Quiz</b>
+        <small>ADMIN PANEL</small>
+      </span>
+    </a>
+
+    <div class="menu-caption">WORKSPACE</div>
+
+    <nav class="navigation" aria-label="Admin navigation">
+      <button class="nav-link active" data-page="dashboard">
+        <span>▦</span> Dashboard
+      </button>
+
+      <button class="nav-link" data-page="create">
+        <span>＋</span> Create Quiz
+      </button>
+
+      <button class="nav-link" data-page="quizzes">
+        <span>▤</span> My Quizzes
+      </button>
+
+      <button class="nav-link" data-page="questions">
+        <span>▧</span> Question Bank
+      </button>
+
+      <button class="nav-link" data-page="participants">
+        <span>♙</span> Participants
+      </button>
+
+      <button class="nav-link" data-page="results">
+        <span>▥</span> Results
+      </button>
+
+      <button class="nav-link" data-page="leaderboard">
+        <span>🏆</span> Leaderboard
+      </button>
+
+      <button class="nav-link" data-page="settings">
+        <span>⚙</span> Settings
+      </button>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <a class="back-link" href="indexn.html">
+        ← Back to website
+      </a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <header class="topbar">
+      <button class="mobile-menu" id="menu-toggle" aria-label="Toggle menu">☰</button>
+
+      <div>
+        <div class="breadcrumb">
+          Church Quiz <span>/</span> Admin
+        </div>
+        <h1 id="page-heading">Dashboard</h1>
+      </div>
+
+      <div class="top-actions">
+        <span class="status-dot"></span>
+        <span class="admin-label">Admin workspace</span>
+        <div class="avatar">A</div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <section class="page active" id="page-dashboard">
+        <div class="welcome-banner">
+          <div>
+            <span class="eyebrow">YOUR COMMUNITY, YOUR QUIZZES</span>
+            <h2>Welcome to your dashboard.</h2>
+            <p>Create meaningful quiz experiences and help your community grow together.</p>
+            <button class="button gold-button" data-go="create">＋ Create a quiz</button>
+          </div>
+          <div class="banner-cross">✝</div>
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat-card">
+            <div class="stat-top">
+              <span>Total quizzes</span><span class="stat-icon">▤</span>
+            </div>
+            <strong id="stat-quizzes">0</strong><small>Quizzes created</small>
+          </article>
+          <article class="stat-card">
+            <div class="stat-top">
+              <span>Questions</span><span class="stat-icon">▧</span>
+            </div>
+            <strong id="stat-questions">0</strong><small>In your question bank</small>
+          </article>
+          <article class="stat-card">
+            <div class="stat-top">
+              <span>Participants</span><span class="stat-icon">♙</span>
+            </div>
+            <strong id="stat-participants">0</strong><small>Demo records</small>
+          </article>
+          <article class="stat-card">
+            <div class="stat-top">
+              <span>Average score</span><span class="stat-icon">↗</span>
+            </div>
+            <strong id="stat-average">—</strong><small>Based on saved results</small>
+          </article>
+        </div>
+
+        <div class="section-heading">
+          <div>
+            <h2>Recent quizzes</h2>
+            <p>Manage your latest quiz activities.</p>
+          </div>
+          <button class="button light-button" data-go="quizzes">View all →</button>
+        </div>
+
+        <div class="card table-card">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Quiz name</th><th>Questions</th><th>Created</th><th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="recent-quizzes"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="recent-empty">
+            <div class="empty-icon">▤</div>
+            <b>No quizzes yet</b>
+            <p>Your created quizzes will appear here.</p>
+            <button class="button gold-button" data-go="create">Create your first quiz</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- KAHOOT-STYLE CREATOR STUDIO (FULL SCREEN) -->
+      <section class="page" id="page-create">
+        <!-- الشريط العلوي للاستوديو -->
+        <header class="studio-header">
+          <div class="studio-brand">
+            <span class="cross-icon">✝</span>
+            <input type="text" id="studio-quiz-title" value="New Church Quiz" placeholder="Enter quiz title...">
+          </div>
+          <div class="studio-actions">
+            <!-- زر إظهار وإخفاء القائمة اليمنى -->
+            <button type="button" class="btn-settings" id="toggle-properties-btn" style="background: #E2E8F0; color: #0B1E36;" title="Show/Hide Properties">⚙ Properties</button>
+            <button type="button" class="btn-exit" id="studio-exit-btn">Exit</button>
+            <button type="button" class="btn-save" id="studio-save-btn">Save</button>
+          </div>
+        </header>
+
+        <!-- مساحة العمل الثلاثية -->
+        <div class="studio-body">
+          <!-- 1. شريط الشرائح الجانبي (يسار) -->
+          <aside class="studio-left-panel">
+            <div class="slides-container" id="slides-list">
+              <!-- تتولد الشرائح ديناميكياً هنا -->
+            </div>
+            <button type="button" class="btn-add-slide" id="btn-add-slide">＋ Add Question</button>
+          </aside>
+
+          <!-- 2. مساحة الكانفاس المركزية (الوسط) -->
+          <main class="studio-main-canvas">
+            <div class="canvas-question-box">
+              <input type="text" id="canvas-question-text" placeholder="Start typing your question" autocomplete="off">
+            </div>
+
+            <!-- مكان مخصص للصورة -->
+            <div class="canvas-media-box" id="media-upload-container">
+              <input type="file" id="question-image-upload" accept="image/png, image/jpeg, image/gif, image/webp" style="display: none;">
+              
+              <div class="media-placeholder" id="media-placeholder">
+                <span class="media-icon">📷</span>
+                <span class="media-text">＋ Upload image</span>
+              </div>
+
+              <div class="media-preview-container" id="media-preview-container" style="display: none;">
+                <img id="question-image-preview" src="" alt="Question Media">
+                <button type="button" class="btn-remove-media" id="btn-remove-media" title="Remove image">🗑️</button>
+              </div>
+            </div>
+
+            <!-- شبكة الإجابات -->
+            <div class="canvas-answers-grid mode-mcq" id="canvas-answers-grid">
+              <div class="answer-card bg-red" data-index="0">
+                <div class="shape">▲</div>
+                <input type="text" class="ans-input" id="ans-text-0" placeholder="Add answer 1">
+                <button type="button" class="correct-tick" id="toggle-0">✔</button>
+              </div>
+              <div class="answer-card bg-blue" data-index="1">
+                <div class="shape">◆</div>
+                <input type="text" class="ans-input" id="ans-text-1" placeholder="Add answer 2">
+                <button type="button" class="correct-tick" id="toggle-1">✔</button>
+              </div>
+              <div class="answer-card bg-yellow" data-index="2">
+                <div class="shape">●</div>
+                <input type="text" class="ans-input" id="ans-text-2" placeholder="Add answer 3">
+                <button type="button" class="correct-tick" id="toggle-2">✔</button>
+              </div>
+              <div class="answer-card bg-green" data-index="3">
+                <div class="shape">■</div>
+                <input type="text" class="ans-input" id="ans-text-3" placeholder="Add answer 4">
+                <button type="button" class="correct-tick" id="toggle-3">✔</button>
+              </div>
+            </div>
+          </main>
+
+          <!-- 3. لوحة الخصائص (يمين) - قابلة للإغلاق -->
+          <aside class="studio-right-panel" id="studio-right-panel">
+            <div class="right-panel-content">
+              <div class="prop-group">
+                <label>Question type</label>
+                <select id="prop-question-type">
+                  <option value="mcq">Quiz</option>
+                  <option value="tf">True or false</option>
+                </select>
+              </div>
+
+              <div class="prop-group">
+                <label>Time limit</label>
+                <select id="prop-time-limit">
+                  <option value="5">5 seconds</option>
+                  <option value="10">10 seconds</option>
+                  <option value="20" selected>20 seconds</option>
+                  <option value="30">30 seconds</option>
+                  <option value="60">1 minute</option>
+                  <option value="90">90 seconds</option>
+                  <option value="120">2 minutes</option>
+                  <option value="240">4 minutes</option>
+                  <option value="300">5 minutes</option>
+                  <option value="600">10 minutes</option>
+                  <option value="900">15 minutes</option>
+                  <option value="1800">30 minutes</option>
+                  <option value="3600">1 hour</option>
+                  <option value="10800">3 hours (max)</option>
+                </select>
+              </div>
+
+              <div class="prop-group">
+                <label>Points</label>
+                <select id="prop-points-multiplier">
+                  <option value="standard">Standard</option>
+                  <option value="double">Double points</option>
+                  <option value="none">No points</option>
+                </select>
+              </div>
+
+              <div class="prop-bottom-actions">
+                <button type="button" id="btn-duplicate-question" class="btn-duplicate">Duplicate</button>
+                <button type="button" id="btn-delete-question" class="btn-delete">Delete</button>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <!-- نافذة الإعدادات النهائية (Settings Modal) -->
+        <div id="studio-save-modal" class="modal-overlay" style="display: none;">
+          <div class="modal-card">
+            <h3>Quiz Settings</h3>
+            <p>Add the final details before saving.</p>
+            
+            <div class="field" style="margin-bottom: 25px;">
+              <label style="color:#A9BCCD;">Category (Fetched from API)</label>
+              <!-- يتم تعبئة هذا الحقل من الباك إند -->
+              <select id="modal-quiz-category" style="width: 100%; padding: 10px; background: #0B1E36; color: white; border: 1px solid #1f3a59; border-radius: 6px;">
+                <option value="">جاري تحميل الأقسام...</option>
+              </select>
+            </div>
+
+            <div class="modal-buttons" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+              <button type="button" id="modal-cancel-btn" style="padding: 10px 20px; background: transparent; color: white; border: 1px solid white; border-radius: 6px; cursor: pointer;">Cancel</button>
+              <button type="button" id="modal-confirm-save-btn" style="padding: 10px 20px; background: #22c55e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">Done</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MY QUIZZES -->
+      <section class="page" id="page-quizzes">
+        <div class="section-heading">
+          <div>
+            <h2>My quizzes</h2>
+            <p>View and manage all your quizzes.</p>
+          </div>
+          <button class="button gold-button" data-go="create">＋ New quiz</button>
+        </div>
+
+        <div class="toolbar">
+          <input id="quiz-search" placeholder="Search quizzes..." aria-label="Search quizzes">
+        </div>
+
+        <div class="card table-card" style="overflow: visible;">
+          <div class="table-scroll" style="overflow: visible;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Quiz name</th><th>Category</th><th>Questions</th><th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="quizzes-table"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="quizzes-empty">
+            <div class="empty-icon">▤</div>
+            <b>No matching quizzes</b>
+            <p>Create a quiz to get started.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- QUESTION BANK -->
+      <section class="page" id="page-questions">
+        <div class="section-heading">
+          <div>
+            <h2>Question bank</h2>
+            <p>Every question saved across your quizzes.</p>
+          </div>
+        </div>
+
+        <div class="section-heading compact-heading">
+          <div><h2>Saved questions</h2></div>
+          <span class="count-pill" id="question-count">0 questions</span>
+        </div>
+
+        <div class="card table-card">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Question</th><th>Quiz</th><th>Choices</th><th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="questions-table"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="questions-empty">
+            <div class="empty-icon">▧</div>
+            <b>Your question bank is empty</b>
+            <p>Questions added in the Studio will appear here.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- PARTICIPANTS -->
+      <section class="page" id="page-participants">
+        <div class="section-heading">
+          <div>
+            <h2>Participants</h2>
+            <p>View participant records saved in this browser.</p>
+          </div>
+        </div>
+        <div class="card table-card">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th><th>Quiz</th><th>Score</th><th>Time</th><th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="participants-table"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="participants-empty">
+            <div class="empty-icon">♙</div>
+            <b>No participants yet</b>
+            <p>Saved quiz results will be listed here.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- RESULTS -->
+      <section class="page" id="page-results">
+        <div class="section-heading">
+          <div>
+            <h2>Results</h2>
+            <p>Review saved quiz scores and export a report.</p>
+          </div>
+          <button class="button gold-button" id="export-results">↓ Export CSV</button>
+        </div>
+        <div class="stats-grid result-stats">
+          <article class="stat-card">
+            <div class="stat-top"><span>Attempts</span><span class="stat-icon">▤</span></div>
+            <strong id="results-attempts">0</strong><small>Saved attempts</small>
+          </article>
+          <article class="stat-card">
+            <div class="stat-top"><span>Average score</span><span class="stat-icon">↗</span></div>
+            <strong id="results-average">—</strong><small>Across saved results</small>
+          </article>
+          <article class="stat-card">
+            <div class="stat-top"><span>Best score</span><span class="stat-icon">✦</span></div>
+            <strong id="results-best">—</strong><small>Highest percentage</small>
+          </article>
+          <article class="stat-card">
+            <div class="stat-top"><span>Unique players</span><span class="stat-icon">♙</span></div>
+            <strong id="results-players">0</strong><small>Names recorded locally</small>
+          </article>
+        </div>
+        <div class="card table-card">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Participant</th><th>Score</th><th>Percentage</th><th>Time</th><th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="results-table"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="results-empty">
+            <div class="empty-icon">▥</div>
+            <b>No results yet</b>
+            <p>Results will appear when quiz attempts are saved.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- LEADERBOARD -->
+      <section class="page" id="page-leaderboard">
+        <div class="section-heading">
+          <div>
+            <h2>Leaderboard</h2>
+            <p>Top 3 participants by their best quiz percentage.</p>
+          </div>
+          <button class="button gold-button" id="admin-leaderboard-refresh" type="button">↻ Refresh</button>
+        </div>
+        <div id="admin-leaderboard-content">
+          <div class="admin-top-three">
+            <article class="admin-top-card">
+              <div class="admin-top-medal">🥇</div>
+              <div class="admin-top-rank">1ST PLACE</div>
+              <h3>Loading...</h3><strong>—</strong>
+            </article>
+            <article class="admin-top-card">
+              <div class="admin-top-medal">🥈</div>
+              <div class="admin-top-rank">2ND PLACE</div>
+              <h3>Loading...</h3><strong>—</strong>
+            </article>
+            <article class="admin-top-card">
+              <div class="admin-top-medal">🥉</div>
+              <div class="admin-top-rank">3RD PLACE</div>
+              <h3>Loading...</h3><strong>—</strong>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="page" id="page-settings">
+        <div class="section-heading">
+          <div>
+            <h2>Settings</h2>
+            <p>Configure the basic details of your workspace.</p>
+          </div>
+        </div>
+        <form id="settings-form" class="card form-card">
+          <div class="form-section-title">
+            <span>⚙</span>
+            <div>
+              <h3>Workspace settings</h3>
+              <p>These details are stored locally in this demo.</p>
+            </div>
+          </div>
+          <div class="field">
+            <label for="church-name">Church or organization name</label>
+            <input id="church-name" maxlength="100" placeholder="Church name">
+          </div>
+          <div class="field">
+            <label for="admin-email">Contact email</label>
+            <input id="admin-email" type="email" placeholder="admin@example.com">
+          </div>
+          <div class="field">
+            <label for="dashboard-language">Dashboard language</label>
+            <select id="dashboard-language">
+              <option value="en">English</option>
+              <option value="ar">العربية</option>
+            </select>
+          </div>
+          <div class="form-footer">
+            <span class="form-hint">Authentication is not configured yet.</span>
+            <button class="button gold-button" type="submit">Save settings</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- HOST LIVE OPTIONS MODAL (Classic Mode) -->
+      <div id="host-options-modal" class="modal-overlay" style="display: none; z-index: 10000;">
+        <div class="host-modal-card">
+          <button class="close-host-modal" id="close-host-modal" type="button">✕</button>
+          
+          <div class="host-modal-content">
+            <!-- الجزء الأيسر -->
+            <div class="host-modal-left">
+              <div class="host-graphic">
+                <span style="font-size: 60px;">🏆</span>
+                <p>Classic Mode</p>
+              </div>
+            </div>
+            
+            <!-- الجزء الأيمن -->
+            <div class="host-modal-right">
+              <h2 class="host-mode-title">Classic</h2>
+              
+              <div class="host-badges">
+                <span>Up to 40 participants</span>
+                <span>Competition</span>
+                <span>Assessment</span>
+              </div>
+              
+              <p class="host-mode-desc">
+                Bring friendly competition to this kahoot. Participants need to answer quickly and correctly to secure a top spot on the podium.
+              </p>
+
+              <!-- شريط بدء اللعبة -->
+              <div class="host-action-bar">
+                <div class="host-quiz-info">
+                  <span class="host-quiz-icon">📝</span>
+                  <strong id="host-selected-quiz-title">Quiz Title</strong>
+                </div>
+                <button id="btn-start-host-final" class="btn-start-host">Start</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <footer class="main-footer">
+      Church Quiz Admin <span>•</span> Learn, Play, Grow
+    </footer>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

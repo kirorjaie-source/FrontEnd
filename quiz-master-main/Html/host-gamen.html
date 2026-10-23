@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Host Game | Church Quiz</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../CSS/host-gamen.css">
+  <link rel="stylesheet" href="../CSS/countdown.css">
+</head>
+<body>
+
+  <header class="game-header">
+    <div class="brand">Church Quiz!</div>
+    <div class="player-count">👤 <span id="header-players">0</span></div>
+  </header>
+
+  <main class="game-container">
+    
+    <section id="screen-get-ready" class="screen-center active">
+      <h1 class="huge-title">Get Ready!</h1>
+      <div class="loader-spinner"></div>
+    </section>
+
+    <section id="screen-countdown" class="screen-center hidden">
+      <div class="diamond-shape"><span id="countdown-text">3</span></div>
+    </section>
+
+    <section id="screen-question-info" class="screen-center hidden">
+      <div class="question-type-badge"><div class="shapes-mini" id="info-shapes">▲ ◆ ● ■</div></div>
+      <h1 id="info-q-text" class="info-title">السؤال...</h1>
+      <div class="info-loader"><div class="info-bar"></div></div>
+    </section>
+
+    <section id="screen-active-question" class="screen-layout hidden">
+      <div class="q-header"><h1 id="active-q-text">السؤال هنا؟</h1></div>
+      <div class="q-middle">
+        <div class="timer-wrapper"><div class="timer-circle" id="q-timer">20</div></div>
+        <div class="q-media" id="q-media-container">
+          <img id="q-image" src="" style="display:none;">
+          <div class="media-placeholder" id="q-placeholder">Church Quiz</div>
+        </div>
+        <div class="answers-counter-wrapper">
+          <span id="q-answers-count">0</span><small>Answers</small>
+        </div>
+      </div>
+      <div class="q-answers-grid" id="host-answers-grid">
+        <div class="ans-box bg-red"><span class="shape">▲</span><span class="text" id="ans-0">---</span><span class="status-icon" id="stat-0"></span></div>
+        <div class="ans-box bg-blue"><span class="shape">◆</span><span class="text" id="ans-1">---</span><span class="status-icon" id="stat-1"></span></div>
+        <div class="ans-box bg-yellow"><span class="shape">●</span><span class="text" id="ans-2">---</span><span class="status-icon" id="stat-2"></span></div>
+        <div class="ans-box bg-green"><span class="shape">■</span><span class="text" id="ans-3">---</span><span class="status-icon" id="stat-3"></span></div>
+      </div>
+    </section>
+
+    <section id="screen-results" class="screen-center hidden" style="justify-content: flex-end; padding-bottom: 30px;">
+      <h1 id="result-q-text" style="margin-bottom: 50px; font-size: 2.5rem; text-align: center;">السؤال هنا؟</h1>
+      <div class="chart-container">
+        <div class="bar-wrapper"><div class="bar bg-red" id="bar-0"><span class="bar-count" id="count-0">0</span></div><div class="bar-base">▲</div></div>
+        <div class="bar-wrapper"><div class="bar bg-blue" id="bar-1"><span class="bar-count" id="count-1">0</span></div><div class="bar-base">◆</div></div>
+        <div class="bar-wrapper" id="wrap-2"><div class="bar bg-yellow" id="bar-2"><span class="bar-count" id="count-2">0</span></div><div class="bar-base">●</div></div>
+        <div class="bar-wrapper" id="wrap-3"><div class="bar bg-green" id="bar-3"><span class="bar-count" id="count-3">0</span></div><div class="bar-base">■</div></div>
+      </div>
+    </section>
+
+    <section id="screen-leaderboard" class="screen-center hidden" style="justify-content: flex-start; padding-top: 40px;">
+      <h1 class="huge-title" style="margin-bottom: 40px;">Top 5</h1>
+      <div class="leaderboard-list" id="leaderboard-list"></div>
+    </section>
+
+    <!-- شاشة التتويج النهائية (Final Podium) المنسقة -->
+    <section id="screen-final-podium" class="screen-center hidden" style="justify-content: flex-end; padding-bottom: 0;">
+      <h1 class="podium-main-title">Podium</h1>
+      <div class="podium-container">
+        <!-- المركز الثاني (يسار) -->
+        <div class="podium-place place-2 hidden" id="podium-2">
+          <div class="winner-info">
+            <span class="w-name" id="w-name-2">---</span>
+            <span class="w-score" id="w-score-2">0</span>
+          </div>
+          <div class="podium-block block-2">
+            <div class="medal medal-silver">2</div>
+          </div>
+        </div>
+        <!-- المركز الأول (وسط وأعلى) -->
+        <div class="podium-place place-1 hidden" id="podium-1">
+          <div class="winner-info winner-first">
+            <span class="w-name" id="w-name-1">---</span>
+            <span class="w-score" id="w-score-1">0</span>
+          </div>
+          <div class="podium-block block-1">
+            <div class="medal medal-gold">1</div>
+          </div>
+        </div>
+        <!-- المركز الثالث (يمين) -->
+        <div class="podium-place place-3 hidden" id="podium-3">
+          <div class="winner-info">
+            <span class="w-name" id="w-name-3">---</span>
+            <span class="w-score" id="w-score-3">0</span>
+          </div>
+          <div class="podium-block block-3">
+            <div class="medal medal-bronze">3</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-return-admin hidden" id="btn-return-admin">Return to Dashboard</button>
+    </section>
+
+  </main>
+
+  <!-- زرار انتقال المدرّس بين المراحل -->
+  <button id="btn-next" style="display:none;position:fixed;right:24px;bottom:24px;z-index:50;padding:14px 30px;border:0;border-radius:10px;font:800 1.1rem 'Montserrat',sans-serif;background:#fff;color:#0B1E36;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.25)">Next ▶</button>
+
+  <!-- ⚠️ الترتيب مهم: SignalR الأول، بعدين apin.js، بعدين ملف الصفحة -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+  <script src="../JS/countdown.js"></script>
+  <script src="../JS/apin.js"></script>
+  <script src="../JS/host-gamenn.js"></script>
+</body>
+</html>
