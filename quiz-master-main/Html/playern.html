@@ -3,16 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
-  <meta name="theme-color" content="#0B1E36">
-  <title>Play | Church Quiz</title>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#1C55AE">
+  <title>Play | Kokquiz</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@400;600;700&family=Pacifico&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../CSS/playern.css">
   <link rel="stylesheet" href="../CSS/countdown.css">
 </head>
 <body>
+  <!-- نجوم الخلفية -->
+  <div class="kok-sparkles" aria-hidden="true">
+    <i style="left:7%;top:10%;font-size:22px;animation-delay:.2s">✦</i>
+    <i style="left:88%;top:16%;font-size:16px;animation-delay:1.1s">✦</i>
+    <i style="left:16%;top:42%;font-size:13px;animation-delay:2s">✦</i>
+    <i style="left:92%;top:48%;font-size:24px;animation-delay:.7s">✦</i>
+    <i style="left:6%;top:76%;font-size:18px;animation-delay:1.6s">✦</i>
+    <i style="left:80%;top:84%;font-size:14px;animation-delay:2.4s">✦</i>
+    <i style="left:46%;top:94%;font-size:12px;animation-delay:.9s">✦</i>
+  </div>
+
   <div class="player-screen">
-    <div class="brand-logo" id="main-logo">Church Quiz!</div>
+    <!-- اللوجو: بيظهر في شاشة الدخول بس -->
+    <div class="brand-logo kok-logo" id="main-logo">
+      <svg class="kok-cross" viewBox="0 0 60 90" aria-hidden="true">
+        <defs>
+          <linearGradient id="kokGold" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#FFF3B0"/><stop offset="1" stop-color="#E4B93C"/>
+          </linearGradient>
+        </defs>
+        <rect x="23" y="2" width="14" height="86" rx="7" fill="url(#kokGold)"/>
+        <rect x="4" y="24" width="52" height="14" rx="7" fill="url(#kokGold)"/>
+      </svg>
+      <span class="kok-word">Kokquiz</span>
+      <span class="kok-tagline">Learn · Play · Grow</span>
+    </div>
+
     <div class="join-card" id="join-card">
+      <div class="pin-chip hidden" id="pin-chip">Game PIN <b id="pin-chip-value">------</b></div>
       <input type="text" id="pin-input" inputmode="numeric" placeholder="Game PIN" autocomplete="off" maxlength="6" class="hidden">
       <input type="text" id="nickname-input" placeholder="Enter your nickname" autocomplete="off" maxlength="15" autofocus>
       <button id="btn-join" class="btn-join">OK, go!</button>
@@ -58,9 +84,10 @@
     </div>
   </div>
 
-  <!-- ⚠️ الترتيب مهم: SignalR الأول، بعدين apin.js، بعدين playern.js -->
+  <!-- ⚠️ الترتيب مهم: SignalR الأول، بعدين countdown.js، بعدين avatars.js، بعدين apin.js، بعدين playern.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
   <script src="../JS/countdown.js"></script>
+  <script src="../JS/avatars.js"></script>
   <script src="../JS/apin.js"></script>
   <script src="../JS/playern.js"></script>
 </body>

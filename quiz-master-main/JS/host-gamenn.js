@@ -1,7 +1,7 @@
 "use strict";
 
 /* ===========================================================================
-   host-gamenn.js — شاشة المدرّس أثناء اللعب.
+   host-gamenn.js — شاشة المدرّس أثناء اللعب (Kokquiz).
    السيرفر (GameService) هو اللي بيتحكم في الأسئلة والوقت والنقاط، والصفحة بتعرض
    الأحداث بس: Question → AnswerCount → Reveal → ... → GameFinished
    =========================================================================== */
@@ -9,8 +9,11 @@
 const ADMIN_PAGE = "adminn.html";
 const LOBBY_PAGE = "lobbyn.html";
 const LOGIN_PAGE = "loginn.html";
+const PODIUM_PAGE = "podium.html";   // صفحة المنصة النهائية — غيّر الاسم لو ملفك اسمه مختلف
 const SHAPES = ["▲", "◆", "●", "■"];
 const RESULTS_SECONDS = 3500; // نعرض الرسم البياني، وبعدها الترتيب لحد السؤال الجاي
+const TOP_N = 5;              // عدد المراكز في شاشة الترتيب (والباقي في "Show all")
+const PODIUM_N = 3;
 
 const $ = (id) => document.getElementById(id);
 const escapeHTML = (value) =>
@@ -29,11 +32,14 @@ const pick = (o, ...names) => {
 let session = null;
 let currentChoices = [];   // [{ id, index, text }] للسؤال الحالي
 let currentText = "";
+let currentHasImage = false;
 let timerId = null;
 let revealTimer = null;
 let endAt = 0;
 let countdownId = null;
 let isLastQuestion = false;
+let lastStandings = [];    // آخر ترتيب وصل (لشاشة الترتيب و"Show all")
+let finalBoard = [];       // الترتيب النهائي
 
 /* ---------------- الشاشات ---------------- */
 
@@ -75,9 +81,10 @@ function updateHeaderPlayers(count) {
 
 /* ---------------- أحداث السيرفر ---------------- */
 
-// GetReady: { seconds } — عدّ تنازلي 3..2..1 قبل أول سؤال (محتاج تعديل الباك إند)
+// GetReady: { seconds } — عدّ تنازلي 3..2..1 قبل كل سؤال
 function onGetReady(d) {
   console.log("[host] GetReady", d);
+  closeAllOverlay();
   const nb = $("btn-next");
   if (nb) nb.style.display = "none";   // مفيش Next أثناء العدّ
   // الشاشة المشتركة (countdown.js): دايرة منقطة + الرقم في النص
@@ -99,6 +106,7 @@ function onQuestion(d) {
   console.log("[host] Question", d);
   isLastQuestion = false;
   Countdown.stop();
+  closeAllOverlay();
   clearInterval(countdownId);
   clearTimeout(revealTimer);
 
@@ -108,6 +116,10 @@ function onQuestion(d) {
   currentText = d.text ?? "";
 
   $("active-q-text").textContent = currentText;
+
+  // سؤال بصورة: الصورة بتظهر كبيرة وعنوان السؤال بيختفي (الستايل في host-gamen.html)
+  currentHasImage = !!d.imageUrl;
+  $("screen-active-question").classList.toggle("has-image", currentHasImage);
 
   const img = $("q-image");
   const placeholder = $("q-placeholder");
@@ -176,6 +188,7 @@ function onReveal(d) {
   const max = Math.max(1, ...perSlot);
 
   $("result-q-text").textContent = currentText;
+  $("result-q-text").style.display = currentHasImage ? "none" : "";   // سؤال الصورة: مفيش عنوان
   for (let i = 0; i < 4; i++) {
     const bar = $(`bar-${i}`);
     const wrap = bar.closest(".bar-wrapper");
@@ -199,31 +212,115 @@ function onReveal(d) {
   }, RESULTS_SECONDS);
 }
 
+/* ---------------- شاشة المراكز (Leaderboard) ---------------- */
+
+// صف واحد في الترتيب: رقم المركز + حرف أول الاسم + الاسم + الصعود/النزول + streak + النقاط
+function rowHTML(s, i, max, delayIndex = i) {
+  const rank = Number(pick(s, "rank")) || i + 1;
+  const rawName = String(pick(s, "name", "playerName", "nickname") ?? "Player");
+  const score = Number(pick(s, "totalScore", "score", "points")) || 0;
+  const earned = Number(pick(s, "pointsEarned")) || 0;
+  const change = Number(pick(s, "rankChange")) || 0;
+  const streak = Number(pick(s, "streak")) || 0;
+  const pct = max > 0 ? Math.max(6, Math.round((score / max) * 100)) : 6;
+
+  const arrow = change > 0 ? `<span class="lb2-chg up">▲ ${change}</span>`
+    : change < 0 ? `<span class="lb2-chg down">▼ ${Math.abs(change)}</span>` : "";
+  const fire = streak > 1 ? `<span class="lb2-streak">🔥 ${streak}</span>` : "";
+  const crown = rank === 1 ? `<span class="lb2-crown">👑</span>` : "";
+  // الشخصية اللي اللاعب اختارها، ولو مفيش نعرض أول حرف من اسمه
+  const initial = escapeHTML(pick(s, "avatar") || ([...rawName.trim()][0] ?? "?"));
+
+  return `
+    <div class="lb2-row r${rank <= 3 ? rank : "x"}" style="--i:${delayIndex};--w:${pct}%">
+      <span class="lb2-fill"></span>
+      <span class="lb2-rank">${rank}</span>
+      <span class="lb2-av">${initial}</span>
+      <span class="lb2-name">${crown}${escapeHTML(rawName)}</span>
+      ${arrow}${fire}
+      <span class="lb2-pts"><b class="lb2-score" data-to="${score}" data-delay="${delayIndex * 110}">${score}</b>${earned ? `<small>+${earned}</small>` : ""}</span>
+    </div>`;
+}
+
+// عدّاد النقاط: من 0 للقيمة النهائية
+function countUp(root) {
+  root.querySelectorAll("[data-to]").forEach((el) => {
+    const to = Number(el.dataset.to) || 0;
+    const t0 = performance.now() + (Number(el.dataset.delay) || 0);
+    const dur = 900;
+    el.textContent = "0";
+    const step = (now) => {
+      const p = Math.min(1, Math.max(0, (now - t0) / dur));
+      el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3)));
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  });
+}
+
+const scoreOf = (s) => Number(pick(s, "totalScore", "score", "points")) || 0;
+
 // StandingDto: playerId, name, totalScore, pointsEarned, rank, rankChange, streak
 function renderLeaderboard(standings) {
+  lastStandings = standings;
   const list = $("leaderboard-list");
   if (!list) return;
-  list.innerHTML = standings.slice(0, 5).map((s) => {
-    const change = s.rankChange > 0 ? `<span style="color:#7CFC9A">▲ ${s.rankChange}</span>`
-      : s.rankChange < 0 ? `<span style="color:#FF8A8A">▼ ${Math.abs(s.rankChange)}</span>` : "";
-    return `
-      <div class="leaderboard-item" style="display:flex;align-items:center;justify-content:space-between;gap:16px;
-           background:rgba(255,255,255,.14);border-radius:12px;padding:14px 22px;margin:8px 0;
-           font:700 1.4rem 'Montserrat',sans-serif;color:#fff;min-width:min(520px,90vw)">
-        <span>${s.rank}. ${escapeHTML(s.name)} ${change}</span>
-        <span>${s.totalScore}${s.pointsEarned ? ` <small style="opacity:.75">(+${s.pointsEarned})</small>` : ""}</span>
-      </div>`;
-  }).join("");
+
+  const max = Math.max(1, ...standings.map(scoreOf));
+  list.innerHTML = standings.length
+    ? standings.slice(0, TOP_N).map((s, i) => rowHTML(s, i, max)).join("")
+    : `<div class="lb2-empty">No standings yet</div>`;
+  countUp(list);
+
+  const more = $("btn-show-all");
+  if (more) {
+    more.classList.toggle("hidden", standings.length <= TOP_N);
+    more.textContent = `Show all players (${standings.length})`;
+  }
+}
+
+// نافذة كل المراكز
+function openAllOverlay(board) {
+  const overlay = $("all-overlay");
+  const list = $("all-list");
+  if (!overlay || !list) return;
+  const max = Math.max(1, ...board.map(scoreOf));
+  list.innerHTML = board.map((s, i) => rowHTML(s, i, max, Math.min(i, 10))).join("");
+  if ($("all-sub")) $("all-sub").textContent = `${board.length} PLAYERS`;
+  overlay.classList.remove("hidden");
+  overlay.scrollTop = 0;
+  countUp(list);
+}
+
+function closeAllOverlay() {
+  $("all-overlay")?.classList.add("hidden");
 }
 
 // GameFinished: List<StandingDto>
 function onFinished(board) {
   console.log("[host] GameFinished", board);
   Countdown.stop();
+  closeAllOverlay();
   stopTimer();
   clearTimeout(revealTimer);
 
   const top = asArray(board);
+  finalBoard = top;
+
+  // نحفظ الترتيب النهائي عشان صفحة المنصة (podium.html) تعرض النتيجة الحقيقية
+  try {
+    localStorage.setItem("churchQuizFinalStandings", JSON.stringify(top.map((s, i) => ({
+      name: pick(s, "name", "playerName", "nickname") ?? "Player",
+      score: scoreOf(s),
+      avatar: pick(s, "avatar") ?? "",
+      rank: Number(pick(s, "rank")) || i + 1
+    }))));
+  } catch { /* ignore */ }
+
+  // نروح لصفحة المنصة الجديدة فوراً (من غير ما نعرض المنصة القديمة)
+  window.location.replace(PODIUM_PAGE);
+  return;
+
   for (let place = 1; place <= 3; place++) {
     const el = $(`podium-${place}`);
     const s = top[place - 1];
@@ -254,6 +351,13 @@ function onFinished(board) {
       el.classList.add("hidden");
     }
   }
+
+  // زرار "Show all players" على المنصة لو فيه أكتر من 3
+  const more = $("btn-show-all-final");
+  if (more) {
+    more.classList.toggle("hidden", top.length <= PODIUM_N);
+    more.textContent = `Show all players (${top.length})`;
+  }
   $("btn-return-admin")?.classList.remove("hidden");
   showScreen("screen-final-podium");
 }
@@ -280,6 +384,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.location.href = ADMIN_PAGE;
   });
 
+  // كل المراكز: من شاشة الترتيب ومن المنصة النهائية
+  $("btn-show-all")?.addEventListener("click", () => openAllOverlay(lastStandings));
+  $("btn-show-all-final")?.addEventListener("click", () => openAllOverlay(finalBoard));
+  $("all-close")?.addEventListener("click", closeAllOverlay);
+  $("all-overlay")?.addEventListener("click", (e) => { if (e.target === $("all-overlay")) closeAllOverlay(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeAllOverlay(); });
+
   // زرار Next: بيطلب من السيرفر ينقل للمرحلة التالية (NextPhase في GameHub)
   $("btn-next")?.addEventListener("click", async () => {
     const btn = $("btn-next");
@@ -287,7 +398,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       await Api.realtime.invoke("NextPhase");
     } catch (err) {
-      alert("Could not move on: " + (err.message || err.code) + "\n(لازم تضيف NextPhase في GameHub — شوف backend-changes.md)");
+      alert("Could not move on: " + (err.message || err.code));
     } finally {
       setTimeout(() => { btn.disabled = false; }, 800);
     }

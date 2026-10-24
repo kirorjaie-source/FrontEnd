@@ -16,44 +16,21 @@ const asArray = (v) => (Array.isArray(v) ? v : v?.items || v?.$values || []);
 let me = null;        // { playerId, nickname }
 let choices = [];     // [{ id, index }] للسؤال الحالي
 let answered = false;
+let readyId = null;
 
 /* ---------------- الشاشات ---------------- */
 
 function show(viewId) {
   VIEWS.forEach((v) => $(v)?.classList.toggle("hidden", v !== viewId));
+  $("main-logo")?.classList.toggle("hidden", viewId !== "join-card");
 }
 
-// onlyReady = true  → شاشة Get Ready لوحدها (من غير لوجو ولا الفوتر)
-function showWaiting(title, text, onlyReady = false) {
+function showWaiting(title, text) {
   const titleEl = document.querySelector("#get-ready-card .ready-title");
   const textEl = document.querySelector("#get-ready-card .loading-text");
   if (titleEl) titleEl.textContent = title;
   if (textEl) textEl.textContent = text;
-  document.body.classList.toggle("only-ready", onlyReady);
   show("get-ready-card");
-}
-
-// رقم الترتيب الكبير بدل صورة الثعلب في شاشة النتيجة
-function setRankNumber(rank) {
-  let el = $("rank-big");
-  if (!el) {
-    el = document.createElement("div");
-    el.id = "rank-big";
-    $("score-gained-text")?.closest(".score-gained-box")?.before(el);
-  }
-  el.textContent = rank != null ? rank : "";
-}
-
-function injectStyles() {
-  const style = document.createElement("style");
-  style.textContent = `
-    #result-card .avatar-large-box { display: none !important; }
-    #rank-big { font: 900 7rem/1 'Montserrat', sans-serif; color: #fff;
-                text-shadow: 0 6px 0 rgba(0,0,0,.25); margin: 24px 0 12px; text-align: center; }
-    body.only-ready .player-footer,
-    body.only-ready .brand-logo { display: none !important; }
-  `;
-  document.head.appendChild(style);
 }
 
 function showError(message) {
@@ -75,27 +52,29 @@ function enterWaitingRoom() {
 
 /* ---------------- أحداث السيرفر ---------------- */
 
-// بيقرأ الـ id من أي اسم حقل محتمل (id / answerId / Id / optionId ...)
-function pickId(c) {
-  if (c == null) return undefined;
-  if (typeof c === "number" || typeof c === "string") return c;
-  return c.id ?? c.answerId ?? c.Id ?? c.AnswerId ?? c.optionId ?? c.OptionId;
+// GetReady: { seconds } — "Get Ready!" بعدّ تنازلي لكل اللاعبين (محتاج تعديل الباك إند)
+function onGetReady(d) {
+  console.log("[player] GetReady", d);
+  // الشاشة المشتركة (countdown.js): دايرة منقطة + الرقم في النص
+  Countdown.start(Number(d?.seconds ?? d?.secondsLeft ?? 3) || 3, { number: d?.number });
+}
+
+// ChoiceDto(AnswerId, Index): بنقرا الـ id بأي اسم، ولو الاسم غريب ناخد أول قيمة (ترتيب الـ DTO)
+function parseChoice(c, i) {
+  const vals = Object.values(c ?? {});
+  return {
+    id: c?.id ?? c?.answerId ?? c?.choiceId ?? c?.optionId ?? vals[0],
+    index: c?.index ?? c?.slot ?? c?.order ?? c?.position ?? i
+  };
 }
 
 // PlayerQuestionDto: number, total, timeLimit, secondsLeft, choices[{id,index}]
 function onQuestion(d) {
   console.log("[player] Question", d);
-  clearInterval(readyTimer);
+  clearInterval(readyId);
   Countdown.stop();
-  document.body.classList.remove("only-ready");
-  const raw = asArray(d.choices ?? d.answers ?? d.options ?? d.Choices ?? d.Answers);
-  console.log("[player] raw choices:", raw);
-
-  choices = raw
-    .map((c, i) => ({
-      id: pickId(c),
-      index: (typeof c === "object" && c !== null ? (c.index ?? c.slot ?? c.order) : undefined) ?? i
-    }))
+  choices = asArray(d.choices ?? d.answers ?? d.options)
+    .map(parseChoice)
     .sort((a, b) => a.index - b.index);
   answered = false;
 
@@ -109,16 +88,6 @@ function onQuestion(d) {
     btn.style.opacity = "";
   });
   show("answer-pad");
-}
-
-// GetReady: { seconds } — شاشة Ready بعدّ تنازلي قبل السؤال الجاي
-let readyTimer = null;
-function onGetReady(d) {
-  console.log("[player] GetReady", d);
-  clearInterval(readyTimer);
-  const seconds = Number(d?.seconds ?? d) || 3;
-  // شاشة Get Ready من countdown.js (بتغطي الصفحة كلها، وبتقفل لما السؤال يوصل)
-  Countdown.start(seconds, { number: d?.number });
 }
 
 function onAnswerAccepted(d) {
@@ -145,7 +114,6 @@ function onReveal(d) {
     $("podium-text").textContent = `You're #${d.rank} of ${d.playersCount}${streak}`;
   }
   setFooterScore(d.totalScore ?? 0);
-  setRankNumber(d.rank);
   show("result-card");
 }
 
@@ -167,7 +135,6 @@ function onFinished(board) {
     $("podium-text").textContent = mine ? `You finished #${mine.rank} of ${list.length}` : "Thanks for playing!";
   }
   if (mine) setFooterScore(mine.totalScore);
-  setRankNumber(mine ? mine.rank : "");
 
   localStorage.removeItem(RECONNECT_KEY); // اللعبة خلصت: مفيش رجوع
   show("result-card");
@@ -217,12 +184,15 @@ async function tryRejoin(urlPin) {
 /* ---------------- التشغيل ---------------- */
 
 document.addEventListener("DOMContentLoaded", async () => {
-  injectStyles();
   const urlPin = new URLSearchParams(location.search).get("pin") || "";
 
   // لو مفيش PIN في الرابط نظهر خانة الـ PIN
   if (!urlPin) $("pin-input")?.classList.remove("hidden");
-  else if ($("pin-input")) $("pin-input").value = urlPin;
+  else {
+    if ($("pin-input")) $("pin-input").value = urlPin;
+    if ($("pin-chip-value")) $("pin-chip-value").textContent = urlPin;
+    $("pin-chip")?.classList.remove("hidden");
+  }
 
   // نسجّل الأحداث قبل أي اتصال
   Api.realtime.on("GetReady", onGetReady);
@@ -239,21 +209,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (answered) return;
       const choice = choices[Number(btn.dataset.index)];
       if (!choice) return;
-
-      // حماية: لو الـ id مش رقم صالح منبعتش للسيرفر (ده كان سبب خطأ الـ binding)
-      const answerId = Number(choice.id);
-      if (choice.id == null || !Number.isFinite(answerId)) {
-        console.error("Choice has no valid numeric id:", choice, "all choices:", choices);
-        showWaiting("Oops!", "Answer id is missing in the question data. Check the console.");
-        return;
-      }
-
       answered = true;
-      document.querySelectorAll("#pad-grid .pad-btn").forEach((b) => {
-        b.disabled = true;
-        b.style.opacity = b === btn ? "1" : "0.4";
-      });
+      document.querySelectorAll("#pad-grid .pad-btn").forEach((b) => { b.disabled = true; b.style.opacity = b === btn ? "1" : "0.4"; });
       try {
+        const answerId = Number(choice.id);
+        if (!Number.isFinite(answerId)) {
+          console.error("Choice id is not a number — شوف شكل الـ Question في الـ Console:", choice);
+          throw new Error("Unexpected choice format (see Console).");
+        }
         await Api.game.submitAnswer(answerId);
         showWaiting("Answer sent!", "Waiting for other players...");
       } catch (err) {

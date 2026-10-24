@@ -1,49 +1,298 @@
-:root { --navy: #0B1E36; --navy-dark: #071322; --gold: #E5B869; --gold-dark: #BD9147; --white: #FFFFFF; --danger: #e21b3c; }
-body, html { margin: 0; padding: 0; height: 100%; font-family: 'Montserrat', sans-serif; background: radial-gradient(circle at 50% 30%, var(--navy) 0%, var(--navy-dark) 100%); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+/* ===========================================================================
+   playern.css — كل شاشات اللاعب بشكل Kokquiz (دخول، انتظار، إجابة، نتيجة).
+   ملف واحد كامل: مفيش حاجة تانية محتاجة تتحمّل غير countdown.css.
+   =========================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+/* الخلفية على html عشان النجوم (z-index:-1) تبان فوقها وتحت المحتوى */
+html {
+  min-height: 100%;
+  background: radial-gradient(1100px 700px at 50% 18%, #3B7BD6 0%, #1C55AE 42%, #0A2B6B 100%) fixed;
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: transparent;
+  color: #fff;
+  font-family: "Montserrat", "Inter", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
 .hidden { display: none !important; }
-.player-screen { width: 100%; max-width: 400px; padding: 20px; display: flex; flex-direction: column; align-items: center; text-align: center; }
-.brand-logo { font-size: 3.5rem; color: var(--white); font-weight: 900; margin-bottom: 30px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-.join-card { background: var(--white); border-radius: 4px; padding: 15px; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 15px; }
-#nickname-input, #pin-input { width: 100%; padding: 18px 10px; font-size: 1.4rem; font-weight: 700; text-align: center; border: 2px solid #ccc; border-radius: 4px; outline: none; transition: 0.2s; }
-#nickname-input:focus, #pin-input:focus { border-color: #333; }
-.btn-join { width: 100%; padding: 18px; font-size: 1.4rem; font-weight: 900; color: var(--white); background: #333; border: none; border-radius: 4px; cursor: pointer; box-shadow: 0 4px 0 #000; transition: 0.1s; }
-.btn-join:active { transform: translateY(4px); box-shadow: 0 0 0 #000; }
-.error-msg { color: var(--danger); font-size: 1rem; font-weight: 700; display: none; }
-.waiting-card { color: var(--white); animation: fadeIn 0.5s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; height: calc(100vh - 100px); width: 100%; }
-.avatar-large-box { background: var(--gold); width: 200px; height: 200px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-.avatar-emoji { font-size: 7rem; }
-.player-name-tilted { font-size: 3.2rem; font-weight: 900; margin: 0 0 20px 0; color: var(--white); transform: rotate(-3deg); text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, 0px 4px 0 #000; }
-.waiting-text { font-size: 1.4rem; font-weight: 700; opacity: 0.95; line-height: 1.3; }
-.get-ready-card { color: var(--white); animation: fadeIn 0.3s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; position: fixed; inset: 0; background: var(--navy); z-index: 9999; }
-.ready-title { font-size: 4rem; font-weight: 900; margin-bottom: 30px; text-shadow: 0 4px 10px rgba(0,0,0,0.4); }
-.ready-loader { width: 90px; height: 90px; border: 15px solid transparent; border-top-color: var(--white); border-left-color: var(--white); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
-.loading-text { font-size: 2rem; font-weight: 800; }
-@keyframes spin { to { transform: rotate(360deg); } }
-@keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-.answer-pad { position: fixed; inset: 0; background: #e5e5e5; display: flex; flex-direction: column; z-index: 8000; padding-bottom: 70px; }
-.pad-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; height: 80px; background: #e5e5e5; }
-.q-number { background: var(--white); color: #333; width: 45px; height: 45px; border-radius: 50%; display: grid; place-items: center; font-size: 1.5rem; font-weight: 900; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-.q-type-badge { background: var(--white); color: #333; padding: 8px 20px; border-radius: 30px; font-size: 1.2rem; font-weight: 800; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-.pad-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; padding: 0 8px 8px 8px; }
-.pad-grid.mode-tf { grid-template-columns: 1fr; }
-.pad-grid.mode-tf .bg-yellow, .pad-grid.mode-tf .bg-green { display: none; }
-.pad-btn { border: none; border-radius: 4px; display: grid; place-items: center; cursor: pointer; transition: transform 0.1s; }
-.pad-btn:active { transform: translateY(6px); box-shadow: 0 0 0 transparent !important; }
-.pad-btn:disabled { opacity: 0.6; pointer-events: none; }
-.pad-btn .shape { font-size: 7rem; color: white; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.2)); }
-.bg-red { background-color: #e21b3c; box-shadow: 0 6px 0 #b0102b; }
-.bg-blue { background-color: #1368ce; box-shadow: 0 6px 0 #0c4a96; }
-.bg-yellow { background-color: #d89e00; box-shadow: 0 6px 0 #a37700; }
-.bg-green { background-color: #26890c; box-shadow: 0 6px 0 #1b6308; }
-.result-card { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9000; animation: fadeIn 0.3s ease; padding-bottom: 70px; }
-.result-card.correct-bg { background-color: #22c55e; }
-.result-card.incorrect-bg { background-color: #e21b3c; }
-.result-banner { background: rgba(0,0,0,0.2); width: 100%; padding: 20px; font-size: 3.5rem; font-weight: 900; color: white; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-.score-gained-box { background: rgba(0,0,0,0.4); padding: 15px 40px; border-radius: 8px; margin-top: 20px; font-size: 2.5rem; font-weight: 900; color: white; border: 2px solid rgba(255,255,255,0.2); }
-.podium-text { font-size: 1.5rem; font-weight: 800; color: white; margin-top: 20px; opacity: 0.9; }
-.player-footer { position: fixed; bottom: 0; left: 0; right: 0; background: var(--navy-dark); height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 10000; border-top: 1px solid rgba(255,255,255,0.1); }
+
+/* ---- التخطيط: كل شاشة في نص الصفحة ---- */
+.player-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 24px 16px 100px;      /* مساحة للفوتر السفلي */
+  text-align: center;
+}
+
+/* ---- نجوم ✦ متلألئة ---- */
+.kok-sparkles { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+.kok-sparkles i {
+  position: absolute;
+  font-style: normal;
+  color: #FFD966;
+  text-shadow: 0 0 10px rgba(255, 217, 102, .85);
+  animation: kok-twinkle 3.2s ease-in-out infinite;
+}
+@keyframes kok-twinkle {
+  0%, 100% { opacity: .25; transform: scale(.8) rotate(0deg); }
+  50%      { opacity: 1;   transform: scale(1.15) rotate(20deg); }
+}
+
+/* ---- اللوجو: صليب ذهبي + Kokquiz + شعار (بيظهر في شاشة الدخول بس) ---- */
+.brand-logo.kok-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 6px;
+}
+.kok-cross {
+  width: clamp(30px, 6.5vh, 54px);
+  height: auto;
+  filter: drop-shadow(0 0 10px rgba(255, 226, 120, .9));
+}
+.kok-word {
+  font-family: "Pacifico", cursive;
+  font-weight: 400;
+  font-size: clamp(48px, 9vw, 84px);
+  line-height: 1.1;
+  color: #fff;
+  text-shadow: 0 0 4px #CDEBFF, 0 0 14px rgba(110, 198, 255, .95), 0 0 34px rgba(60, 150, 255, .7), 0 4px 0 #1B63C7;
+}
+.kok-tagline {
+  font: 800 12px/1 "Montserrat", sans-serif;
+  letter-spacing: .35em;
+  text-transform: uppercase;
+  color: #DCE9FF;
+  text-shadow: 0 0 8px rgba(255, 255, 255, .35);
+}
+
+/* ---- كارت الدخول (زجاجي) ---- */
+.join-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(92vw, 440px);
+  padding: 22px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, .12);
+  border: 1px solid rgba(255, 255, 255, .28);
+  box-shadow: 0 18px 50px rgba(5, 25, 70, .45), inset 0 1px 0 rgba(255, 255, 255, .25);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+.pin-chip {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: rgba(11, 30, 54, .35);
+  border: 1px solid rgba(255, 255, 255, .25);
+  color: #DCE9FF;
+  font: 700 13px "Montserrat", sans-serif;
+}
+.pin-chip b { color: #FFD966; font-size: 16px; letter-spacing: .12em; }
+
+.join-card input {
+  width: 100%;
+  height: 58px;
+  padding: 0 16px;
+  border-radius: 14px;
+  border: 2px solid transparent;
+  background: #fff;
+  color: #0B1E36;
+  text-align: center;
+  font: 800 19px "Montserrat", sans-serif;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.join-card input::placeholder { color: #8A97AD; font-weight: 700; }
+.join-card input:focus { border-color: #FFD966; box-shadow: 0 0 0 4px rgba(255, 217, 102, .35); }
+
+.btn-join {
+  width: 100%;
+  height: 58px;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #FBEFC4 0%, #EBCB6E 100%);
+  color: #0B1E36;
+  font: 800 19px "Montserrat", sans-serif;
+  cursor: pointer;
+  box-shadow: 0 5px 0 #B8962E, 0 12px 24px rgba(5, 25, 70, .35);
+  transition: transform .1s, box-shadow .1s, filter .15s;
+}
+.btn-join:hover { filter: brightness(1.05); }
+.btn-join:active { transform: translateY(4px); box-shadow: 0 1px 0 #B8962E, 0 6px 12px rgba(5, 25, 70, .3); }
+.btn-join:disabled { opacity: .6; cursor: default; }
+
+.error-msg {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(226, 27, 60, .28);
+  border: 1px solid rgba(255, 140, 160, .45);
+  color: #FFE3E8;
+  font: 700 14px "Montserrat", sans-serif;
+}
+.error-msg:empty { display: none; }
+
+/* ---- الأفاتار (الانتظار + النتيجة) ---- */
+.avatar-large-box {
+  width: clamp(120px, 34vw, 170px);
+  height: clamp(120px, 34vw, 170px);
+  display: grid;
+  place-items: center;
+  border-radius: 28px;
+  background: linear-gradient(180deg, #FFF6D6, #F6DE9A);
+  box-shadow: 0 8px 0 rgba(11, 30, 54, .25), 0 18px 40px rgba(5, 25, 70, .4);
+}
+.avatar-emoji { font-size: clamp(64px, 20vw, 96px); line-height: 1; }
+
+/* ---- شاشة الانتظار بعد الدخول ---- */
+.waiting-card, .get-ready-card, .result-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.player-name-tilted {
+  margin: 0;
+  font-weight: 900;
+  font-size: clamp(34px, 9vw, 52px);
+  transform: rotate(-3deg);
+  text-shadow: 0 4px 0 rgba(11, 30, 54, .3);
+  word-break: break-word;
+}
+.waiting-text { margin: 0; font-weight: 700; font-size: 17px; line-height: 1.5; color: #DCE9FF; }
+
+/* ---- "Answer sent!" / انتظار ---- */
+.ready-title { margin: 0; font-weight: 900; font-size: clamp(30px, 8vw, 46px); text-shadow: 0 4px 0 rgba(11, 30, 54, .25); }
+.ready-loader {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 8px dotted #FFD966;
+  animation: kok-spin 1.6s linear infinite;
+}
+.loading-text { margin: 0; font-weight: 700; font-size: 18px; color: #DCE9FF; }
+@keyframes kok-spin { to { transform: rotate(360deg); } }
+
+/* ---- لوحة الإجابة ---- */
+.answer-pad {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.pad-header { display: flex; align-items: center; justify-content: space-between; }
+.q-number {
+  min-width: 45px;
+  height: 45px;
+  padding: 0 12px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(8, 28, 70, .6);
+  font-weight: 900;
+  font-size: 20px;
+}
+.q-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: rgba(8, 28, 70, .6);
+  font-weight: 800;
+  font-size: 15px;
+}
+.pad-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  height: min(62vh, 540px);
+}
+.pad-btn {
+  border: 3px solid rgba(255, 255, 255, .35);
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: clamp(48px, 15vw, 100px);
+  cursor: pointer;
+  box-shadow: 0 7px 0 rgba(0, 0, 0, .25);
+  transition: transform .1s, box-shadow .1s, opacity .15s;
+}
+.pad-btn:active { transform: translateY(5px); box-shadow: 0 2px 0 rgba(0, 0, 0, .25); }
+.pad-btn:disabled { cursor: default; }
+.bg-red    { background: #E21B3C; }
+.bg-blue   { background: #1368CE; }
+.bg-yellow { background: #FFA602; }
+.bg-green  { background: #26890C; }
+.pad-btn .shape { filter: drop-shadow(0 3px 0 rgba(0, 0, 0, .25)); }
+
+/* ---- النتيجة ---- */
+.result-card { width: 100%; max-width: 520px; }
+.result-banner {
+  width: calc(100% + 32px);
+  margin: 0 -16px;
+  padding: 22px 12px;
+  background: #26890C;           /* بيتغيّر من JS: صح / غلط / انتهى الوقت */
+  color: #fff;
+  font-weight: 900;
+  font-size: clamp(34px, 9vw, 54px);
+  text-shadow: 0 3px 0 rgba(0, 0, 0, .2);
+}
+.score-gained-box {
+  padding: 12px 30px;
+  border-radius: 14px;
+  background: rgba(8, 28, 70, .55);
+  border: 2px solid rgba(255, 255, 255, .35);
+  font-weight: 900;
+  font-size: clamp(30px, 8vw, 44px);
+}
+.podium-text { margin: 0; font-weight: 800; font-size: 20px; }
+
+/* ---- الفوتر: اسم اللاعب ونقاطه ---- */
+.player-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  background: rgba(8, 28, 70, .92);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
 .footer-left { display: flex; align-items: center; gap: 12px; }
-.player-avatar-mini { background: var(--gold); color: var(--navy); width: 45px; height: 45px; border-radius: 8px; display: grid; place-items: center; font-size: 1.8rem; }
-.player-info { display: flex; flex-direction: column; text-align: left; }
-.player-name-bottom { color: var(--white); font-size: 1.1rem; font-weight: 800; }
-.player-score { color: var(--white); font-size: 1rem; font-weight: 700; opacity: 0.7; }
+.player-avatar-mini {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #FBEFC4;
+  font-size: 26px;
+}
+.player-info { display: flex; flex-direction: column; text-align: start; line-height: 1.2; }
+.player-name-bottom { font-weight: 800; font-size: 18px; }
+.player-score { font-weight: 800; font-size: 16px; color: #FFD966; }
+
+@media (prefers-reduced-motion: reduce) {
+  .kok-sparkles i, .ready-loader { animation: none; }
+}

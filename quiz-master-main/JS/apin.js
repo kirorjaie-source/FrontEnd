@@ -118,7 +118,7 @@
 
     if (res.status === 204) return null;
     const text = await res.text();
-    try { return text ? JSON.parse(text) : {}; } catch { return {}; }
+    try { return text ? JSON.parse(text) : {}; } catch { return text; } // رد نصي (زي رابط صورة)
   }
 
   /* --------------------------------------------------------------- Helpers */
@@ -514,12 +514,36 @@
     },
 
     media: {
-      // ⚠️ عدّل المسار حسب UploadsController
       async upload(file) {
-        const fd = new FormData();
-        fd.append("file", file);
-        const res = await http("POST", "/Uploads", fd, true);
-        return res.url || res.path || "";
+        // POST /api/Uploads/image — اسم الحقل غالبًا "file" (IFormFile)، وبنجرّب "image" لو السيرفر رفض
+        const UPLOAD = { path: "/Uploads/image", fields: ["file", "image"] };
+
+        if (!file || !String(file.type).startsWith("image/")) throw new ApiError("NOT_AN_IMAGE", "الملف المرفق ليس صورة.");
+        if (file.size > 10 * 1024 * 1024) throw new ApiError("FILE_TOO_LARGE", "حجم الصورة كبير جداً.");
+
+        let res;
+        for (let i = 0; i < UPLOAD.fields.length; i++) {
+          const fd = new FormData();
+          fd.append(UPLOAD.fields[i], file);
+          try {
+            res = await http("POST", UPLOAD.path, fd, true);
+            break;
+          } catch (err) {
+            // 400 = غالبًا اسم الحقل غلط ← نجرّب الاسم التاني. أي خطأ تاني نوقف عنده.
+            if (err.code !== "HTTP_400" || i === UPLOAD.fields.length - 1) throw err;
+          }
+        }
+        console.log("Upload response:", res);
+
+        const url = typeof res === "string"
+          ? res
+          : res?.url ?? res?.imageUrl ?? res?.path ?? res?.filePath ?? res?.fileUrl ?? "";
+        if (!url) throw new ApiError("NO_URL", "السيرفر لم يرجع رابط الصورة (شوف الرد في الـ Console).");
+
+        // رابط نسبي (/uploads/x.png) ← نحوّله لرابط كامل على السيرفر
+        if (/^(https?:|data:)/i.test(url)) return url;
+        const origin = CONFIG.API_BASE.replace(/\/api\/?$/i, "");
+        return origin + (url.startsWith("/") ? "" : "/") + url;
       }
     },
 
@@ -596,7 +620,7 @@
         await realtime.connect({ pin: p, role: "player" });
         const waitJoined = realtime.waitFor("Joined", 8000);
         try {
-          await realtime.invoke("JoinGame", p, name);
+          await realtime.invoke("JoinGame", p, name, window.Avatars?.selected() ?? "");
         } catch (e) {
           waitJoined.catch(() => {});
           throw e;
