@@ -7,94 +7,151 @@
 
   <title>Admin Dashboard | Church Quiz</title>
 
-  <link rel="stylesheet" href="../CSS/adminn.css">
-  <script src="../JS/apin.js" defer></script>
-  <script src="../JS/adminn.js" defer></script>
+  <link rel="stylesheet" href="../Css/adminn.css">
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../Css/admin-home.css">
+  <script src="../Js/apin.js" defer></script>
+  <script src="../Js/contacts.js" defer></script>
+  <script src="../Js/adminn.js" defer></script>
 </head>
 
 <body>
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
-    <a class="brand" href="adminn.html">
+    <a class="brand" href="../Html/adminn.html">
       <span class="brand-cross">✝</span>
       <span>
-        <b>Church Quiz</b>
-        <small>ADMIN PANEL</small>
+        <b data-i18n="brand.name">Kok_Quiz</b>
+        <small data-i18n="brand.sub">ADMIN PANEL</small>
       </span>
     </a>
 
-    <div class="menu-caption">WORKSPACE</div>
+    <div class="menu-caption" data-i18n="menu.workspace">WORKSPACE</div>
 
     <nav class="navigation" aria-label="Admin navigation">
-      <button class="nav-link active" data-page="dashboard">
-        <span>▦</span> Dashboard
+      <button class="nav-link active" data-page="home">
+        <span>⌂</span><i class="nav-label" data-i18n="nav.home">Home</i>
       </button>
 
+      <button class="nav-link" data-page="dashboard">
+        <span>▦</span><i class="nav-label" data-i18n="nav.dashboard">Dashboard</i>
+      </button>
       <button class="nav-link" data-page="create">
-        <span>＋</span> Create Quiz
+        <span>＋</span><i class="nav-label" data-i18n="nav.create">Create Quiz</i>
       </button>
 
       <button class="nav-link" data-page="quizzes">
-        <span>▤</span> My Quizzes
+        <span>▤</span><i class="nav-label" data-i18n="nav.quizzes">My Quizzes</i>
       </button>
 
-      <button class="nav-link" data-page="questions">
-        <span>▧</span> Question Bank
+      <button class="nav-link" data-page="explore">
+        <span>▧</span><i class="nav-label" data-i18n="nav.explore">Quizzes</i>
       </button>
 
       <button class="nav-link" data-page="participants">
-        <span>♙</span> Participants
+        <span>♙</span><i class="nav-label" data-i18n="nav.participants">Participants</i>
       </button>
 
       <button class="nav-link" data-page="results">
-        <span>▥</span> Results
+        <span>▥</span><i class="nav-label" data-i18n="nav.results">Results</i>
       </button>
 
       <button class="nav-link" data-page="leaderboard">
-        <span>🏆</span> Leaderboard
+        <span>🏆</span><i class="nav-label" data-i18n="nav.leaderboard">Leaderboard</i>
       </button>
 
       <button class="nav-link" data-page="settings">
-        <span>⚙</span> Settings
+        <span>⚙</span><i class="nav-label" data-i18n="nav.settings">Settings</i>
       </button>
     </nav>
 
     <div class="sidebar-bottom">
-      <a class="back-link" href="indexn.html">
-        ← Back to website
-      </a>
     </div>
   </aside>
 
   <!-- MAIN -->
   <main class="main">
     <header class="topbar">
-      <button class="mobile-menu" id="menu-toggle" aria-label="Toggle menu">☰</button>
+      <button class="mobile-menu" id="menu-toggle" aria-label="Toggle menu" data-i18n-title="studio.menu" title="Show/Hide menu">☰</button>
 
       <div>
         <div class="breadcrumb">
-          Church Quiz <span>/</span> Admin
+          <em class="crumb-text" data-i18n="brand.name">Kok_Quiz</em> <span>/</span> <em class="crumb-text" data-i18n="crumb.admin">Admin</em>
         </div>
-        <h1 id="page-heading">Dashboard</h1>
+        <h1 id="page-heading" data-i18n="nav.home">Home</h1>
       </div>
 
       <div class="top-actions">
+        <button type="button" class="lang-btn" id="lang-toggle" aria-label="Language">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/>
+          </svg>
+          <span id="lang-label">العربية</span>
+        </button>
         <span class="status-dot"></span>
-        <span class="admin-label">Admin workspace</span>
-        <div class="avatar">A</div>
+        <span class="admin-label" id="user-name" data-i18n="user.default">Admin</span>
+        <div class="avatar" id="user-avatar">A</div>
       </div>
     </header>
 
     <div class="content">
 
+      <section class="page active" id="page-home">
+        <!-- نجوم الخلفية -->
+        <div class="kq-sparkles" aria-hidden="true">
+          <i style="left:5%;top:9%;font-size:22px;animation-delay:.2s">✦</i>
+          <i style="left:91%;top:14%;font-size:16px;animation-delay:1.1s">✦</i>
+          <i style="left:10%;top:52%;font-size:13px;animation-delay:2s">✦</i>
+          <i style="left:94%;top:58%;font-size:24px;animation-delay:.7s">✦</i>
+          <i style="left:7%;top:86%;font-size:18px;animation-delay:1.6s">✦</i>
+          <i style="left:84%;top:90%;font-size:14px;animation-delay:2.4s">✦</i>
+        </div>
+
+        <!-- اللوحة الزجاجية: اللوجو -->
+        <div class="kq-hero">
+          <span class="kq-hero-word">Kokquiz</span>
+          <span class="kq-hero-cross" aria-hidden="true">✝</span>
+        </div>
+
+        <!-- الدايرتين + الصليب الذهبي (غيّر مسارات الصور) -->
+        <div class="kq-emblems">
+          <i class="kq-spark a" aria-hidden="true">✦</i>
+          <div class="kq-round"><img src="logo1.png" alt=""></div>
+
+          <svg class="kq-cross" viewBox="0 0 60 90" aria-hidden="true">
+            <defs>
+              <linearGradient id="kqGold" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#FFF3B0"/><stop offset="1" stop-color="#E4B93C"/>
+              </linearGradient>
+            </defs>
+            <rect x="23" y="2" width="14" height="86" rx="7" fill="url(#kqGold)"/>
+            <rect x="4" y="24" width="52" height="14" rx="7" fill="url(#kqGold)"/>
+          </svg>
+
+          <div class="kq-round"><img src="../church-logo.jpg" alt=""></div>
+          <i class="kq-spark b" aria-hidden="true">✦</i>
+        </div>
+
+        <p class="kq-tagline" data-i18n="home.tagline">Learn · Play · Grow</p>
+        <p class="kq-sub" data-i18n="home.sub">Test your knowledge and grow together in faith.</p>
+
+        <!-- زراير التنقل: data-go = اسم الصفحة (dashboard / create / quizzes / explore / participants / results / leaderboard / settings) -->
+        <nav class="kq-nav">
+          <button type="button" class="kq-btn" data-go="dashboard" data-i18n="nav.dashboard">Dashboard</button>
+          <button type="button" class="kq-btn" data-go="create" data-i18n="dash.createBtn">＋ Create a quiz</button>
+          <button type="button" class="kq-btn" data-go="quizzes" data-i18n="nav.quizzes">My Quizzes</button>
+          <button type="button" class="kq-btn" data-go="explore" data-i18n="nav.explore">Quizzes</button>
+        </nav>
+      </section>
+
       <!-- DASHBOARD -->
-      <section class="page active" id="page-dashboard">
+      <section class="page" id="page-dashboard">
         <div class="welcome-banner">
           <div>
-            <span class="eyebrow">YOUR COMMUNITY, YOUR QUIZZES</span>
-            <h2>Welcome to your dashboard.</h2>
-            <p>Create meaningful quiz experiences and help your community grow together.</p>
-            <button class="button gold-button" data-go="create">＋ Create a quiz</button>
+            <span class="eyebrow" data-i18n="dash.eyebrow">YOUR COMMUNITY, YOUR QUIZZES</span>
+            <h2 data-i18n="dash.welcome">Welcome to your dashboard.</h2>
+            <p data-i18n="dash.intro">Create meaningful quiz experiences and help your community grow together.</p>
+            <button class="button gold-button" data-go="create" data-i18n="dash.createBtn">＋ Create a quiz</button>
           </div>
           <div class="banner-cross">✝</div>
         </div>
@@ -102,36 +159,36 @@
         <div class="stats-grid">
           <article class="stat-card">
             <div class="stat-top">
-              <span>Total quizzes</span><span class="stat-icon">▤</span>
+              <span data-i18n="stat.total">Total quizzes</span><span class="stat-icon">▤</span>
             </div>
-            <strong id="stat-quizzes">0</strong><small>Quizzes created</small>
+            <strong id="stat-quizzes">0</strong><small data-i18n="stat.totalNote">Quizzes created</small>
           </article>
           <article class="stat-card">
             <div class="stat-top">
-              <span>Questions</span><span class="stat-icon">▧</span>
+              <span data-i18n="common.questions">Questions</span><span class="stat-icon">▧</span>
             </div>
-            <strong id="stat-questions">0</strong><small>In your question bank</small>
+            <strong id="stat-questions">0</strong><small data-i18n="stat.questionsNote">Across your quizzes</small>
           </article>
           <article class="stat-card">
             <div class="stat-top">
-              <span>Participants</span><span class="stat-icon">♙</span>
+              <span data-i18n="nav.participants">Participants</span><span class="stat-icon">♙</span>
             </div>
-            <strong id="stat-participants">0</strong><small>Demo records</small>
+            <strong id="stat-participants">0</strong><small data-i18n="stat.participantsNote">Demo records</small>
           </article>
           <article class="stat-card">
             <div class="stat-top">
-              <span>Average score</span><span class="stat-icon">↗</span>
+              <span data-i18n="common.avg">Average score</span><span class="stat-icon">↗</span>
             </div>
-            <strong id="stat-average">—</strong><small>Based on saved results</small>
+            <strong id="stat-average">—</strong><small data-i18n="stat.avgNote">Based on saved results</small>
           </article>
         </div>
 
         <div class="section-heading">
           <div>
-            <h2>Recent quizzes</h2>
-            <p>Manage your latest quiz activities.</p>
+            <h2 data-i18n="dash.recent">Recent quizzes</h2>
+            <p data-i18n="dash.recentSub">Manage your latest quiz activities.</p>
           </div>
-          <button class="button light-button" data-go="quizzes">View all →</button>
+          <button class="button light-button" data-go="quizzes" data-i18n="common.viewAll">View all →</button>
         </div>
 
         <div class="card table-card">
@@ -139,7 +196,7 @@
             <table>
               <thead>
                 <tr>
-                  <th>Quiz name</th><th>Questions</th><th>Created</th><th>Action</th>
+                  <th data-i18n="th.quizName">Quiz name</th><th data-i18n="common.questions">Questions</th><th data-i18n="th.created">Created</th><th data-i18n="th.action">Action</th>
                 </tr>
               </thead>
               <tbody id="recent-quizzes"></tbody>
@@ -147,9 +204,9 @@
           </div>
           <div class="empty-state" id="recent-empty">
             <div class="empty-icon">▤</div>
-            <b>No quizzes yet</b>
-            <p>Your created quizzes will appear here.</p>
-            <button class="button gold-button" data-go="create">Create your first quiz</button>
+            <b data-i18n="dash.noQuizzes">No quizzes yet</b>
+            <p data-i18n="dash.noQuizzesSub">Your created quizzes will appear here.</p>
+            <button class="button gold-button" data-go="create" data-i18n="dash.createFirst">Create your first quiz</button>
           </div>
         </div>
       </section>
@@ -159,14 +216,15 @@
         <!-- الشريط العلوي للاستوديو -->
         <header class="studio-header">
           <div class="studio-brand">
+            <button type="button" class="studio-menu-btn" id="studio-menu-toggle" data-i18n-title="studio.menu" title="Show/Hide menu">☰</button>
             <span class="cross-icon">✝</span>
-            <input type="text" id="studio-quiz-title" value="New Church Quiz" placeholder="Enter quiz title...">
+            <input type="text" id="studio-quiz-title" value="New Church Quiz" placeholder="Enter quiz title..." data-i18n-ph="studio.titlePh">
           </div>
           <div class="studio-actions">
             <!-- زر إظهار وإخفاء القائمة اليمنى -->
-            <button type="button" class="btn-settings" id="toggle-properties-btn" style="background: #E2E8F0; color: #0B1E36;" title="Show/Hide Properties">⚙ Properties</button>
-            <button type="button" class="btn-exit" id="studio-exit-btn">Exit</button>
-            <button type="button" class="btn-save" id="studio-save-btn">Save</button>
+            <button type="button" class="btn-settings" id="toggle-properties-btn" style="background: #E2E8F0; color: #0B1E36;" data-i18n-title="studio.propsTitle" title="Show/Hide Properties" data-i18n="studio.props">⚙ Properties</button>
+            <button type="button" class="btn-exit" id="studio-exit-btn" data-i18n="studio.exit">Exit</button>
+            <button type="button" class="btn-save" id="studio-save-btn" data-i18n="studio.save">Save</button>
           </div>
         </header>
 
@@ -177,13 +235,13 @@
             <div class="slides-container" id="slides-list">
               <!-- تتولد الشرائح ديناميكياً هنا -->
             </div>
-            <button type="button" class="btn-add-slide" id="btn-add-slide">＋ Add Question</button>
+            <button type="button" class="btn-add-slide" id="btn-add-slide" data-i18n="studio.add">＋ Add Question</button>
           </aside>
 
           <!-- 2. مساحة الكانفاس المركزية (الوسط) -->
           <main class="studio-main-canvas">
             <div class="canvas-question-box">
-              <input type="text" id="canvas-question-text" placeholder="Start typing your question" autocomplete="off">
+              <input type="text" id="canvas-question-text" placeholder="Start typing your question" data-i18n-ph="studio.questionPh" autocomplete="off">
             </div>
 
             <!-- مكان مخصص للصورة -->
@@ -192,12 +250,12 @@
               
               <div class="media-placeholder" id="media-placeholder">
                 <span class="media-icon">📷</span>
-                <span class="media-text">＋ Upload image</span>
+                <span class="media-text" data-i18n="studio.upload">＋ Upload image</span>
               </div>
 
               <div class="media-preview-container" id="media-preview-container" style="display: none;">
                 <img id="question-image-preview" src="" alt="Question Media">
-                <button type="button" class="btn-remove-media" id="btn-remove-media" title="Remove image">🗑️</button>
+                <button type="button" class="btn-remove-media" id="btn-remove-media" title="Remove image" data-i18n-title="studio.removeImg">🗑️</button>
               </div>
             </div>
 
@@ -205,22 +263,22 @@
             <div class="canvas-answers-grid mode-mcq" id="canvas-answers-grid">
               <div class="answer-card bg-red" data-index="0">
                 <div class="shape">▲</div>
-                <input type="text" class="ans-input" id="ans-text-0" placeholder="Add answer 1">
+                <input type="text" class="ans-input" id="ans-text-0" placeholder="Add answer 1" data-i18n-ph="studio.ansPh" data-n="1">
                 <button type="button" class="correct-tick" id="toggle-0">✔</button>
               </div>
               <div class="answer-card bg-blue" data-index="1">
                 <div class="shape">◆</div>
-                <input type="text" class="ans-input" id="ans-text-1" placeholder="Add answer 2">
+                <input type="text" class="ans-input" id="ans-text-1" placeholder="Add answer 2" data-i18n-ph="studio.ansPh" data-n="2">
                 <button type="button" class="correct-tick" id="toggle-1">✔</button>
               </div>
               <div class="answer-card bg-yellow" data-index="2">
                 <div class="shape">●</div>
-                <input type="text" class="ans-input" id="ans-text-2" placeholder="Add answer 3">
+                <input type="text" class="ans-input" id="ans-text-2" placeholder="Add answer 3" data-i18n-ph="studio.ansPh" data-n="3">
                 <button type="button" class="correct-tick" id="toggle-2">✔</button>
               </div>
               <div class="answer-card bg-green" data-index="3">
                 <div class="shape">■</div>
-                <input type="text" class="ans-input" id="ans-text-3" placeholder="Add answer 4">
+                <input type="text" class="ans-input" id="ans-text-3" placeholder="Add answer 4" data-i18n-ph="studio.ansPh" data-n="4">
                 <button type="button" class="correct-tick" id="toggle-3">✔</button>
               </div>
             </div>
@@ -230,45 +288,45 @@
           <aside class="studio-right-panel" id="studio-right-panel">
             <div class="right-panel-content">
               <div class="prop-group">
-                <label>Question type</label>
+                <label data-i18n="prop.type">Question type</label>
                 <select id="prop-question-type">
-                  <option value="mcq">Quiz</option>
-                  <option value="tf">True or false</option>
+                  <option value="mcq" data-i18n="type.mcq">Quiz</option>
+                  <option value="tf" data-i18n="type.tf">True or false</option>
                 </select>
               </div>
 
               <div class="prop-group">
-                <label>Time limit</label>
+                <label data-i18n="prop.time">Time limit</label>
                 <select id="prop-time-limit">
-                  <option value="5">5 seconds</option>
-                  <option value="10">10 seconds</option>
-                  <option value="20" selected>20 seconds</option>
-                  <option value="30">30 seconds</option>
-                  <option value="60">1 minute</option>
-                  <option value="90">90 seconds</option>
-                  <option value="120">2 minutes</option>
-                  <option value="240">4 minutes</option>
-                  <option value="300">5 minutes</option>
-                  <option value="600">10 minutes</option>
-                  <option value="900">15 minutes</option>
-                  <option value="1800">30 minutes</option>
-                  <option value="3600">1 hour</option>
-                  <option value="10800">3 hours (max)</option>
+                  <option value="5" data-i18n="time.5">5 seconds</option>
+                  <option value="10" data-i18n="time.10">10 seconds</option>
+                  <option value="20" selected data-i18n="time.20">20 seconds</option>
+                  <option value="30" data-i18n="time.30">30 seconds</option>
+                  <option value="60" data-i18n="time.60">1 minute</option>
+                  <option value="90" data-i18n="time.90">90 seconds</option>
+                  <option value="120" data-i18n="time.120">2 minutes</option>
+                  <option value="240" data-i18n="time.240">4 minutes</option>
+                  <option value="300" data-i18n="time.300">5 minutes</option>
+                  <option value="600" data-i18n="time.600">10 minutes</option>
+                  <option value="900" data-i18n="time.900">15 minutes</option>
+                  <option value="1800" data-i18n="time.1800">30 minutes</option>
+                  <option value="3600" data-i18n="time.3600">1 hour</option>
+                  <option value="10800" data-i18n="time.10800">3 hours (max)</option>
                 </select>
               </div>
 
               <div class="prop-group">
-                <label>Points</label>
+                <label data-i18n="prop.points">Points</label>
                 <select id="prop-points-multiplier">
-                  <option value="standard">Standard</option>
-                  <option value="double">Double points</option>
-                  <option value="none">No points</option>
+                  <option value="standard" data-i18n="points.standard">Standard</option>
+                  <option value="double" data-i18n="points.double">Double points</option>
+                  <option value="none" data-i18n="points.none">No points</option>
                 </select>
               </div>
 
               <div class="prop-bottom-actions">
-                <button type="button" id="btn-duplicate-question" class="btn-duplicate">Duplicate</button>
-                <button type="button" id="btn-delete-question" class="btn-delete">Delete</button>
+                <button type="button" id="btn-duplicate-question" class="btn-duplicate" data-i18n="studio.duplicate">Duplicate</button>
+                <button type="button" id="btn-delete-question" class="btn-delete" data-i18n="common.delete">Delete</button>
               </div>
             </div>
           </aside>
@@ -277,11 +335,17 @@
         <!-- نافذة الإعدادات النهائية (Settings Modal) -->
         <div id="studio-save-modal" class="modal-overlay" style="display: none;">
           <div class="modal-card">
-            <h3>Quiz Settings</h3>
-            <p>Add the final details before saving.</p>
+            <h3 data-i18n="modal.title">Quiz Settings</h3>
+            <p data-i18n="modal.sub">Add the final details before saving.</p>
             
-            <div class="field" style="margin-bottom: 25px;">
-              <label style="color:#A9BCCD;">Category (Fetched from API)</label>
+            <div class="field" style="margin-bottom: 16px;">
+              <label style="color:#A9BCCD;" data-i18n="modal.name">Quiz name</label>
+              <input type="text" id="modal-quiz-name" maxlength="80" autocomplete="off" placeholder="Enter quiz title..." data-i18n-ph="studio.titlePh" style="width: 100%; padding: 10px; background: #0B1E36; color: white; border: 1px solid #1f3a59; border-radius: 6px; box-sizing: border-box;">
+            </div>
+
+            <!-- التصنيف بيظهر للمسابقة الجديدة بس (المسابقة الموجودة ليها تصنيف خلاص) -->
+            <div class="field" id="modal-category-field" style="margin-bottom: 25px;">
+              <label style="color:#A9BCCD;" data-i18n="modal.category">Category (Fetched from API)</label>
               <!-- يتم تعبئة هذا الحقل من الباك إند -->
               <select id="modal-quiz-category" style="width: 100%; padding: 10px; background: #0B1E36; color: white; border: 1px solid #1f3a59; border-radius: 6px;">
                 <option value="">جاري تحميل الأقسام...</option>
@@ -289,8 +353,8 @@
             </div>
 
             <div class="modal-buttons" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
-              <button type="button" id="modal-cancel-btn" style="padding: 10px 20px; background: transparent; color: white; border: 1px solid white; border-radius: 6px; cursor: pointer;">Cancel</button>
-              <button type="button" id="modal-confirm-save-btn" style="padding: 10px 20px; background: #22c55e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">Done</button>
+              <button type="button" id="modal-cancel-btn" style="padding: 10px 20px; background: transparent; color: white; border: 1px solid white; border-radius: 6px; cursor: pointer;" data-i18n="modal.cancel">Cancel</button>
+              <button type="button" id="modal-confirm-save-btn" style="padding: 10px 20px; background: #22c55e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;" data-i18n="modal.done">Done</button>
             </div>
           </div>
         </div>
@@ -300,14 +364,14 @@
       <section class="page" id="page-quizzes">
         <div class="section-heading">
           <div>
-            <h2>My quizzes</h2>
-            <p>View and manage all your quizzes.</p>
+            <h2 data-i18n="myq.title">My quizzes</h2>
+            <p data-i18n="myq.sub">View and manage all your quizzes.</p>
           </div>
-          <button class="button gold-button" data-go="create">＋ New quiz</button>
+          <button class="button gold-button" data-go="create" data-i18n="myq.new">＋ New quiz</button>
         </div>
 
         <div class="toolbar">
-          <input id="quiz-search" placeholder="Search quizzes..." aria-label="Search quizzes">
+          <input id="quiz-search" placeholder="Search quizzes..." data-i18n-ph="myq.searchPh" aria-label="Search quizzes">
         </div>
 
         <div class="card table-card" style="overflow: visible;">
@@ -315,7 +379,7 @@
             <table>
               <thead>
                 <tr>
-                  <th>Quiz name</th><th>Category</th><th>Questions</th><th>Action</th>
+                  <th data-i18n="th.quizName">Quiz name</th><th data-i18n="th.category">Category</th><th data-i18n="common.questions">Questions</th><th data-i18n="th.action">Action</th>
                 </tr>
               </thead>
               <tbody id="quizzes-table"></tbody>
@@ -323,42 +387,31 @@
           </div>
           <div class="empty-state" id="quizzes-empty">
             <div class="empty-icon">▤</div>
-            <b>No matching quizzes</b>
-            <p>Create a quiz to get started.</p>
+            <b data-i18n="myq.empty">No matching quizzes</b>
+            <p data-i18n="myq.emptySub">Create a quiz to get started.</p>
           </div>
         </div>
       </section>
 
       <!-- QUESTION BANK -->
-      <section class="page" id="page-questions">
+      <section class="page" id="page-explore">
         <div class="section-heading">
           <div>
-            <h2>Question bank</h2>
-            <p>Every question saved across your quizzes.</p>
+            <h2 data-i18n="explore.title">Quizzes</h2>
+            <p data-i18n="explore.sub">Discover quizzes shared by other creators and host them live.</p>
           </div>
         </div>
 
-        <div class="section-heading compact-heading">
-          <div><h2>Saved questions</h2></div>
-          <span class="count-pill" id="question-count">0 questions</span>
+        <div class="toolbar explore-toolbar">
+          <input id="explore-search" type="search" placeholder="Search quizzes by name..." data-i18n-ph="explore.searchPh" autocomplete="off">
         </div>
 
-        <div class="card table-card">
-          <div class="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>Question</th><th>Quiz</th><th>Choices</th><th>Action</th>
-                </tr>
-              </thead>
-              <tbody id="questions-table"></tbody>
-            </table>
-          </div>
-          <div class="empty-state" id="questions-empty">
-            <div class="empty-icon">▧</div>
-            <b>Your question bank is empty</b>
-            <p>Questions added in the Studio will appear here.</p>
-          </div>
+        <div class="quiz-grid" id="explore-grid"></div>
+
+        <div class="card empty-state" id="explore-empty" hidden>
+          <div class="empty-icon">▧</div>
+          <b data-i18n="explore.empty">No quizzes found</b>
+          <p data-i18n="explore.emptySub">Try a different name, or check back later.</p>
         </div>
       </section>
 
@@ -366,8 +419,8 @@
       <section class="page" id="page-participants">
         <div class="section-heading">
           <div>
-            <h2>Participants</h2>
-            <p>View participant records saved in this browser.</p>
+            <h2 data-i18n="nav.participants">Participants</h2>
+            <p data-i18n="part.sub">View participant records saved in this browser.</p>
           </div>
         </div>
         <div class="card table-card">
@@ -375,7 +428,7 @@
             <table>
               <thead>
                 <tr>
-                  <th>Name</th><th>Quiz</th><th>Score</th><th>Time</th><th>Date</th>
+                  <th data-i18n="th.name">Name</th><th data-i18n="th.quiz">Quiz</th><th data-i18n="th.score">Score</th><th data-i18n="th.time">Time</th><th data-i18n="th.date">Date</th>
                 </tr>
               </thead>
               <tbody id="participants-table"></tbody>
@@ -383,8 +436,8 @@
           </div>
           <div class="empty-state" id="participants-empty">
             <div class="empty-icon">♙</div>
-            <b>No participants yet</b>
-            <p>Saved quiz results will be listed here.</p>
+            <b data-i18n="part.empty">No participants yet</b>
+            <p data-i18n="part.emptySub">Saved quiz results will be listed here.</p>
           </div>
         </div>
       </section>
@@ -393,27 +446,27 @@
       <section class="page" id="page-results">
         <div class="section-heading">
           <div>
-            <h2>Results</h2>
-            <p>Review saved quiz scores and export a report.</p>
+            <h2 data-i18n="nav.results">Results</h2>
+            <p data-i18n="res.sub">Review saved quiz scores and export a report.</p>
           </div>
-          <button class="button gold-button" id="export-results">↓ Export CSV</button>
+          <button class="button gold-button" id="export-results" data-i18n="res.export">↓ Export CSV</button>
         </div>
         <div class="stats-grid result-stats">
           <article class="stat-card">
-            <div class="stat-top"><span>Attempts</span><span class="stat-icon">▤</span></div>
-            <strong id="results-attempts">0</strong><small>Saved attempts</small>
+            <div class="stat-top"><span data-i18n="res.attempts">Attempts</span><span class="stat-icon">▤</span></div>
+            <strong id="results-attempts">0</strong><small data-i18n="res.attemptsNote">Saved attempts</small>
           </article>
           <article class="stat-card">
-            <div class="stat-top"><span>Average score</span><span class="stat-icon">↗</span></div>
-            <strong id="results-average">—</strong><small>Across saved results</small>
+            <div class="stat-top"><span data-i18n="common.avg">Average score</span><span class="stat-icon">↗</span></div>
+            <strong id="results-average">—</strong><small data-i18n="res.avgNote">Across saved results</small>
           </article>
           <article class="stat-card">
-            <div class="stat-top"><span>Best score</span><span class="stat-icon">✦</span></div>
-            <strong id="results-best">—</strong><small>Highest percentage</small>
+            <div class="stat-top"><span data-i18n="res.best">Best score</span><span class="stat-icon">✦</span></div>
+            <strong id="results-best">—</strong><small data-i18n="res.bestNote">Highest percentage</small>
           </article>
           <article class="stat-card">
-            <div class="stat-top"><span>Unique players</span><span class="stat-icon">♙</span></div>
-            <strong id="results-players">0</strong><small>Names recorded locally</small>
+            <div class="stat-top"><span data-i18n="res.unique">Unique players</span><span class="stat-icon">♙</span></div>
+            <strong id="results-players">0</strong><small data-i18n="res.uniqueNote">Names recorded locally</small>
           </article>
         </div>
         <div class="card table-card">
@@ -421,7 +474,7 @@
             <table>
               <thead>
                 <tr>
-                  <th>Participant</th><th>Score</th><th>Percentage</th><th>Time</th><th>Date</th>
+                  <th data-i18n="th.participant">Participant</th><th data-i18n="th.score">Score</th><th data-i18n="th.percentage">Percentage</th><th data-i18n="th.time">Time</th><th data-i18n="th.date">Date</th>
                 </tr>
               </thead>
               <tbody id="results-table"></tbody>
@@ -429,8 +482,8 @@
           </div>
           <div class="empty-state" id="results-empty">
             <div class="empty-icon">▥</div>
-            <b>No results yet</b>
-            <p>Results will appear when quiz attempts are saved.</p>
+            <b data-i18n="res.empty">No results yet</b>
+            <p data-i18n="res.emptySub">Results will appear when quiz attempts are saved.</p>
           </div>
         </div>
       </section>
@@ -439,26 +492,26 @@
       <section class="page" id="page-leaderboard">
         <div class="section-heading">
           <div>
-            <h2>Leaderboard</h2>
-            <p>Top 3 participants by their best quiz percentage.</p>
+            <h2 data-i18n="nav.leaderboard">Leaderboard</h2>
+            <p data-i18n="lb.sub">Top 3 participants by their best quiz percentage.</p>
           </div>
-          <button class="button gold-button" id="admin-leaderboard-refresh" type="button">↻ Refresh</button>
+          <button class="button gold-button" id="admin-leaderboard-refresh" type="button" data-i18n="lb.refresh">↻ Refresh</button>
         </div>
         <div id="admin-leaderboard-content">
           <div class="admin-top-three">
             <article class="admin-top-card">
               <div class="admin-top-medal">🥇</div>
-              <div class="admin-top-rank">1ST PLACE</div>
+              <div class="admin-top-rank" data-i18n="lb.r1">1ST PLACE</div>
               <h3>Loading...</h3><strong>—</strong>
             </article>
             <article class="admin-top-card">
               <div class="admin-top-medal">🥈</div>
-              <div class="admin-top-rank">2ND PLACE</div>
+              <div class="admin-top-rank" data-i18n="lb.r2">2ND PLACE</div>
               <h3>Loading...</h3><strong>—</strong>
             </article>
             <article class="admin-top-card">
               <div class="admin-top-medal">🥉</div>
-              <div class="admin-top-rank">3RD PLACE</div>
+              <div class="admin-top-rank" data-i18n="lb.r3">3RD PLACE</div>
               <h3>Loading...</h3><strong>—</strong>
             </article>
           </div>
@@ -469,38 +522,56 @@
       <section class="page" id="page-settings">
         <div class="section-heading">
           <div>
-            <h2>Settings</h2>
-            <p>Configure the basic details of your workspace.</p>
+            <h2 data-i18n="nav.settings">Settings</h2>
+            <p data-i18n="set.sub">Configure the basic details of your workspace.</p>
           </div>
         </div>
         <form id="settings-form" class="card form-card">
           <div class="form-section-title">
             <span>⚙</span>
             <div>
-              <h3>Workspace settings</h3>
-              <p>These details are stored locally in this demo.</p>
+              <h3 data-i18n="set.section">Workspace settings</h3>
+              <p data-i18n="set.sectionSub">These details are stored locally in this demo.</p>
             </div>
           </div>
           <div class="field">
-            <label for="church-name">Church or organization name</label>
-            <input id="church-name" maxlength="100" placeholder="Church name">
+            <label for="user-display-name" data-i18n="set.name">Your name</label>
+            <input id="user-display-name" maxlength="60" placeholder="Enter your name" data-i18n-ph="set.namePh" autocomplete="name">
           </div>
           <div class="field">
-            <label for="admin-email">Contact email</label>
+            <label for="church-name" data-i18n="set.church">Church or organization name</label>
+            <input id="church-name" maxlength="100" placeholder="Church name" data-i18n-ph="set.churchPh">
+          </div>
+          <div class="field">
+            <label for="admin-email" data-i18n="set.email">Contact email</label>
             <input id="admin-email" type="email" placeholder="admin@example.com">
           </div>
           <div class="field">
-            <label for="dashboard-language">Dashboard language</label>
+            <label for="dashboard-language" data-i18n="set.lang">Dashboard language</label>
             <select id="dashboard-language">
               <option value="en">English</option>
               <option value="ar">العربية</option>
             </select>
           </div>
           <div class="form-footer">
-            <span class="form-hint">Authentication is not configured yet.</span>
-            <button class="button gold-button" type="submit">Save settings</button>
+            <span class="form-hint" data-i18n="set.hint">Authentication is not configured yet.</span>
+            <div class="footer-actions">
+              <button class="button light-button logout-btn" type="button" id="logout-btn" data-i18n="set.logout">Log out</button>
+              <button class="button gold-button" type="submit" data-i18n="set.save">Save settings</button>
+            </div>
           </div>
         </form>
+
+        <div class="card form-card support-card">
+          <div class="form-section-title">
+            <span>💬</span>
+            <div>
+              <h3 data-i18n="sup.title">Support</h3>
+              <p data-i18n="sup.sub">Need help? Contact one of our support team on WhatsApp.</p>
+            </div>
+          </div>
+          <div class="support-grid" id="support-grid"></div>
+        </div>
       </section>
 
       <!-- HOST LIVE OPTIONS MODAL (Classic Mode) -->
@@ -513,21 +584,21 @@
             <div class="host-modal-left">
               <div class="host-graphic">
                 <span style="font-size: 60px;">🏆</span>
-                <p>Classic Mode</p>
+                <p data-i18n="host.mode">Classic Mode</p>
               </div>
             </div>
             
             <!-- الجزء الأيمن -->
             <div class="host-modal-right">
-              <h2 class="host-mode-title">Classic</h2>
+              <h2 class="host-mode-title" data-i18n="host.classic">Classic</h2>
               
               <div class="host-badges">
-                <span>Up to 40 participants</span>
-                <span>Competition</span>
-                <span>Assessment</span>
+                <span data-i18n="host.b1">Up to 40 participants</span>
+                <span data-i18n="host.b2">Competition</span>
+                <span data-i18n="host.b3">Assessment</span>
               </div>
               
-              <p class="host-mode-desc">
+              <p class="host-mode-desc" data-i18n="host.desc">
                 Bring friendly competition to this kahoot. Participants need to answer quickly and correctly to secure a top spot on the podium.
               </p>
 
@@ -535,9 +606,9 @@
               <div class="host-action-bar">
                 <div class="host-quiz-info">
                   <span class="host-quiz-icon">📝</span>
-                  <strong id="host-selected-quiz-title">Quiz Title</strong>
+                  <strong id="host-selected-quiz-title" data-i18n="host.quizTitle">Quiz Title</strong>
                 </div>
-                <button id="btn-start-host-final" class="btn-start-host">Start</button>
+                <button id="btn-start-host-final" class="btn-start-host" data-i18n="host.start">Start</button>
               </div>
             </div>
           </div>
@@ -547,7 +618,7 @@
     </div>
 
     <footer class="main-footer">
-      Church Quiz Admin <span>•</span> Learn, Play, Grow
+      <i data-i18n="footer.a">Church Quiz Admin</i> <span>•</span> <i data-i18n="footer.b">Learn, Play, Grow</i>
     </footer>
   </main>
 

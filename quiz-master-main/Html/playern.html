@@ -39,6 +39,8 @@
 
     <div class="join-card" id="join-card">
       <div class="pin-chip hidden" id="pin-chip">Game PIN <b id="pin-chip-value">------</b></div>
+      <div class="avatar-pick-title">Choose your character</div>
+      <div class="avatar-picker" id="avatar-picker" role="radiogroup" aria-label="Choose your character"></div>
       <input type="text" id="pin-input" inputmode="numeric" placeholder="Game PIN" autocomplete="off" maxlength="6" class="hidden">
       <input type="text" id="nickname-input" placeholder="Enter your nickname" autocomplete="off" maxlength="15" autofocus>
       <button id="btn-join" class="btn-join">OK, go!</button>
@@ -84,11 +86,12 @@
     </div>
   </div>
 
-  <!-- ⚠️ الترتيب مهم: SignalR الأول، بعدين countdown.js، بعدين avatars.js، بعدين apin.js، بعدين playern.js -->
+  <!-- ⚠️ الترتيب مهم: SignalR الأول، بعدين countdown.js، بعدين apin.js، بعدين playern.js -->
+  <script src="../JS/i18n.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
   <script src="../JS/countdown.js"></script>
-  <script src="../JS/avatars.js"></script>
   <script src="../JS/apin.js"></script>
+  <script src="../JS/avatars.js"></script>
   <script src="../JS/playern.js"></script>
 </body>
 </html>

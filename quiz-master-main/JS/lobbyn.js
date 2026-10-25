@@ -45,7 +45,10 @@ function updatePlayersUI(players) {
   displayedPlayersCount = players.length;
 
   countDisplay.textContent = players.length;
-  container.innerHTML = players.map((p) => `<div class="player-tag">${escapeHTML(p.nickname)}</div>`).join("");
+  container.innerHTML = players.map((p) => {
+    const emoji = window.Kok?.avatarEmoji(p.avatar);
+    return `<div class="player-tag">${emoji ? emoji + " " : ""}${escapeHTML(p.nickname)}</div>`;
+  }).join("");
 }
 
 function hideLoadingOverlay() {

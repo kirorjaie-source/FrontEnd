@@ -101,7 +101,7 @@
 
     if (res.status === 401) {
       Api.auth.logout();
-      location.href = "login.html";
+      location.href = "loginn.html";
       throw new ApiError("UNAUTHORIZED", "انتهت جلسة الدخول. يرجى إعادة التسجيل.");
     }
 
@@ -406,9 +406,40 @@
       id: s.id,
       title: s.title ?? s.name ?? "",
       category: await categoryToName(s.category),
+      createdAt: s.createdAt ?? s.createdOn ?? s.createdDate ?? s.dateCreated ?? s.created ?? null,
       questions: s.questions || [],
       questionCount: s.questionCount ?? s.questionsCount ?? (s.questions ? s.questions.length : 0)
     };
+  }
+
+  // ---- سؤال جاي من السيرفر (GET /Quizzes/{id}) ← شكل الاستوديو ----
+  const pointsKey = (p) => (Number(p) <= 1 ? "none" : Number(p) >= 2000 ? "double" : "standard");
+  function typeFromServer(v, optionCount) {
+    if (typeof v === "number") return v === 1 ? "tf" : "mcq";           // نفس تخمين QUESTION_TYPE
+    const s = String(v ?? "").toLowerCase();
+    if (/true|false|tf|bool/.test(s)) return "tf";
+    return optionCount === 2 ? "tf" : "mcq";
+  }
+  function questionFromServer(q) {
+    const options = toArray(q.options ?? q.answers ?? q.choices);
+    const type = typeFromServer(q.questionType ?? q.type, options.length);
+    let answers = options.map((o) => String(o.text ?? o.answerText ?? o.title ?? ""));
+    const correct = Math.max(0, options.findIndex((o) => o.isCorrect ?? o.correct));
+    if (type === "tf") answers = ["True", "False"];
+    else while (answers.length < 4) answers.push("");
+
+    const out = {
+      id: q.id,
+      type,
+      text: q.text ?? "",
+      image: q.imageUrl ?? q.image ?? null,
+      timeLimit: Number(q.timeLimit ?? q.timeLimitInSeconds) || 20,
+      points: pointsKey(q.points),
+      answers,
+      correct
+    };
+    out._fp = JSON.stringify(toQuestionDto(out));   // بصمة: عشان نعرف لو اتغيّر قبل ما نبعت تعديل
+    return out;
   }
 
   // ⚠️ قيم enum الـ UserRoles تخمين (Player=0, Creator=1, Admin=2) — ابعتلي الـ enum عشان أظبطها
@@ -464,35 +495,70 @@
       // GET /api/Quizzes/public
       listPublic: async () => Promise.all(toArray(await http("GET", "/Quizzes/public")).map(fromSummary)),
 
-      // ⚠️ مفيش GET /Quizzes/{id} في الباك إند، فبنرجّع الملخص من mine (غالبًا من غير أسئلة)
+      // GET /api/Quizzes/{id} → المسابقة بكل أسئلتها (محتاج endpoint في الباك إند — شوف backend-edit-quiz.md)
+      // لو مش موجود بنرجع للملخص من /mine (من غير أسئلة) ونعلّم عليه _partial
       get: async (id) => {
+        try {
+          const d = await http("GET", `/Quizzes/${id}`);
+          if (d && typeof d === "object" && (d.id != null || d.title != null)) {
+            const base = await fromSummary(d);
+            const qs = toArray(d.questions ?? d.Questions).map(questionFromServer);
+            return { ...base, questions: qs, questionCount: qs.length || base.questionCount, _originalQuestionIds: qs.map((q) => q.id) };
+          }
+        } catch (e) {
+          if (e.code !== "HTTP_404" && e.code !== "HTTP_405") throw e;
+        }
         const list = toArray(await http("GET", "/Quizzes/mine"));
         const found = list.find((q) => String(q.id) === String(id));
-        return found ? fromSummary(found) : null;
+        return found ? { ...(await fromSummary(found)), _partial: true } : null;
       },
 
-      // POST /api/Quizzes → { id } ثم POST /Quizzes/{id}/questions لكل سؤال
-      // PUT /api/Quizzes/{id} → 204 (بيعدّل بيانات الكويز بس) + بيضيف الأسئلة الجديدة
+      // مسابقة جديدة: POST /Quizzes ثم POST /Quizzes/{id}/questions لكل سؤال
+      // مسابقة موجودة: PUT /Quizzes/{id} + (أسئلة جديدة: POST) + (أسئلة اتحذفت: DELETE) + (أسئلة اتعدّلت: PUT /Quizzes/questions/{id})
       save: async (quiz) => {
         const dto = await toQuizDto(quiz);
         const isExisting = quiz.id != null && /^\d+$/.test(String(quiz.id));
+        const isServerId = (q) => /^\d+$/.test(String(q.id ?? ""));
+        const questions = quiz.questions || [];
         let quizId = quiz.id;
-        let questions = quiz.questions || [];
 
-        if (isExisting) {
-          await http("PUT", `/Quizzes/${quizId}`, dto);
-          // الأسئلة اللي ids بتاعتها من السيرفر (أرقام قصيرة) متضافة قبل كده
-          questions = questions.filter((q) => !/^\d{1,9}$/.test(String(q.id ?? "")));
-        } else {
-          const res = await http("POST", "/Quizzes", dto);
-          quizId = res.id ?? res.quizId;
-        }
-
-        for (const q of questions) {
+        const addQuestion = async (q) => {
           try {
             await http("POST", `/Quizzes/${quizId}/questions`, toQuestionDto(q));
           } catch (e) {
             e.message = `تم حفظ المسابقة (رقم ${quizId}) لكن فشل حفظ سؤال: ${e.message}`;
+            throw e;
+          }
+        };
+
+        if (!isExisting) {
+          const res = await http("POST", "/Quizzes", dto);
+          quizId = res.id ?? res.quizId;
+          for (const q of questions) await addQuestion(q);
+          return { ...quiz, id: quizId };
+        }
+
+        await http("PUT", `/Quizzes/${quizId}`, dto);
+
+        // 1) الأسئلة الجديدة (بنضيفها الأول عشان المسابقة ما تفضلش من غير أسئلة)
+        for (const q of questions.filter((x) => !isServerId(x))) await addQuestion(q);
+
+        // لو السيرفر مرجّعش أسئلة المسابقة، مش هنحذف ولا نعدّل حاجة موجودة
+        if (quiz._partial) return { ...quiz, id: quizId };
+
+        // 2) الأسئلة اللي اتشالت من الاستوديو
+        const keep = new Set(questions.filter(isServerId).map((q) => String(q.id)));
+        for (const oldId of quiz._originalQuestionIds || []) {
+          if (!keep.has(String(oldId))) await http("DELETE", `/Quizzes/questions/${oldId}`);
+        }
+
+        // 3) الأسئلة اللي اتعدّلت
+        for (const q of questions.filter(isServerId)) {
+          if (q._fp && JSON.stringify(toQuestionDto(q)) === q._fp) continue;   // ما اتغيّرتش
+          try {
+            await http("PUT", `/Quizzes/questions/${q.id}`, toQuestionDto(q));
+          } catch (e) {
+            e.message = `تعذّر تعديل سؤال موجود (محتاج PUT /Quizzes/questions/{id} في الباك إند): ${e.message}`;
             throw e;
           }
         }
@@ -613,21 +679,21 @@
         writeJSON(KEYS.game, { ...readJSON(KEYS.game, {}), status: "finished" });
       },
 
-      // اللاعب: JoinGame(pin, name) ← السيرفر يرد بحدث "Joined" { playerId, reconnectToken }
-      async join(pin, nickname) {
+      // اللاعب: JoinGame(pin, name, avatar) ← السيرفر يرد بحدث "Joined" { playerId, reconnectToken }
+      async join(pin, nickname, avatar = "fox") {
         const p = String(pin).trim();
         const name = String(nickname).trim();
         await realtime.connect({ pin: p, role: "player" });
         const waitJoined = realtime.waitFor("Joined", 8000);
         try {
-          await realtime.invoke("JoinGame", p, name, window.Avatars?.selected() ?? "");
+          await realtime.invoke("JoinGame", p, name, String(avatar));
         } catch (e) {
           waitJoined.catch(() => {});
           throw e;
         }
         const info = await waitJoined;
-        writeJSON(KEYS.reconnect, { pin: p, playerId: info.playerId, reconnectToken: info.reconnectToken, nickname: name });
-        return { id: info.playerId, playerId: info.playerId, nickname: name, reconnectToken: info.reconnectToken };
+        writeJSON(KEYS.reconnect, { pin: p, playerId: info.playerId, reconnectToken: info.reconnectToken, nickname: name, avatar });
+        return { id: info.playerId, playerId: info.playerId, nickname: name, avatar, reconnectToken: info.reconnectToken };
       },
 
       // اللاعب: رجوع بعد انقطاع النت — RejoinGame(pin, reconnectToken)
@@ -777,7 +843,7 @@
     if (!nick) return;
     const list = readJSON(KEYS.players, []);
     if (!list.some((p) => p.nickname === nick)) {
-      list.push({ id: uuid(), nickname: nick });
+      list.push({ id: uuid(), nickname: nick, avatar: payload?.avatar ?? payload?.avatarKey ?? null });
       writeJSON(KEYS.players, list);
     }
   });
@@ -804,7 +870,7 @@
         localStorage.removeItem(CONFIG.TOKEN_KEY);
         localStorage.removeItem("churchQuizToken");
       },
-      requireLogin(redirect = "login.html") {
+      requireLogin(redirect = "loginn.html") {
         if (Api.auth.getSession()) return true;
         location.replace(redirect);
         return false;

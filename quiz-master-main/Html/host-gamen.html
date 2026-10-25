@@ -7,11 +7,20 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../CSS/host-gamen.css">
   <link rel="stylesheet" href="../CSS/countdown.css">
+<style>
+  /* سؤال بصورة: نخفي المستطيل الأبيض ونص السؤال، والصورة تبان لوحدها */
+  #screen-active-question.has-image .q-header { display: none; }
+  #screen-active-question.has-image #q-image {
+    max-height: 55vh;
+    max-width: 100%;
+    object-fit: contain;
+  }
+</style>
 </head>
 <body>
 
   <header class="game-header">
-    <div class="brand">Church Quiz!</div>
+    <div class="brand"><span class="kq-brand kq-sm"></span></div>
     <div class="player-count">👤 <span id="header-players">0</span></div>
   </header>
 

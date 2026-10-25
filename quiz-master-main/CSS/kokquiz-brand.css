@@ -1,0 +1,80 @@
+/* ===========================================================================
+   kokquiz-brand.css — لوجو Kokquiz المشترك (الاسم بخط Pacifico بتأثير نيون أزرق)
+   الاستخدام:  <span class="kq-brand kq-md kq-panel"></span>   (والـ JS بيملّاه)
+   أحجام:    kq-sm (هيدر)   kq-md   kq-lg (صفحات الدخول)
+   لوحة:     kq-panel = اللوحة الكحلي المدوّرة حوالين الاسم (زي صورة اللوجو)
+   تخطيط:    kq-stack = الصليب فوق الاسم (مع data-tagline يظهر "Learn · Play · Grow")
+   لتغيير الخط: غيّر --kq-font (وحمّله من Google Fonts)
+   =========================================================================== */
+.kq-brand {
+  --kq-size: 2.4rem;
+  --kq-font: 'Pacifico', cursive;
+  display: inline-flex;
+  align-items: center;
+  gap: .3em;
+  font-size: var(--kq-size);
+  line-height: 1.15;
+  color: #fff;
+  font-family: var(--kq-font);
+  user-select: none;
+}
+.kq-sm { --kq-size: 1.5rem; }
+.kq-md { --kq-size: 2.4rem; }
+.kq-lg { --kq-size: 4rem; }
+
+.kq-brand .kq-cross {
+  height: 1.5em;
+  width: auto;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 0 .3em rgba(243, 210, 122, .65));
+}
+.kq-brand .kq-text { display: inline-flex; flex-direction: column; align-items: center; gap: .18em; }
+
+/* الاسم: تدرّج أزرق سماوي + حد أبيض + لمعة نيون */
+.kq-brand .kq-word {
+  font-weight: 400;
+  letter-spacing: .01em;
+  color: transparent;
+  background: linear-gradient(180deg, #F2FCFF 0%, #A8E4FA 38%, #5DB9E8 72%, #3D8FD1 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-stroke: .028em rgba(255, 255, 255, .95);
+  filter:
+    drop-shadow(0 0 .08em rgba(255, 255, 255, .6))
+    drop-shadow(0 0 .3em rgba(80, 175, 255, .8))
+    drop-shadow(0 .06em 0 rgba(0, 0, 0, .35));
+  white-space: nowrap;
+  padding: 0 .08em;           /* عشان ذيل الحروف المائلة ما يتقصش */
+}
+
+.kq-brand .kq-tagline {
+  font: 800 .24em 'Montserrat', sans-serif;
+  letter-spacing: .4em;
+  text-transform: uppercase;
+  color: #F6DE9C;
+  text-shadow: 0 .1em .3em rgba(0, 0, 0, .35);
+  white-space: nowrap;
+}
+
+/* اللوحة الكحلي المدوّرة (زي صورة اللوجو) */
+.kq-brand.kq-panel {
+  padding: .3em .85em .4em;
+  border-radius: .42em;
+  background: linear-gradient(135deg, rgba(16, 40, 72, .96), rgba(7, 20, 38, .96));
+  border: 1px solid rgba(255, 255, 255, .12);
+  box-shadow: 0 .3em 1em rgba(0, 0, 0, .4), inset 0 1px 0 rgba(255, 255, 255, .1);
+}
+
+/* الصليب فوق الاسم */
+.kq-brand.kq-stack { flex-direction: column; gap: .15em; text-align: center; }
+.kq-brand.kq-stack .kq-cross { height: 1.9em; }
+
+/* للصفحات اللي خلفيتها (أو الكارت) فاتحة وبدون لوحة: ضيف kq-on-light */
+.kq-brand.kq-on-light .kq-word {
+  background: linear-gradient(180deg, #3C9BEA 0%, #1D63C0 55%, #0B3F8F 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-stroke: .02em rgba(255, 255, 255, .9);
+  filter: drop-shadow(0 .05em .12em rgba(11, 30, 54, .35));
+}
+.kq-brand.kq-on-light .kq-tagline { color: #BD9147; text-shadow: none; }

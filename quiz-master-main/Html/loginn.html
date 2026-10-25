@@ -3,21 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login | Church Quiz</title>
-  
+  <title>Sign In | Kokquiz</title>
+
+  <!-- لوجو Kokquiz -->
+  <link rel="stylesheet" href="../CSS/kokquiz-brand.css">
+
   <!-- مسارات الـ CSS والـ JS الموحدة (تأكد من مطابقة أسماء الملفات) -->
   <link rel="stylesheet" href="../CSS/loginn.css">
   <script src="../JS/apin.js" defer></script>
   <script src="../JS/loginn.js" defer></script>
+  <!-- في الـ head -->
+<link rel="stylesheet" href="../CSS/kokquiz-brand.css">
+
+<!-- قبل </body> -->
+<script src="../JS/kokquiz-brand.js"></script>
 </head>
 <body>
   <main class="login-page">
     <section class="login-card">
       <a class="back-link" href="index.html">← Back to Home</a>
 
-      <div class="logo">✦</div>
+      <!-- لو كارت الدخول عندك فاتح (أبيض) ضيف kq-on-light على الـ span ده -->
+      <h1 class="kq-heading"><span class="kq-brand kq-lg kq-stack" data-tagline></span></h1>
+
       <p class="eyebrow">WELCOME BACK</p>
-      <h1>Church Quiz</h1>
       <p class="subtitle">Sign in to continue your journey.</p>
 
       <form id="loginForm">
@@ -60,5 +69,7 @@
       </p>
     </section>
   </main>
+
+  <script src="../JS/kokquiz-brand.js"></script>
 </body>
 </html>

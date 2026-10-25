@@ -16,6 +16,37 @@ const asArray = (v) => (Array.isArray(v) ? v : v?.items || v?.$values || []);
 let me = null;        // { playerId, nickname }
 let choices = [];     // [{ id, index }] للسؤال الحالي
 let answered = false;
+
+/* ---------------- الشخصية ---------------- */
+const AVATAR_KEY = "kokAvatar";
+let selectedAvatar = localStorage.getItem(AVATAR_KEY) || (window.Kok?.DEFAULT_AVATAR ?? "fox");
+
+function buildAvatarPicker() {
+  const box = $("avatar-picker");
+  if (!box || !window.Kok) return;
+  box.innerHTML = window.Kok.avatars
+    .map((a) => `<button type="button" class="avatar-opt" role="radio" data-key="${a.key}" aria-label="${a.key}">${a.emoji}</button>`)
+    .join("");
+  const mark = () => box.querySelectorAll(".avatar-opt").forEach((b) => {
+    const on = b.dataset.key === selectedAvatar;
+    b.classList.toggle("selected", on);
+    b.setAttribute("aria-checked", String(on));
+  });
+  box.addEventListener("click", (e) => {
+    const b = e.target.closest(".avatar-opt");
+    if (!b) return;
+    selectedAvatar = b.dataset.key;
+    localStorage.setItem(AVATAR_KEY, selectedAvatar);
+    mark();
+  });
+  mark();
+}
+
+// يحط إيموجي الشخصية في كارت الانتظار والنتيجة والفوتر
+function applyAvatar(key) {
+  const emoji = window.Kok?.avatarEmoji(key) || "🦊";
+  document.querySelectorAll(".avatar-emoji, .player-avatar-mini").forEach((el) => { el.textContent = emoji; });
+}
 let readyId = null;
 
 /* ---------------- الشاشات ---------------- */
@@ -43,6 +74,7 @@ function setFooterScore(score) {
 }
 
 function enterWaitingRoom() {
+  applyAvatar(me.avatar);
   if ($("player-name-display")) $("player-name-display").textContent = me.nickname;
   if ($("footer-player-name")) $("footer-player-name").textContent = me.nickname;
   setFooterScore(0);
@@ -153,8 +185,8 @@ async function joinGame(urlPin) {
   btn.disabled = true;
   showError("");
   try {
-    const p = await Api.game.join(pin, nickname);
-    me = { playerId: p.playerId ?? p.id, nickname };
+    const p = await Api.game.join(pin, nickname, selectedAvatar);
+    me = { playerId: p.playerId ?? p.id, nickname, avatar: selectedAvatar };
     enterWaitingRoom();
   } catch (err) {
     console.error("Join failed:", err);
@@ -171,7 +203,7 @@ async function tryRejoin(urlPin) {
   if (!saved || (urlPin && saved.pin !== urlPin)) return false;
   try {
     await Api.game.rejoin();
-    me = { playerId: saved.playerId, nickname: saved.nickname };
+    me = { playerId: saved.playerId, nickname: saved.nickname, avatar: saved.avatar || selectedAvatar };
     enterWaitingRoom(); // لو اللعبة شغالة السيرفر هيبعت السؤال الحالي بعدها
     return true;
   } catch (err) {
@@ -226,6 +258,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
+  buildAvatarPicker();
   show("join-card");
   await tryRejoin(urlPin);
 });

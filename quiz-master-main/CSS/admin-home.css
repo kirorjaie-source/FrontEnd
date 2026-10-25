@@ -1,0 +1,178 @@
+/* ===========================================================================
+   admin-home.css — الصفحة الرئيسية (Kokquiz) جوه لوحة التحكم + زرار اللغة.
+   كل القواعد متحددة بـ #page-home و .lang-btn فمش هتأثر على باقي الصفحات.
+   حطه جنب adminn.css واربطه بنفس الطريقة بعده.
+   =========================================================================== */
+
+/* ---------- زرار اللغة (فوق على اليمين) ---------- */
+.lang-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 14px;
+  margin-inline-end: 10px;
+  border-radius: 999px;
+  border: 1px solid #CBD5E1;
+  background: #fff;
+  color: #0B1E36;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background .15s, transform .1s;
+}
+.lang-btn:hover { background: #F1F5F9; }
+.lang-btn:active { transform: scale(.96); }
+.lang-btn svg { flex: none; }
+
+/* ---------- الصفحة الرئيسية ---------- */
+#page-home.active {
+  --r: clamp(110px, 18vw, 220px);          /* حجم الدايرتين والصليب */
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(16px, 3vh, 30px);
+  min-height: calc(100vh - 150px);
+  padding: clamp(20px, 4vh, 44px) 20px;
+  border-radius: 24px;
+  text-align: center;
+  color: #fff;
+  font-family: "Montserrat", "Inter", sans-serif;
+  background: radial-gradient(1100px 700px at 50% 20%, #3B7BD6 0%, #1C55AE 42%, #0A2B6B 100%);
+}
+#page-home > * { position: relative; z-index: 1; }
+
+/* نجوم الخلفية */
+#page-home .kq-sparkles { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+#page-home .kq-sparkles i {
+  position: absolute;
+  font-style: normal;
+  color: #FFD966;
+  text-shadow: 0 0 10px rgba(255, 217, 102, .85);
+  animation: kq-twinkle 3.2s ease-in-out infinite;
+}
+@keyframes kq-twinkle {
+  0%, 100% { opacity: .25; transform: scale(.8) rotate(0deg); }
+  50%      { opacity: 1;   transform: scale(1.15) rotate(20deg); }
+}
+
+/* اللوحة الزجاجية فيها اللوجو */
+#page-home .kq-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: min(100%, 940px);
+  padding: clamp(16px, 3.5vh, 34px) clamp(20px, 5vw, 52px);
+  border-radius: 26px;
+  background: rgba(255, 255, 255, .1);
+  border: 1px solid rgba(255, 255, 255, .26);
+  box-shadow: 0 18px 50px rgba(5, 25, 70, .4), inset 0 1px 0 rgba(255, 255, 255, .22);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+#page-home .kq-hero-word {
+  font-family: "Pacifico", cursive;
+  font-weight: 400;
+  font-size: clamp(48px, 8vw, 96px);
+  line-height: 1.1;
+  color: #fff;
+  text-shadow: 0 0 4px #CDEBFF, 0 0 14px rgba(110, 198, 255, .95), 0 0 34px rgba(60, 150, 255, .7), 0 4px 0 #1B63C7;
+}
+#page-home .kq-hero-cross {
+  position: absolute;
+  inset-inline-end: clamp(20px, 5vw, 56px);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: clamp(48px, 8vw, 88px);
+  line-height: 1;
+  color: rgba(255, 255, 255, .22);
+}
+
+/* الدايرتين والصليب الذهبي */
+#page-home .kq-emblems {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 3.5vw, 44px);
+}
+#page-home .kq-round {
+  width: var(--r);
+  height: var(--r);
+  padding: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .2);
+  box-shadow: 0 0 0 6px rgba(255, 255, 255, .12), 0 14px 40px rgba(5, 25, 70, .5), 0 0 44px rgba(255, 255, 255, .22);
+}
+#page-home .kq-round img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #fff;                         /* لو الصورة ناقصة تبان دايرة بيضا */
+}
+#page-home .kq-cross {
+  height: calc(var(--r) * 1.05);
+  width: auto;
+  filter: drop-shadow(0 0 18px rgba(255, 226, 120, .9));
+}
+#page-home .kq-spark {
+  position: absolute;
+  font-style: normal;
+  color: #FFD966;
+  text-shadow: 0 0 10px rgba(255, 217, 102, .9);
+  animation: kq-twinkle 3s ease-in-out infinite;
+}
+#page-home .kq-spark.a { top: -6%; inset-inline-start: 4%; font-size: 22px; }
+#page-home .kq-spark.b { bottom: 2%; inset-inline-end: 6%; font-size: 18px; animation-delay: 1.2s; }
+
+/* الشعار والجملة */
+#page-home .kq-tagline {
+  margin: 0;
+  font-weight: 800;
+  font-size: clamp(11px, 1.5vw, 14px);
+  line-height: 1;
+  letter-spacing: .35em;
+  text-transform: uppercase;
+  color: #DCE9FF;
+  text-shadow: 0 0 8px rgba(255, 255, 255, .35);
+}
+#page-home .kq-sub { margin: 0; font-weight: 700; font-size: clamp(15px, 2vw, 19px); color: #fff; }
+
+/* زراير التنقل */
+#page-home .kq-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+#page-home .kq-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 190px;
+  height: 52px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #FBEFC4 0%, #EBCB6E 100%);
+  color: #0B1E36;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 5px 0 #B8962E, 0 12px 24px rgba(5, 25, 70, .35);
+  transition: transform .1s, box-shadow .1s, filter .15s;
+}
+#page-home .kq-btn:hover { filter: brightness(1.05); }
+#page-home .kq-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #B8962E, 0 6px 12px rgba(5, 25, 70, .3); }
+
+@media (max-width: 560px) {
+  #page-home .kq-hero { justify-content: center; }
+  #page-home .kq-hero-cross { display: none; }
+  #page-home .kq-btn { min-width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #page-home .kq-sparkles i, #page-home .kq-spark { animation: none; opacity: .7; }
+}
