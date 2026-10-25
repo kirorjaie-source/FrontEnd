@@ -3,19 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Host Game | Church Quiz</title>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <title>Host Game | Kok quiz</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Montserrat:wght@700;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../CSS/host-gamen.css">
   <link rel="stylesheet" href="../CSS/countdown.css">
-<style>
-  /* سؤال بصورة: نخفي المستطيل الأبيض ونص السؤال، والصورة تبان لوحدها */
-  #screen-active-question.has-image .q-header { display: none; }
-  #screen-active-question.has-image #q-image {
-    max-height: 55vh;
-    max-width: 100%;
-    object-fit: contain;
-  }
-</style>
 </head>
 <body>
 
@@ -47,7 +38,11 @@
         <div class="timer-wrapper"><div class="timer-circle" id="q-timer">20</div></div>
         <div class="q-media" id="q-media-container">
           <img id="q-image" src="" style="display:none;">
-          <div class="media-placeholder" id="q-placeholder">Church Quiz</div>
+          <div class="media-placeholder" id="q-placeholder">
+            <span class="kq-ph-cross">✝</span>
+            <span class="kq-ph-word">Kok quiz</span>
+            <span class="kq-ph-sub">Learn · Play · Grow</span>
+          </div>
         </div>
         <div class="answers-counter-wrapper">
           <span id="q-answers-count">0</span><small>Answers</small>
@@ -125,4 +120,4 @@
   <script src="../JS/apin.js"></script>
   <script src="../JS/host-gamenn.js"></script>
 </body>
-</html>           
+</html>

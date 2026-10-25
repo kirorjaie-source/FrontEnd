@@ -617,25 +617,28 @@ async function renderQuizzes() {
   const search = searchInput ? searchInput.value.trim().toLowerCase() : "";
   const list = (await Api.quizzes.list()).filter((q) => String(q.title || "").toLowerCase().includes(search));
 
-  if ($("quizzes-table")) {
-    $("quizzes-table").innerHTML = list.map((quiz) => {
+  const grid = $("my-quizzes-grid");
+  if (grid) {
+    grid.innerHTML = list.map((quiz) => {
       const id = escapeHTML(quiz.id);
+      const count = Number(quiz.questionCount ?? (quiz.questions ? quiz.questions.length : 0)) || 0;
+      const cover = quiz.imageUrl || quiz.coverImage || quiz.image || "";
       return `
-      <tr>
-        <td><span class="table-title">${escapeHTML(quiz.title)}</span></td>
-        <td>${escapeHTML(quiz.category || t("common.general"))}</td>
-        <td>${Number(quiz.questionCount || (quiz.questions ? quiz.questions.length : 0)) || 0}</td>
-        <td>
-          <div class="dropdown-container">
-            <button class="btn-more-options" data-action="toggle-menu" aria-label="Quiz actions">⋮</button>
-            <div class="dropdown-menu">
-              <button class="dropdown-item" data-action="host" data-id="${id}"><span>▶</span> ${t("menu.host")}</button>
-              <button class="dropdown-item" data-action="edit" data-id="${id}"><span>✏️</span> ${t("menu.edit")}</button>
-              <button class="dropdown-item text-danger" data-action="delete-quiz" data-id="${id}"><span>🗑️</span> ${t("menu.delete")}</button>
-            </div>
+      <article class="quiz-card my-quiz-card">
+        <div class="quiz-cover tone-${coverTone(quiz.title || quiz.id)}">
+          ${cover ? `<img src="${escapeHTML(cover)}" alt="" loading="lazy">` : `<span class="quiz-cover-icon">✝</span>`}
+          <span class="quiz-badge">${escapeHTML(quiz.category || t("common.general"))}</span>
+          <span class="quiz-count">▤ ${nQuestions(count)}</span>
+        </div>
+        <div class="quiz-card-body">
+          <h3 class="quiz-card-title">${escapeHTML(quiz.title)}</h3>
+          <div class="my-quiz-actions">
+            <button type="button" class="button gold-button quiz-host-btn" data-action="host" data-id="${id}">${t("explore.host")}</button>
+            <button type="button" class="icon-btn" data-action="edit" data-id="${id}" title="${t("menu.edit")}" aria-label="${t("menu.edit")}">✏️</button>
+            <button type="button" class="icon-btn icon-btn-danger" data-action="delete-quiz" data-id="${id}" title="${t("menu.delete")}" aria-label="${t("menu.delete")}">🗑️</button>
           </div>
-        </td>
-      </tr>`;
+        </div>
+      </article>`;
     }).join("");
   }
 

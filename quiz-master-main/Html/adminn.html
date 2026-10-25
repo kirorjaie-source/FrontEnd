@@ -7,18 +7,18 @@
 
   <title>Admin Dashboard | Church Quiz</title>
 
-  <link rel="stylesheet" href="../Css/adminn.css">
+  <link rel="stylesheet" href="../CSS/adminn.css">
   <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../Css/admin-home.css">
-  <script src="../Js/apin.js" defer></script>
-  <script src="../Js/contacts.js" defer></script>
-  <script src="../Js/adminn.js" defer></script>
+  <link rel="stylesheet" href="../CSS/admin-home.css">
+  <script src="../JS/apin.js" defer></script>
+  <script src="../JS/contacts.js" defer></script>
+  <script src="../JS/adminn.js" defer></script>
 </head>
 
 <body>
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
-    <a class="brand" href="../Html/adminn.html">
+    <a class="brand" href="adminn.html">
       <span class="brand-cross">✝</span>
       <span>
         <b data-i18n="brand.name">Kok_Quiz</b>
@@ -116,7 +116,7 @@
         <!-- الدايرتين + الصليب الذهبي (غيّر مسارات الصور) -->
         <div class="kq-emblems">
           <i class="kq-spark a" aria-hidden="true">✦</i>
-          <div class="kq-round"><img src="logo1.png" alt=""></div>
+          <div class="kq-round"><img src="../images/logo1.png" alt=""></div>
 
           <svg class="kq-cross" viewBox="0 0 60 90" aria-hidden="true">
             <defs>
@@ -128,7 +128,7 @@
             <rect x="4" y="24" width="52" height="14" rx="7" fill="url(#kqGold)"/>
           </svg>
 
-          <div class="kq-round"><img src="../church-logo.jpg" alt=""></div>
+          <div class="kq-round"><img src="../images/logo2.png" alt=""></div>
           <i class="kq-spark b" aria-hidden="true">✦</i>
         </div>
 
@@ -374,22 +374,11 @@
           <input id="quiz-search" placeholder="Search quizzes..." data-i18n-ph="myq.searchPh" aria-label="Search quizzes">
         </div>
 
-        <div class="card table-card" style="overflow: visible;">
-          <div class="table-scroll" style="overflow: visible;">
-            <table>
-              <thead>
-                <tr>
-                  <th data-i18n="th.quizName">Quiz name</th><th data-i18n="th.category">Category</th><th data-i18n="common.questions">Questions</th><th data-i18n="th.action">Action</th>
-                </tr>
-              </thead>
-              <tbody id="quizzes-table"></tbody>
-            </table>
-          </div>
-          <div class="empty-state" id="quizzes-empty">
-            <div class="empty-icon">▤</div>
-            <b data-i18n="myq.empty">No matching quizzes</b>
-            <p data-i18n="myq.emptySub">Create a quiz to get started.</p>
-          </div>
+        <div class="quiz-grid" id="my-quizzes-grid"></div>
+        <div class="empty-state" id="quizzes-empty">
+          <div class="empty-icon">▤</div>
+          <b data-i18n="myq.empty">No matching quizzes</b>
+          <p data-i18n="myq.emptySub">Create a quiz to get started.</p>
         </div>
       </section>
 

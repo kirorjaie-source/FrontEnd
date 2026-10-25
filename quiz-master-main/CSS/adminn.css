@@ -635,3 +635,120 @@ tbody tr:hover { background: #FBFCFE; }
   .studio-header { flex-wrap: wrap; height: auto; padding: 10px; gap: 10px; } .studio-brand, .studio-actions { width: 100%; justify-content: space-between; } .canvas-answers-grid { grid-template-columns: 1fr; }
   .host-modal-content { flex-direction: column; } .host-modal-left { width: 100%; height: 120px; border-right: none; border-bottom: 1px solid #1E3A5F; } .host-modal-right { width: 100%; padding: 25px; } .host-action-bar { flex-direction: column; gap: 15px; text-align: center; } .btn-start-host { width: 100%; }
 }
+
+/* ===========================================================
+   كروت المسابقات (صفحة Quizzes / explore) — مربعة وجنب بعض
+   الصق الكتلة دي في آخر adminn.css (بعد آخر @media)
+   بتستخدم نفس متغيرات adminn.css (--navy, --gold, --border ...)
+   =========================================================== */
+
+.explore-toolbar { grid-template-columns: minmax(180px, 1fr); }
+
+.quiz-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 22px;
+  margin-top: 6px;
+}
+
+/* الكارت: مربع */
+.quiz-card {
+  display: flex;
+  flex-direction: column;
+  aspect-ratio: 1 / 1;
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--white);
+  border: 1px solid var(--border);
+  box-shadow: 0 6px 18px rgba(20, 40, 60, .08);
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s;
+}
+.quiz-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--gold);
+  box-shadow: 0 16px 34px rgba(20, 40, 60, .18);
+}
+
+/* الغلاف */
+.quiz-cover {
+  position: relative;
+  flex: 1 1 52%;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: #fff;
+}
+.quiz-cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.quiz-cover-icon { font-size: clamp(44px, 5vw, 70px); opacity: .92; text-shadow: 0 4px 14px rgba(0,0,0,.3); transition: transform .3s; }
+.quiz-card:hover .quiz-cover-icon { transform: scale(1.12) rotate(-6deg); }
+
+.quiz-cover.tone-0 { background: linear-gradient(135deg, #0B1E36, #1d4f91); }
+.quiz-cover.tone-1 { background: linear-gradient(135deg, #BD9147, #E5B869); }
+.quiz-cover.tone-2 { background: linear-gradient(135deg, #5b2a86, #a54bd0); }
+.quiz-cover.tone-3 { background: linear-gradient(135deg, #0f7a5a, #36c28f); }
+
+.quiz-badge, .quiz-count {
+  position: absolute;
+  top: 10px;
+  z-index: 2;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  background: rgba(0, 0, 0, .42);
+  backdrop-filter: blur(4px);
+}
+.quiz-badge { left: 10px; }
+.quiz-count { right: 10px; }
+
+/* الجزء السفلي */
+.quiz-card-body {
+  flex: 1 1 48%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 12px 14px 14px;
+}
+.quiz-card-title {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.3;
+  color: var(--navy);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.quiz-card-meta { margin: 0; font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.quiz-host-btn { width: 100%; }
+
+.explore-loading { grid-column: 1 / -1; text-align: center; color: var(--muted); }
+
+@media (max-width: 600px) {
+  .quiz-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .quiz-card-title { font-size: 13px; }
+}
+
+
+/* ---- My Quizzes: أزرار الكارت (بدء / تعديل / حذف) ---- */
+.my-quiz-actions { display: flex; align-items: center; gap: 8px; }
+.my-quiz-actions .quiz-host-btn { flex: 1; width: auto; min-width: 0; padding: 10px 8px; }
+.icon-btn {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: #F8FAFC;
+  font-size: 15px;
+  line-height: 1;
+  transition: .2s;
+}
+.icon-btn:hover { background: #EEF2F7; transform: translateY(-1px); }
+.icon-btn-danger { border-color: #F3D8D8; background: #FFF5F5; }
+.icon-btn-danger:hover { background: #FDE8E8; }
