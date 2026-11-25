@@ -1,0 +1,66 @@
+/* ============================================================
+   mobile.css — تظبيط مسافات الموبايل للوحة التحكم
+   يتحط في CSS/ ويتربط بعد باقي ملفات الـ CSS في كل صفحة.
+   ============================================================ */
+
+/* الفوتر كان لازق في حرف الشاشة */
+.main-footer {
+  padding: 18px 20px;
+  text-align: center;
+}
+
+@media (max-width: 720px) {
+  /* ---- الشريط العلوي ---- */
+  .topbar { padding: 12px 14px !important; gap: 10px !important; }
+  .topbar h1 { font-size: 20px !important; line-height: 1.25 !important; }
+  .breadcrumb { font-size: 11px !important; }
+  .top-actions { gap: 8px !important; }
+  .lang-btn { padding: 6px 10px !important; font-size: 13px !important; }
+
+  /* ---- المحتوى ---- */
+  .content { padding: 14px 12px 24px !important; }
+
+  .section-heading {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    padding: 16px !important;
+    margin-bottom: 14px !important;
+  }
+  .section-heading h2 { font-size: 20px !important; }
+
+  .welcome-banner { padding: 20px 18px !important; margin-bottom: 14px !important; }
+  .banner-cross { display: none !important; }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    margin-bottom: 14px !important;
+  }
+  .stat-card { padding: 14px !important; }
+  .stat-card strong { font-size: 24px !important; }
+
+  .quiz-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
+  .my-quiz-actions { gap: 8px !important; }
+
+  .card { border-radius: 16px; }
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table th, table td { padding: 12px 12px !important; }
+
+  .toolbar { margin-bottom: 12px !important; }
+  .toolbar input { width: 100% !important; box-sizing: border-box; }
+
+  /* ---- النوافذ ---- */
+  .modal-card, .host-modal-card {
+    width: calc(100% - 24px) !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+  }
+
+  .main-footer { padding: 14px 12px; font-size: 12.5px; }
+}
+
+@media (max-width: 400px) {
+  .content { padding: 12px 10px 20px !important; }
+  .stats-grid { gap: 8px !important; }
+}

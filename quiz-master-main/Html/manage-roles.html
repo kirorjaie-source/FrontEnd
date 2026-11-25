@@ -6,6 +6,7 @@
   <title>Manage Roles | Kokquiz Admin</title>
   <link rel="stylesheet" href="../CSS/adminn.css">
   <link rel="stylesheet" href="../CSS/manage-roles.css">
+  <link rel="stylesheet" href="../CSS/mobile.css">
 
   <style>
     body {
@@ -665,4 +666,187 @@
 
   <!-- Ameen Modal (Add / Edit) -->
   <div id="ameenModal" class="modal-backdrop" hidden>
-    <div class="modal-box super-modal-box" role="dialog" aria-modal="true" aria-lab
+    <div class="modal-box super-modal-box" role="dialog" aria-modal="true" aria-labelledby="ameenModalTitle">
+      <div class="super-modal-header">
+        <div class="super-header-info">
+          <span class="super-crown">⛪</span>
+          <div>
+            <h3 id="ameenModalTitle">أمين · Ameen</h3>
+            <p id="ameenModalSub"></p>
+          </div>
+        </div>
+        <button type="button" id="closeAmeenXBtn" class="super-close-x" aria-label="Close">✕</button>
+      </div>
+
+      <form id="ameenForm" class="super-modal-body" novalidate>
+        <div class="s-field">
+          <label class="s-label" for="ameenChurchSelect">⛪ الكنيسة · Church</label>
+          <div class="s-input-wrap">
+            <select id="ameenChurchSelect" class="s-input no-eye"></select>
+          </div>
+        </div>
+
+        <div class="s-field" id="ameenNameField" hidden>
+          <label class="s-label" for="ameenNameInput">👤 الاسم · Name</label>
+          <div class="s-input-wrap">
+            <input id="ameenNameInput" class="s-input no-eye" type="text" maxlength="100">
+          </div>
+        </div>
+
+        <div class="s-field">
+          <label class="s-label" for="ameenEmailInput">📧 الإيميل · Email</label>
+          <div class="s-input-wrap">
+            <input id="ameenEmailInput" class="s-input no-eye" type="email" placeholder="user@example.com">
+          </div>
+        </div>
+
+        <div class="s-field">
+          <label class="s-label" for="ameenPhoneInput">📱 رقم الموبايل · Phone</label>
+          <div class="s-input-wrap">
+            <input id="ameenPhoneInput" class="s-input no-eye" type="tel" inputmode="numeric" maxlength="11" placeholder="01xxxxxxxxx" dir="ltr">
+          </div>
+        </div>
+
+        <div id="ameenModalErr" class="s-err"></div>
+
+        <div class="s-actions">
+          <button type="button" id="cancelAmeenBtn" class="s-btn-cancel">إلغاء · Cancel</button>
+          <button type="submit" id="saveAmeenBtn" class="s-btn-save">حفظ · Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Password Modal (Non-Admin Users) -->
+  <div id="pwdModal" class="modal-backdrop" hidden>
+    <div class="modal-box super-modal-box" role="dialog" aria-modal="true" aria-labelledby="pwdModalTitle">
+      <div class="super-modal-header">
+        <div class="super-header-info">
+          <span class="super-crown">🔑</span>
+          <div>
+            <h3 id="pwdModalTitle" data-i18n="roles.modalTitle">Change User Password</h3>
+            <p id="pwdModalUser"></p>
+          </div>
+        </div>
+        <button type="button" id="closePwdXBtn" class="super-close-x" aria-label="Close">✕</button>
+      </div>
+
+      <form id="pwdForm" class="super-modal-body" novalidate>
+        <div class="s-field">
+          <label class="s-label" for="newPwdInput">🔒 New Password</label>
+          <div class="s-input-wrap">
+            <input id="newPwdInput" class="s-input" type="password" required placeholder="New password" data-i18n-ph="roles.newPwdPh">
+            <button type="button" id="togglePwdBtn" class="s-eye" title="Show/Hide password">👁</button>
+          </div>
+
+          <div class="s-chips" id="pwdRules">
+            <span class="s-chip" id="ruleLen">8+ Chars</span>
+            <span class="s-chip" id="ruleUpper">A-Z</span>
+            <span class="s-chip" id="ruleLower">a-z</span>
+            <span class="s-chip" id="ruleDigit">0-9</span>
+            <span class="s-chip" id="ruleSpecial">@#$!</span>
+          </div>
+        </div>
+
+        <div class="s-field">
+          <label class="s-label" for="confirmPwdInput">✅ Confirm Password</label>
+          <div class="s-input-wrap">
+            <input id="confirmPwdInput" class="s-input no-eye" type="password" required placeholder="Confirm new password" data-i18n-ph="roles.confirmPwdPh">
+          </div>
+        </div>
+
+        <div id="pwdModalErr" class="s-err"></div>
+
+        <div class="s-actions">
+          <button type="button" id="cancelPwdBtn" class="s-btn-cancel" data-i18n="roles.cancel">Cancel</button>
+          <button type="submit" id="savePwdBtn" class="s-btn-save" data-i18n="roles.savePwd">Save Password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Super Reset Modal (Any User / Admin via X-Admin Key) -->
+  <div id="superModal" class="modal-backdrop" hidden>
+    <div class="modal-box super-modal-box" role="dialog" aria-modal="true" aria-labelledby="superModalTitle">
+      <div class="super-modal-header">
+        <div class="super-header-info">
+          <span class="super-crown">👑</span>
+          <div>
+            <h3 id="superModalTitle">Super Password Reset</h3>
+            <p>Override any account password (including Admins) via <strong>X-Admin</strong> key</p>
+          </div>
+        </div>
+        <button type="button" id="closeSuperXBtn" class="super-close-x" aria-label="Close">✕</button>
+      </div>
+
+      <form id="superForm" class="super-modal-body" novalidate>
+        <div class="s-field">
+          <label class="s-label" for="superAdminKey">🔑 Private X-Admin Key</label>
+          <div class="s-input-wrap">
+            <input id="superAdminKey" class="s-input" type="password" autocomplete="off" required placeholder="Enter your X-Admin secret key">
+            <button type="button" id="toggleSuperKeyBtn" class="s-eye" title="Show/Hide key">👁</button>
+          </div>
+        </div>
+
+        <div class="s-field">
+          <label class="s-label" for="superEmailInput">📧 Target Account Email</label>
+          <div class="s-input-wrap">
+            <input id="superEmailInput" class="s-input no-eye" type="email" list="allUsersEmails" required placeholder="Choose or type user/admin email...">
+          </div>
+          <datalist id="allUsersEmails"></datalist>
+        </div>
+
+        <div class="s-field">
+          <label class="s-label" for="superNewPwd">🔒 New Password</label>
+          <div class="s-input-wrap">
+            <input id="superNewPwd" class="s-input" type="password" required placeholder="Create new strong password">
+            <button type="button" id="toggleSuperPwdBtn" class="s-eye" title="Show/Hide password">👁</button>
+          </div>
+
+          <div class="s-chips" id="superPwdRules">
+            <span class="s-chip" id="sRuleLen">8+ Chars</span>
+            <span class="s-chip" id="sRuleUpper">A-Z</span>
+            <span class="s-chip" id="sRuleLower">a-z</span>
+            <span class="s-chip" id="sRuleDigit">0-9</span>
+            <span class="s-chip" id="sRuleSpecial">@#$!</span>
+          </div>
+        </div>
+
+        <div class="s-field">
+          <label class="s-label" for="superConfirmPwd">✅ Confirm Password</label>
+          <div class="s-input-wrap">
+            <input id="superConfirmPwd" class="s-input no-eye" type="password" required placeholder="Re-enter new password">
+          </div>
+        </div>
+
+        <div id="superModalErr" class="s-err"></div>
+
+        <div class="s-actions">
+          <button type="button" id="cancelSuperBtn" class="s-btn-cancel" data-i18n="roles.cancel">Cancel</button>
+          <button type="submit" id="saveSuperBtn" class="s-btn-save">👑 Reset Password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../JS/i18n.js"></script>
+  <script src="../JS/apin.js"></script>
+  <script src="../JS/manage-roles.js"></script>
+  <script>
+    if (localStorage.getItem("churchQuizSidebarCollapsed") === "1") {
+      document.body.classList.add("sidebar-collapsed");
+    }
+    document.getElementById("rolesLangToggle")?.addEventListener("click", () => {
+      if (window.KokI18n) KokI18n.toggleLang();
+    });
+    document.getElementById("rolesMenuToggle")?.addEventListener("click", () => {
+      if (window.matchMedia("(max-width: 900px)").matches) {
+        document.getElementById("sidebar")?.classList.toggle("open");
+      } else {
+        const collapsed = document.body.classList.toggle("sidebar-collapsed");
+        localStorage.setItem("churchQuizSidebarCollapsed", collapsed ? "1" : "0");
+      }
+    });
+  </script>
+</body>
+</html>
