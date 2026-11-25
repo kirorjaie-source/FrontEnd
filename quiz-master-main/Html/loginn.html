@@ -1,75 +1,141 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign In | Kokquiz</title>
 
-  <!-- لوجو Kokquiz -->
-  <link rel="stylesheet" href="../CSS/kokquiz-brand.css">
-
-  <!-- مسارات الـ CSS والـ JS الموحدة (تأكد من مطابقة أسماء الملفات) -->
   <link rel="stylesheet" href="../CSS/loginn.css">
+
+  <style>
+    .login-eyebrow {
+      font-size: 12px; font-weight: 800; letter-spacing: .3em;
+      color: #E3B565; margin: 0 0 6px;
+    }
+    html[dir="rtl"] .login-eyebrow { letter-spacing: 0.05em; }
+
+    .brand-logo { margin: 0 0 6px; line-height: 0; }
+    .brand-logo img {
+      display: block; height: clamp(70px, 11vw, 120px);
+      width: auto; max-width: 100%; mix-blend-mode: screen;
+    }
+
+    .card-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .lang-toggle-btn {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #E3B565;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.12s;
+    }
+    .lang-toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+    }
+
+    html[dir="rtl"] .password-wrapper input { padding-left: 42px; padding-right: 14px; }
+    html[dir="rtl"] #togglePassword { right: auto; left: 12px; }
+
+    .login-stage {
+      display: flex; align-items: center; justify-content: center;
+      gap: clamp(24px, 5vw, 80px); width: 100%;
+    }
+    .side-circle {
+      flex: 0 0 auto;
+      width: clamp(120px, 15vw, 210px); aspect-ratio: 1;
+      padding: 8px; border-radius: 50%;
+      background: rgba(255, 255, 255, .08);
+      border: 2px solid rgba(255, 255, 255, .18);
+      box-shadow: 0 0 0 8px rgba(70, 120, 220, .25), 0 18px 40px rgba(0, 0, 0, .4);
+    }
+    .side-circle img {
+      display: block; width: 100%; height: 100%;
+      border-radius: 50%; object-fit: cover; background: #fff;
+    }
+    @media (max-width: 900px) { .side-circle { display: none; } }
+  </style>
+
+  <script src="../JS/i18n.js" defer></script>
   <script src="../JS/apin.js" defer></script>
   <script src="../JS/loginn.js" defer></script>
-  <!-- في الـ head -->
-<link rel="stylesheet" href="../CSS/kokquiz-brand.css">
-
-<!-- قبل </body> -->
-<script src="../JS/kokquiz-brand.js"></script>
 </head>
 <body>
   <main class="login-page">
-    <section class="login-card">
-      <a class="back-link" href="index.html">← Back to Home</a>
+    <div class="login-stage">
 
-      <!-- لو كارت الدخول عندك فاتح (أبيض) ضيف kq-on-light على الـ span ده -->
-      <h1 class="kq-heading"><span class="kq-brand kq-lg kq-stack" data-tagline></span></h1>
+      <div class="side-circle">
+        <img src="../church-logo.jpg" alt="">
+      </div>
 
-      <p class="eyebrow">WELCOME BACK</p>
-      <p class="subtitle">Sign in to continue your journey.</p>
-
-      <form id="loginForm">
-        <label for="email">Email address *</label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          placeholder="you@example.com"
-          autocomplete="email"
-          required
-        >
-
-        <label for="password">Password *</label>
-        <div class="password-wrapper">
-          <input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="Enter your password"
-            autocomplete="current-password"
-            required
-          >
-          <button
-            type="button"
-            id="togglePassword"
-            aria-label="Show password"
-          >◉</button>
+      <section class="login-card">
+        <div class="card-top-bar">
+          <a class="back-link" href="index.html" data-i18n="login.backHome">← Back to Home</a>
+          <button type="button" id="langToggleBtn" class="lang-toggle-btn" data-i18n="lang.switch">العربية</button>
         </div>
 
-        <p id="loginMessage" class="message" role="status" aria-live="polite"></p>
+        <div class="login-eyebrow" data-i18n="login.eyebrowTag">LEARN • PLAY • GROW</div>
+        <h1 class="brand-logo"><img src="../kokquiz-logo.png" alt="Kokquiz"></h1>
 
-        <button class="login-button" type="submit">Sign In</button>
-      </form>
+        <p class="eyebrow" data-i18n="login.welcome">WELCOME BACK</p>
+        <p class="subtitle" data-i18n="login.subtitle">Sign in to continue your journey.</p>
 
-      <p class="signup-text">
-        Don't have an account?
-        <!-- التوجيه لصفحة إنشاء الحساب بشكل صحيح -->
-        <a href="indexn.html">Create Account</a>
-      </p>
-    </section>
+        <form id="loginForm" novalidate>
+          <label for="email" data-i18n="login.emailLabel">Email address *</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="you@example.com"
+            data-i18n-ph="login.emailPh"
+            autocomplete="email"
+            required
+          >
+
+          <label for="password" data-i18n="login.pwdLabel">Password *</label>
+          <div class="password-wrapper">
+            <input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="Enter your password"
+              data-i18n-ph="login.pwdPh"
+              autocomplete="current-password"
+              required
+            >
+            <button
+              type="button"
+              id="togglePassword"
+              aria-label="Show password"
+              data-i18n-label="login.showPwd"
+            >◉</button>
+          </div>
+
+          <p id="loginMessage" class="message" role="status" aria-live="polite"></p>
+
+          <button class="login-button" type="submit" data-i18n="login.submit">Sign In</button>
+        </form>
+
+        <p class="signup-text">
+          <span data-i18n="login.noAccount">Don't have an account?</span>
+          <a href="indexn.html" data-i18n="login.createAccount">Create Account</a>
+        </p>
+      </section>
+
+      <div class="side-circle">
+        <img src="../logo-Elmalak.jpeg" alt="">
+      </div>
+
+    </div>
   </main>
-
-  <script src="../JS/kokquiz-brand.js"></script>
 </body>
 </html>

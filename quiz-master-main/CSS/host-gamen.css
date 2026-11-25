@@ -62,7 +62,7 @@ body, html { margin: 0; padding: 0; height: 100%; font-family: 'Montserrat', san
 .q-media img { max-width: 100%; max-height: 100%; }
 .media-placeholder { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
 .media-placeholder .kq-ph-cross { font-size: 2.2rem; line-height: 1; color: var(--gold); text-shadow: 0 0 18px rgba(255,210,133,.9); animation: phCross 3s ease-in-out infinite; }
-.media-placeholder .kq-ph-word { font-family: 'Pacifico', cursive; font-size: clamp(2.8rem, 5vw, 4.4rem); line-height: 1.15; color: #fff; text-shadow: 0 0 4px #CDEBFF, 0 0 14px rgba(110,198,255,.95), 0 0 34px rgba(60,150,255,.7), 0 4px 0 #1B63C7; animation: phGlow 2.6s ease-in-out infinite; }
+.media-placeholder .kq-ph-word { font-family: 'Pacifico', cursive; font-size: clamp(2.8rem, 5vw, 4.4rem); line-height: 1.15; color: transparent; background: linear-gradient(180deg, #FFFFFF 0%, #E3F6FF 38%, #8FD0FF 78%, #5BB0FF 100%); -webkit-background-clip: text; background-clip: text; text-shadow: none; filter: drop-shadow(0 0 1.5px #1B63C7) drop-shadow(0 0 1.5px #1B63C7) drop-shadow(0 4px 0 #1B63C7) drop-shadow(0 0 16px rgba(110,198,255,.95)); animation: phGlow 2.6s ease-in-out infinite; }
 .media-placeholder .kq-ph-sub { font-weight: 800; font-size: .8rem; letter-spacing: .4em; color: #DCE9FF; opacity: .85; text-transform: uppercase; }
 @keyframes phGlow { 0%,100% { transform: scale(1) rotate(-2deg); } 50% { transform: scale(1.06) rotate(2deg); } }
 @keyframes phCross { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-5px) scale(1.15); } }
@@ -273,3 +273,6 @@ body, html { margin: 0; padding: 0; height: 100%; font-family: 'Montserrat', san
 
 .btn-return-admin { position: absolute; bottom: 30px; right: 30px; padding: 15px 30px; font-size: 1.2rem; font-weight: 800; background: var(--white); color: var(--navy); border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: 0.2s; z-index: 10; }
 .btn-return-admin:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
+
+/* لوجو Kokquiz (صورة) في مربع السؤال اللي من غير صورة */
+.media-placeholder .kq-ph-logo { width: min(86%, 380px); height: auto; mix-blend-mode: screen; background: transparent; animation: phGlow 2.6s ease-in-out infinite; }

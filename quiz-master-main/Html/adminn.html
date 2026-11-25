@@ -10,9 +10,393 @@
   <link rel="stylesheet" href="../CSS/adminn.css">
   <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../CSS/admin-home.css">
+  <link rel="stylesheet" href="../CSS/churches.css">
   <script src="../JS/apin.js" defer></script>
   <script src="../JS/contacts.js" defer></script>
   <script src="../JS/adminn.js" defer></script>
+  <script src="../JS/churches.js" defer></script>
+
+  <style>
+    /* ============================================================
+       Account Dropdown Menu (Topbar)
+       ============================================================ */
+    .user-menu-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .user-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 5px 10px 5px 14px;
+      border-radius: 999px;
+      border: 1.5px solid transparent;
+      background: transparent;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.16s ease, border-color 0.16s ease;
+    }
+
+    [dir="rtl"] .user-trigger {
+      padding: 5px 14px 5px 10px;
+    }
+
+    .user-trigger:hover,
+    .user-menu-wrap.open .user-trigger {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+
+    .user-caret {
+      font-size: 12px;
+      color: #64748b;
+      transition: transform 0.18s ease;
+    }
+
+    .user-menu-wrap.open .user-caret {
+      transform: rotate(180deg);
+    }
+
+    .user-dropdown {
+      position: absolute;
+      top: calc(100% + 10px);
+      inset-inline-end: 0;
+      min-width: 220px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      box-shadow: 0 16px 38px rgba(11, 30, 54, 0.16);
+      padding: 8px;
+      z-index: 9999;
+      animation: dropFade 0.16s ease-out;
+    }
+
+    .user-dropdown[hidden] {
+      display: none !important;
+    }
+
+    @keyframes dropFade {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .user-dropdown-head {
+      padding: 10px 12px 12px;
+      border-bottom: 1px solid #f1f5f9;
+      margin-bottom: 6px;
+      text-align: start;
+    }
+
+    .user-dropdown-head strong {
+      display: block;
+      font-size: 14px;
+      font-weight: 800;
+      color: #0b1e36;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-dropdown-head small {
+      display: block;
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-drop-item {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      color: #0f233c;
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: start;
+      transition: background 0.14s ease, color 0.14s ease;
+    }
+
+    .user-drop-item i {
+      font-style: normal;
+    }
+
+    .user-drop-item:hover {
+      background: #f1f5f9;
+      color: #144b96;
+    }
+
+    .user-drop-item.danger {
+      color: #dc2626;
+    }
+
+    .user-drop-item.danger:hover {
+      background: #fef2f2;
+      color: #b91c1c;
+    }
+
+    .user-drop-divider {
+      height: 1px;
+      background: #f1f5f9;
+      margin: 6px 0;
+    }
+
+    /* ============================================================
+       Settings Page — Royal Navy & Gold Upgrade
+       ============================================================ */
+    #page-settings {
+      display: none;
+    }
+
+    #page-settings.active {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      max-width: 1020px;
+      margin: 0 auto;
+    }
+
+    #page-settings > .section-heading {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #0b1e36 0%, #144b96 55%, #1c68c7 100%);
+      color: #ffffff;
+      padding: 26px 30px;
+      border-radius: 20px;
+      border: 1px solid rgba(227, 181, 101, 0.35);
+      box-shadow: 0 12px 28px rgba(11, 30, 54, 0.18);
+      margin-bottom: 0;
+    }
+
+    #page-settings > .section-heading::after {
+      content: "⚙";
+      position: absolute;
+      inset-inline-end: 28px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 64px;
+      color: rgba(243, 198, 111, 0.16);
+      pointer-events: none;
+    }
+
+    #page-settings > .section-heading h2 {
+      color: #f3c66f;
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    #page-settings > .section-heading p {
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 14px;
+      margin: 0;
+    }
+
+    #page-settings .form-card {
+      background: #ffffff;
+      border-radius: 20px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 8px 26px rgba(15, 35, 60, 0.05);
+      padding: 28px 30px;
+      transition: box-shadow 0.2s ease;
+    }
+
+    #page-settings .form-card:hover {
+      box-shadow: 0 12px 32px rgba(15, 35, 60, 0.08);
+    }
+
+    #page-settings .form-section-title {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding-bottom: 18px;
+      margin-bottom: 22px;
+      border-bottom: 1.5px solid #f1f5f9;
+    }
+
+    #page-settings .form-section-title > span {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #0b1e36 0%, #163763 100%);
+      color: #f3c66f;
+      border: 1px solid rgba(227, 181, 101, 0.45);
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      flex-shrink: 0;
+      box-shadow: 0 6px 14px rgba(11, 30, 54, 0.16);
+    }
+
+    #page-settings .form-section-title h3 {
+      font-size: 17px;
+      font-weight: 800;
+      color: #0b1e36;
+      margin: 0 0 3px;
+    }
+
+    #page-settings .form-section-title p {
+      font-size: 13px;
+      color: #64748b;
+      margin: 0;
+    }
+
+    #settings-form {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 20px;
+      row-gap: 18px;
+    }
+
+    #settings-form .form-section-title,
+    #settings-form .form-footer {
+      grid-column: 1 / -1;
+    }
+
+    #settings-form .field {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    #settings-form .field label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    #settings-form .field input,
+    #settings-form .field select {
+      width: 100%;
+      height: 46px;
+      padding: 0 15px;
+      border-radius: 12px;
+      border: 1.5px solid #cbd5e1;
+      background: #f8fafc;
+      color: #0f233c;
+      font-size: 14px;
+      font-weight: 600;
+      outline: none;
+      transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    #settings-form .field input:focus,
+    #settings-form .field select:focus {
+      background: #ffffff;
+      border-color: #1c68c7;
+      box-shadow: 0 0 0 4px rgba(28, 104, 199, 0.13);
+    }
+
+    #settings-form .form-footer {
+      margin-top: 8px;
+      padding-top: 20px;
+      border-top: 1.5px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    #settings-form .form-hint {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #64748b;
+      background: #f8fafc;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+
+    #settings-form .footer-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    #settings-form .logout-btn {
+      height: 44px;
+      padding: 0 20px;
+      border-radius: 12px;
+      border: 1.5px solid #fecaca;
+      background: #fef2f2;
+      color: #dc2626;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.16s ease;
+    }
+
+    #settings-form .logout-btn:hover {
+      background: #fee2e2;
+      border-color: #f87171;
+      transform: translateY(-1px);
+    }
+
+    #settings-form button[type="submit"] {
+      height: 44px;
+      padding: 0 26px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, #f3c66f 0%, #dfa63b 100%);
+      color: #0b1e36;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(223, 166, 59, 0.35);
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    #settings-form button[type="submit"]:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 22px rgba(223, 166, 59, 0.45);
+    }
+
+    #page-settings .support-person {
+      background: #f8fafc !important;
+      border: 1.5px solid #e2e8f0 !important;
+      border-radius: 16px !important;
+      padding: 16px 20px !important;
+      transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    #page-settings .support-person:hover {
+      transform: translateY(-2px);
+      border-color: #25D366 !important;
+      background: #ffffff !important;
+      box-shadow: 0 8px 20px rgba(37, 211, 102, 0.12);
+    }
+
+    #page-settings .wa-circle {
+      box-shadow: 0 6px 14px rgba(37, 211, 102, 0.3);
+      transition: transform 0.16s ease;
+    }
+
+    #page-settings .support-person:hover .wa-circle {
+      transform: scale(1.07);
+    }
+
+    @media (max-width: 720px) {
+      #settings-form {
+        grid-template-columns: 1fr;
+      }
+      #page-settings > .section-heading,
+      #page-settings .form-card {
+        padding: 20px;
+      }
+    }
+  </style>
 </head>
 
 <body>
@@ -29,6 +413,10 @@
     <div class="menu-caption" data-i18n="menu.workspace">WORKSPACE</div>
 
     <nav class="navigation" aria-label="Admin navigation">
+      <a class="nav-link" href="manage-roles.html" id="nav-manage-roles" style="display: none; text-decoration: none;">
+        <span>🛡</span><i class="nav-label" data-i18n="nav.manageRoles">Manage Roles</i>
+      </a>
+
       <button class="nav-link active" data-page="home">
         <span>⌂</span><i class="nav-label" data-i18n="nav.home">Home</i>
       </button>
@@ -36,6 +424,11 @@
       <button class="nav-link" data-page="dashboard">
         <span>▦</span><i class="nav-label" data-i18n="nav.dashboard">Dashboard</i>
       </button>
+
+      <button class="nav-link" data-page="churches">
+        <span>⛪</span><i class="nav-label" data-i18n="nav.churches">Churches</i>
+      </button>
+
       <button class="nav-link" data-page="create">
         <span>＋</span><i class="nav-label" data-i18n="nav.create">Create Quiz</i>
       </button>
@@ -54,10 +447,6 @@
 
       <button class="nav-link" data-page="results">
         <span>▥</span><i class="nav-label" data-i18n="nav.results">Results</i>
-      </button>
-
-      <button class="nav-link" data-page="leaderboard">
-        <span>🏆</span><i class="nav-label" data-i18n="nav.leaderboard">Leaderboard</i>
       </button>
 
       <button class="nav-link" data-page="settings">
@@ -88,9 +477,32 @@
           </svg>
           <span id="lang-label">العربية</span>
         </button>
-        <span class="status-dot"></span>
-        <span class="admin-label" id="user-name" data-i18n="user.default">Admin</span>
-        <div class="avatar" id="user-avatar">A</div>
+
+        <!-- Account Dropdown -->
+        <div class="user-menu-wrap" id="user-menu-wrap">
+          <button type="button" class="user-trigger" id="user-menu-btn" aria-expanded="false" aria-haspopup="true">
+            <span class="status-dot"></span>
+            <span class="admin-label" id="user-name" data-i18n="user.default">Admin</span>
+            <div class="avatar" id="user-avatar">A</div>
+            <span class="user-caret">▾</span>
+          </button>
+
+          <div class="user-dropdown" id="user-dropdown" hidden>
+            <div class="user-dropdown-head">
+              <strong id="dropdown-user-name">Admin</strong>
+              <small id="dropdown-user-email">admin@kokquiz.com</small>
+            </div>
+            <button type="button" class="user-drop-item" id="drop-settings-btn">
+              <span>⚙</span>
+              <i data-i18n="nav.settings">Settings</i>
+            </button>
+            <div class="user-drop-divider"></div>
+            <button type="button" class="user-drop-item danger" id="drop-logout-btn">
+              <span>🚪</span>
+              <i data-i18n="set.logout">Log out</i>
+            </button>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -109,14 +521,14 @@
 
         <!-- اللوحة الزجاجية: اللوجو -->
         <div class="kq-hero">
-          <span class="kq-hero-word">Kokquiz</span>
+          <img class="kq-hero-logo" src="../kokquiz-logo.png" alt="Kokquiz">
           <span class="kq-hero-cross" aria-hidden="true">✝</span>
         </div>
 
-        <!-- الدايرتين + الصليب الذهبي (غيّر مسارات الصور) -->
+        <!-- الدايرتين + الصليب الذهبي -->
         <div class="kq-emblems">
           <i class="kq-spark a" aria-hidden="true">✦</i>
-          <div class="kq-round"><img src="../images/logo1.png" alt=""></div>
+          <div class="kq-round"><img src="../logo-Elmalak.jpeg" alt=""></div>
 
           <svg class="kq-cross" viewBox="0 0 60 90" aria-hidden="true">
             <defs>
@@ -128,14 +540,14 @@
             <rect x="4" y="24" width="52" height="14" rx="7" fill="url(#kqGold)"/>
           </svg>
 
-          <div class="kq-round"><img src="../images/logo2.png" alt=""></div>
+          <div class="kq-round"><img src="../church-logo.jpg" alt=""></div>
           <i class="kq-spark b" aria-hidden="true">✦</i>
         </div>
 
         <p class="kq-tagline" data-i18n="home.tagline">Learn · Play · Grow</p>
         <p class="kq-sub" data-i18n="home.sub">Test your knowledge and grow together in faith.</p>
 
-        <!-- زراير التنقل: data-go = اسم الصفحة (dashboard / create / quizzes / explore / participants / results / leaderboard / settings) -->
+        <!-- زراير التنقل -->
         <nav class="kq-nav">
           <button type="button" class="kq-btn" data-go="dashboard" data-i18n="nav.dashboard">Dashboard</button>
           <button type="button" class="kq-btn" data-go="create" data-i18n="dash.createBtn">＋ Create a quiz</button>
@@ -149,7 +561,7 @@
         <div class="welcome-banner">
           <div>
             <span class="eyebrow" data-i18n="dash.eyebrow">YOUR COMMUNITY, YOUR QUIZZES</span>
-            <h2 data-i18n="dash.welcome">Welcome to your dashboard.</h2>
+            <h2 data-i18n="dash.welcome">Welcome to your Kokquiz</h2>
             <p data-i18n="dash.intro">Create meaningful quiz experiences and help your community grow together.</p>
             <button class="button gold-button" data-go="create" data-i18n="dash.createBtn">＋ Create a quiz</button>
           </div>
@@ -211,9 +623,13 @@
         </div>
       </section>
 
+      <!-- CHURCHES (يتم رسمها من churches.js) -->
+      <section class="page" id="page-churches">
+        <div id="kc-root"></div>
+      </section>
+
       <!-- KAHOOT-STYLE CREATOR STUDIO (FULL SCREEN) -->
       <section class="page" id="page-create">
-        <!-- الشريط العلوي للاستوديو -->
         <header class="studio-header">
           <div class="studio-brand">
             <button type="button" class="studio-menu-btn" id="studio-menu-toggle" data-i18n-title="studio.menu" title="Show/Hide menu">☰</button>
@@ -221,30 +637,23 @@
             <input type="text" id="studio-quiz-title" value="New Church Quiz" placeholder="Enter quiz title..." data-i18n-ph="studio.titlePh">
           </div>
           <div class="studio-actions">
-            <!-- زر إظهار وإخفاء القائمة اليمنى -->
             <button type="button" class="btn-settings" id="toggle-properties-btn" style="background: #E2E8F0; color: #0B1E36;" data-i18n-title="studio.propsTitle" title="Show/Hide Properties" data-i18n="studio.props">⚙ Properties</button>
             <button type="button" class="btn-exit" id="studio-exit-btn" data-i18n="studio.exit">Exit</button>
             <button type="button" class="btn-save" id="studio-save-btn" data-i18n="studio.save">Save</button>
           </div>
         </header>
 
-        <!-- مساحة العمل الثلاثية -->
         <div class="studio-body">
-          <!-- 1. شريط الشرائح الجانبي (يسار) -->
           <aside class="studio-left-panel">
-            <div class="slides-container" id="slides-list">
-              <!-- تتولد الشرائح ديناميكياً هنا -->
-            </div>
+            <div class="slides-container" id="slides-list"></div>
             <button type="button" class="btn-add-slide" id="btn-add-slide" data-i18n="studio.add">＋ Add Question</button>
           </aside>
 
-          <!-- 2. مساحة الكانفاس المركزية (الوسط) -->
           <main class="studio-main-canvas">
             <div class="canvas-question-box">
               <input type="text" id="canvas-question-text" placeholder="Start typing your question" data-i18n-ph="studio.questionPh" autocomplete="off">
             </div>
 
-            <!-- مكان مخصص للصورة -->
             <div class="canvas-media-box" id="media-upload-container">
               <input type="file" id="question-image-upload" accept="image/png, image/jpeg, image/gif, image/webp" style="display: none;">
               
@@ -259,7 +668,6 @@
               </div>
             </div>
 
-            <!-- شبكة الإجابات -->
             <div class="canvas-answers-grid mode-mcq" id="canvas-answers-grid">
               <div class="answer-card bg-red" data-index="0">
                 <div class="shape">▲</div>
@@ -284,7 +692,6 @@
             </div>
           </main>
 
-          <!-- 3. لوحة الخصائص (يمين) - قابلة للإغلاق -->
           <aside class="studio-right-panel" id="studio-right-panel">
             <div class="right-panel-content">
               <div class="prop-group">
@@ -332,7 +739,6 @@
           </aside>
         </div>
 
-        <!-- نافذة الإعدادات النهائية (Settings Modal) -->
         <div id="studio-save-modal" class="modal-overlay" style="display: none;">
           <div class="modal-card">
             <h3 data-i18n="modal.title">Quiz Settings</h3>
@@ -343,10 +749,8 @@
               <input type="text" id="modal-quiz-name" maxlength="80" autocomplete="off" placeholder="Enter quiz title..." data-i18n-ph="studio.titlePh" style="width: 100%; padding: 10px; background: #0B1E36; color: white; border: 1px solid #1f3a59; border-radius: 6px; box-sizing: border-box;">
             </div>
 
-            <!-- التصنيف بيظهر للمسابقة الجديدة بس (المسابقة الموجودة ليها تصنيف خلاص) -->
             <div class="field" id="modal-category-field" style="margin-bottom: 25px;">
               <label style="color:#A9BCCD;" data-i18n="modal.category">Category (Fetched from API)</label>
-              <!-- يتم تعبئة هذا الحقل من الباك إند -->
               <select id="modal-quiz-category" style="width: 100%; padding: 10px; background: #0B1E36; color: white; border: 1px solid #1f3a59; border-radius: 6px;">
                 <option value="">جاري تحميل الأقسام...</option>
               </select>
@@ -569,7 +973,6 @@
           <button class="close-host-modal" id="close-host-modal" type="button">✕</button>
           
           <div class="host-modal-content">
-            <!-- الجزء الأيسر -->
             <div class="host-modal-left">
               <div class="host-graphic">
                 <span style="font-size: 60px;">🏆</span>
@@ -577,7 +980,6 @@
               </div>
             </div>
             
-            <!-- الجزء الأيمن -->
             <div class="host-modal-right">
               <h2 class="host-mode-title" data-i18n="host.classic">Classic</h2>
               
@@ -591,7 +993,6 @@
                 Bring friendly competition to this kahoot. Participants need to answer quickly and correctly to secure a top spot on the podium.
               </p>
 
-              <!-- شريط بدء اللعبة -->
               <div class="host-action-bar">
                 <div class="host-quiz-info">
                   <span class="host-quiz-icon">📝</span>

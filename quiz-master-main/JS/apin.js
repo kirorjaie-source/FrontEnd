@@ -1,12 +1,9 @@
 "use strict";
 
 /* ===========================================================================
-   api.js  —  الطبقة الموحدة للتعامل مع البيانات والـ Realtime (REST + SignalR)
-   تم تعديل قسم remote ليطابق الـ Swagger الفعلي.
+   apin.js  —  الطبقة الموحدة للتعامل مع البيانات والـ Realtime (REST + SignalR)
    =========================================================================== */
 (function () {
-  // على اللابتوب بنستخدم localhost، ولما الصفحة تتفتح من التليفون (عنوان الشبكة 192.168.x.x)
-  // بنستخدم نفس العنوان للباك إند، لأن localhost على التليفون معناه التليفون نفسه
   const API_HOST = (!location.hostname || location.hostname === "127.0.0.1") ? "localhost" : location.hostname;
 
   const CONFIG = {
@@ -56,10 +53,8 @@
     }
   }
 
-  // يحوّل أي شكل رد (array أو {items} أو {data}) إلى array
   const toArray = (r) => (Array.isArray(r) ? r : r?.items || r?.data || r?.$values || []);
 
-  // يستخرج سبب الخطأ من أي شكل رد: ProblemDetails، قايمة أخطاء Identity، نص عادي...
   function extractErrorMessage(err, status) {
     const describe = (e) => (typeof e === "string" ? e : e?.description || e?.message || JSON.stringify(e));
     if (typeof err === "string") return err.trim() || `خطأ من السيرفر (${status})`;
@@ -109,7 +104,7 @@
       let raw = "";
       try { raw = await res.text(); } catch { /* no body */ }
       let err = {};
-      try { err = raw ? JSON.parse(raw) : {}; } catch { err = raw; } // رد نصي عادي
+      try { err = raw ? JSON.parse(raw) : {}; } catch { err = raw; }
       let message = extractErrorMessage(err, res.status);
       if (res.status === 403) message = "ليس لديك صلاحية (يجب أن يكون الحساب Creator أو Admin).";
       console.error(`HTTP ${res.status} ${method} ${url}`, err);
@@ -118,7 +113,7 @@
 
     if (res.status === 204) return null;
     const text = await res.text();
-    try { return text ? JSON.parse(text) : {}; } catch { return text; } // رد نصي (زي رابط صورة)
+    try { return text ? JSON.parse(text) : {}; } catch { return text; }
   }
 
   /* --------------------------------------------------------------- Helpers */
@@ -203,7 +198,10 @@
         const session = { id: user.id, name: user.fullName || user.name || "", email: user.email, role: "Creator", loggedIn: true };
         writeJSON(KEYS.session, session);
         return session;
-      }
+      },
+
+      async confirmEmail() { return {}; },
+      async resendCode() { return {}; }
     },
 
     categories: {
@@ -339,7 +337,7 @@
   };
 
   /* =========================================================================
-     REMOTE  (ASP.NET Core REST API) — مطابق لـ QuizzesController
+     REMOTE  (ASP.NET Core REST API)
      ========================================================================= */
   const normKey = (s) => String(s).toLowerCase().replace(/[\s_\-]/g, "");
 
@@ -349,7 +347,6 @@
     return _catNames;
   }
 
-  // يحوّل اسم/رقم الـ category لرقم الـ enum اللي السيرفر مستنيه
   async function categoryToEnum(cat) {
     if (typeof cat === "number") return cat;
     const names = await getCategoryNames();
@@ -359,19 +356,15 @@
     return 0;
   }
 
-  // يحوّل رقم/اسم الـ category لاسم للعرض
   async function categoryToName(cat) {
     const names = await getCategoryNames();
     if (typeof cat === "number") return names[cat] ?? String(cat);
     return cat ?? "";
   }
 
-  // ⚠️ قيم enum الـ QuestionType تخمين (0 = اختيار متعدد، 1 = صح/خطأ) — ابعتلي الـ enum للتأكد
   const QUESTION_TYPE = { mcq: 0, quiz: 0, tf: 1 };
-  // القيم المسموحة للنقاط من السيرفر: 1..5000
   const POINTS = { none: 1, zero: 1, standard: 1000, double: 2000 };
 
-  // QuestionCreateDto: Text, ImageUrl, QuestionType, TimeLimit(5-250), Points(1-5000), Options(2-4)
   function toQuestionDto(q) {
     const n = normalizeQuestion(q);
     const pts = typeof q.points === "number" ? q.points : POINTS[n.points] ?? 1000;
@@ -385,11 +378,10 @@
       questionType: QUESTION_TYPE[n.type] ?? 0,
       timeLimit: Math.min(250, Math.max(5, n.timeLimit)),
       points: Math.min(5000, Math.max(1, pts)),
-      options // ⚠️ أسماء حقول OptionDto تخمين (text, isCorrect)
+      options
     };
   }
 
-  // QuizCreateDto: Title, Description, ImageUrl, IsPublic, Category (enum)
   async function toQuizDto(quiz) {
     return {
       title: quiz.title,
@@ -412,10 +404,9 @@
     };
   }
 
-  // ---- سؤال جاي من السيرفر (GET /Quizzes/{id}) ← شكل الاستوديو ----
   const pointsKey = (p) => (Number(p) <= 1 ? "none" : Number(p) >= 2000 ? "double" : "standard");
   function typeFromServer(v, optionCount) {
-    if (typeof v === "number") return v === 1 ? "tf" : "mcq";           // نفس تخمين QUESTION_TYPE
+    if (typeof v === "number") return v === 1 ? "tf" : "mcq";
     const s = String(v ?? "").toLowerCase();
     if (/true|false|tf|bool/.test(s)) return "tf";
     return optionCount === 2 ? "tf" : "mcq";
@@ -438,24 +429,20 @@
       answers,
       correct
     };
-    out._fp = JSON.stringify(toQuestionDto(out));   // بصمة: عشان نعرف لو اتغيّر قبل ما نبعت تعديل
+    out._fp = JSON.stringify(toQuestionDto(out));
     return out;
   }
 
-  // ⚠️ قيم enum الـ UserRoles تخمين (Player=0, Creator=1, Admin=2) — ابعتلي الـ enum عشان أظبطها
-  // الفورم مفروض ما يقدرش يسجّل Admin، فأي قيمة غير معروفة بتتحول لـ player
   const ROLE_VALUES = { player: 0, creator: 1, teacher: 1, host: 1 };
 
   const remote = {
     auth: {
-      // RegisterDto: UserName, Email, Password, rolesDto (enum UserRoles)
       async register(dto) {
         const roleKey = String(dto.requestedRole ?? dto.role ?? "player").trim().toLowerCase();
         const rolesDto = typeof dto.rolesDto === "number"
           ? dto.rolesDto
           : (ROLE_VALUES[roleKey] ?? ROLE_VALUES.player);
 
-        // الـ Identity غالبًا بيرفض المسافات في UserName، فبنبدلها بـ _
         const rawName = dto.userName ?? dto.fullName ?? dto.name ?? String(dto.email || "").split("@")[0];
         const userName = String(rawName).trim().replace(/\s+/g, "_");
 
@@ -466,6 +453,7 @@
           rolesDto
         });
       },
+
       async login(email, password) {
         const res = await http("POST", "/Auth/login", { email, password });
         const token = res.token || res.accessToken;
@@ -480,23 +468,30 @@
         };
         writeJSON(KEYS.session, session);
         return session;
+      },
+
+      confirmEmail(email, code) {
+        return http("POST", "/Auth/confirm-email", {
+          email: String(email).trim(),
+          code: String(code).trim()
+        });
+      },
+
+      resendCode(email) {
+        return http("POST", "/Auth/resend-confirmation", {
+          email: String(email).trim()
+        });
       }
     },
 
-    // GET /api/Quizzes/categories  → ["BibleKnowledge", ...]
     categories: {
       list: async () => (await getCategoryNames()).map((name, i) => ({ id: i, name }))
     },
 
     quizzes: {
-      // GET /api/Quizzes/mine
       list: async () => Promise.all(toArray(await http("GET", "/Quizzes/mine")).map(fromSummary)),
-
-      // GET /api/Quizzes/public
       listPublic: async () => Promise.all(toArray(await http("GET", "/Quizzes/public")).map(fromSummary)),
 
-      // GET /api/Quizzes/{id} → المسابقة بكل أسئلتها (محتاج endpoint في الباك إند — شوف backend-edit-quiz.md)
-      // لو مش موجود بنرجع للملخص من /mine (من غير أسئلة) ونعلّم عليه _partial
       get: async (id) => {
         try {
           const d = await http("GET", `/Quizzes/${id}`);
@@ -513,8 +508,6 @@
         return found ? { ...(await fromSummary(found)), _partial: true } : null;
       },
 
-      // مسابقة جديدة: POST /Quizzes ثم POST /Quizzes/{id}/questions لكل سؤال
-      // مسابقة موجودة: PUT /Quizzes/{id} + (أسئلة جديدة: POST) + (أسئلة اتحذفت: DELETE) + (أسئلة اتعدّلت: PUT /Quizzes/questions/{id})
       save: async (quiz) => {
         const dto = await toQuizDto(quiz);
         const isExisting = quiz.id != null && /^\d+$/.test(String(quiz.id));
@@ -540,21 +533,17 @@
 
         await http("PUT", `/Quizzes/${quizId}`, dto);
 
-        // 1) الأسئلة الجديدة (بنضيفها الأول عشان المسابقة ما تفضلش من غير أسئلة)
         for (const q of questions.filter((x) => !isServerId(x))) await addQuestion(q);
 
-        // لو السيرفر مرجّعش أسئلة المسابقة، مش هنحذف ولا نعدّل حاجة موجودة
         if (quiz._partial) return { ...quiz, id: quizId };
 
-        // 2) الأسئلة اللي اتشالت من الاستوديو
         const keep = new Set(questions.filter(isServerId).map((q) => String(q.id)));
         for (const oldId of quiz._originalQuestionIds || []) {
           if (!keep.has(String(oldId))) await http("DELETE", `/Quizzes/questions/${oldId}`);
         }
 
-        // 3) الأسئلة اللي اتعدّلت
         for (const q of questions.filter(isServerId)) {
-          if (q._fp && JSON.stringify(toQuestionDto(q)) === q._fp) continue;   // ما اتغيّرتش
+          if (q._fp && JSON.stringify(toQuestionDto(q)) === q._fp) continue;
           try {
             await http("PUT", `/Quizzes/questions/${q.id}`, toQuestionDto(q));
           } catch (e) {
@@ -565,23 +554,17 @@
         return { ...quiz, id: quizId };
       },
 
-      // DELETE /api/Quizzes/{id}
       remove: (id) => http("DELETE", `/Quizzes/${id}`),
-
-      // POST /api/Quizzes/{quizId}/questions → { id }
       addQuestion: (quizId, question) => http("POST", `/Quizzes/${quizId}/questions`, toQuestionDto(question))
     },
 
     questions: {
-      // ⚠️ مفيش endpoint لقايمة الأسئلة، و /mine مش بيرجّع الأسئلة — لازم endpoint جديد في الباك إند
       list: async () => [],
-      // DELETE /api/Quizzes/questions/{questionId}
       remove: (id) => http("DELETE", `/Quizzes/questions/${id}`)
     },
 
     media: {
       async upload(file) {
-        // POST /api/Uploads/image — اسم الحقل غالبًا "file" (IFormFile)، وبنجرّب "image" لو السيرفر رفض
         const UPLOAD = { path: "/Uploads/image", fields: ["file", "image"] };
 
         if (!file || !String(file.type).startsWith("image/")) throw new ApiError("NOT_AN_IMAGE", "الملف المرفق ليس صورة.");
@@ -595,18 +578,15 @@
             res = await http("POST", UPLOAD.path, fd, true);
             break;
           } catch (err) {
-            // 400 = غالبًا اسم الحقل غلط ← نجرّب الاسم التاني. أي خطأ تاني نوقف عنده.
             if (err.code !== "HTTP_400" || i === UPLOAD.fields.length - 1) throw err;
           }
         }
-        console.log("Upload response:", res);
 
         const url = typeof res === "string"
           ? res
           : res?.url ?? res?.imageUrl ?? res?.path ?? res?.filePath ?? res?.fileUrl ?? "";
-        if (!url) throw new ApiError("NO_URL", "السيرفر لم يرجع رابط الصورة (شوف الرد في الـ Console).");
+        if (!url) throw new ApiError("NO_URL", "السيرفر لم يرجع رابط الصورة.");
 
-        // رابط نسبي (/uploads/x.png) ← نحوّله لرابط كامل على السيرفر
         if (/^(https?:|data:)/i.test(url)) return url;
         const origin = CONFIG.API_BASE.replace(/\/api\/?$/i, "");
         return origin + (url.startsWith("/") ? "" : "/") + url;
@@ -614,8 +594,6 @@
     },
 
     results: {
-      // GET /api/Games/sessions/{sessionId}/leaderboard → List<StandingDto>
-      // StandingDto(PlayerId, Name, TotalScore, PointsEarned, Rank, RankChange, Streak)
       list: async () => {
         const cur = readJSON(KEYS.game, null);
         const sid = cur && (cur.sessionId || cur.id);
@@ -627,7 +605,7 @@
           score: r.totalScore ?? 0,
           points: r.totalScore ?? 0,
           rank: r.rank,
-          total: cur.totalQuestions ?? 0, // ⚠️ السيرفر مش بيرجّع عدد الأسئلة/الإجابات الصحيحة
+          total: cur.totalQuestions ?? 0,
           quizTitle: cur.quizTitle ?? cur.title ?? "Church Quiz",
           date: cur.createdAt
         }));
@@ -635,20 +613,17 @@
       saveGame: async () => null
     },
 
-    // ⚠️ مفيش Settings في الباك إند — localStorage مؤقتًا
     settings: {
       get: async () => readJSON(KEYS.settings, {}),
       save: async (s) => { writeJSON(KEYS.settings, s); return s; }
     },
 
     game: {
-      // POST /api/Games/{quizId}/sessions → SessionCreatedDto
       async create(quizId) {
         const s = await http("POST", `/Games/${quizId}/sessions`);
-        console.log("SessionCreatedDto من السيرفر:", s);
         const pin = s.pinCode ?? s.pin ?? s.roomCode ?? s.code;
         if (pin == null) {
-          throw new ApiError("NO_PIN", "السيرفر لم يرجع PIN للغرفة. افتح الـ Console وابعتلي شكل SessionCreatedDto.");
+          throw new ApiError("NO_PIN", "السيرفر لم يرجع PIN للغرفة.");
         }
         const session = {
           ...s,
@@ -662,7 +637,6 @@
         return session;
       },
 
-      // المدرّس: HostJoin(pin) ثم StartGame()
       async start(pin) {
         const cur = readJSON(KEYS.game, {});
         const p = pin ?? cur.roomCode;
@@ -673,13 +647,11 @@
         return updated;
       },
 
-      // المدرّس: EndGame()
       async end() {
         await realtime.invoke("EndGame");
         writeJSON(KEYS.game, { ...readJSON(KEYS.game, {}), status: "finished" });
       },
 
-      // اللاعب: JoinGame(pin, name, avatar) ← السيرفر يرد بحدث "Joined" { playerId, reconnectToken }
       async join(pin, nickname, avatar = "fox") {
         const p = String(pin).trim();
         const name = String(nickname).trim();
@@ -696,7 +668,6 @@
         return { id: info.playerId, playerId: info.playerId, nickname: name, avatar, reconnectToken: info.reconnectToken };
       },
 
-      // اللاعب: رجوع بعد انقطاع النت — RejoinGame(pin, reconnectToken)
       async rejoin() {
         const saved = readJSON(KEYS.reconnect, null);
         if (!saved) throw new ApiError("NO_SAVED_PLAYER", "مفيش لاعب محفوظ للرجوع.");
@@ -705,10 +676,7 @@
         return saved;
       },
 
-      // اللاعب: SubmitAnswer(answerId)
       submitAnswer: (answerId) => realtime.invoke("SubmitAnswer", Number(answerId)),
-
-      // مفيش endpoint لقايمة اللاعبين — بتتحدّث من حدث PlayerJoined
       async players() { return readJSON(KEYS.players, []); }
     }
   };
@@ -727,7 +695,6 @@
     _role: null,
     _bound: new Set(),
 
-    // يربط حدث SignalR باسمه (مرة واحدة لكل اتصال)
     _bind(evt) {
       if (!this._conn || this._bound.has(evt)) return;
       this._bound.add(evt);
@@ -745,7 +712,7 @@
       }
 
       if (!window.signalR) {
-        throw new ApiError("SIGNALR_NOT_LOADED", "مكتبة SignalR غير محمّلة في الصفحة (ضيف script الـ signalr.min.js).");
+        throw new ApiError("SIGNALR_NOT_LOADED", "مكتبة SignalR غير محمّلة في الصفحة.");
       }
 
       const Connected = signalR.HubConnectionState.Connected;
@@ -766,7 +733,6 @@
       ["Joined", "PlayerJoined", "PlayerLeft", "UpdatePlayerList", "GameStarted", "ReceiveAnswer", "StateChanged",
         ...Object.keys(this._handlers)].forEach((evt) => this._bind(evt));
 
-      // بعد إعادة الاتصال السيرفر بينسى الـ Context، فلازم نعيد الدخول
       this._conn.onreconnected(async () => {
         try {
           if (this._role === "host") await this._conn.invoke("HostJoin", this._pin);
@@ -779,10 +745,9 @@
 
       try {
         await this._conn.start();
-        console.log("SignalR connected successfully! 🚀");
       } catch (err) {
         console.error("SignalR Connection Error:", err);
-        throw new ApiError("HUB_CONNECTION_FAILED", "تعذر الاتصال بـ GameHub. تأكد من الباك إند ومن إعدادات CORS/التوكن.");
+        throw new ApiError("HUB_CONNECTION_FAILED", "تعذر الاتصال بـ GameHub.");
       }
 
       if (role === "host") await this.invoke("HostJoin", pin);
@@ -809,7 +774,6 @@
       this._handlers[type] = (this._handlers[type] || []).filter((fn) => fn !== handler);
     },
 
-    // ينتظر حدث واحد مع timeout
     waitFor(type, ms = 8000) {
       return new Promise((resolve, reject) => {
         const timer = setTimeout(() => {
@@ -826,10 +790,9 @@
       this._conn = null;
     },
 
-    // للـ mock فقط. مع السيرفر الحقيقي استخدم Api.game.* أو Api.realtime.invoke(method, ...args)
     send(type, data = {}) {
       if (CONFIG.USE_MOCK) this._channel?.postMessage({ type, ...data });
-      else console.warn(`realtime.send("${type}") غير مدعوم مع الـ GameHub — استخدم Api.realtime.invoke("MethodName", ...)`);
+      else console.warn(`realtime.send("${type}") غير مدعوم مع الـ GameHub`);
     },
 
     _dispatch(type, data) {
@@ -837,7 +800,6 @@
     }
   };
 
-  // نحدّث قايمة اللاعبين المحفوظة كل ما حد يدخل (الحدث بيوصل المدرّس باسم اللاعب)
   realtime.on("PlayerJoined", (payload) => {
     const nick = typeof payload === "string" ? payload : payload?.name ?? payload?.nickname;
     if (!nick) return;

@@ -752,3 +752,6 @@ tbody tr:hover { background: #FBFCFE; }
 .icon-btn:hover { background: #EEF2F7; transform: translateY(-1px); }
 .icon-btn-danger { border-color: #F3D8D8; background: #FFF5F5; }
 .icon-btn-danger:hover { background: #FDE8E8; }
+
+/* لوجو Kokquiz (صورة) في الصفحة الرئيسية */
+#page-home .kq-hero-logo { display: block; height: clamp(70px, 12vw, 150px); width: auto; max-width: 100%; mix-blend-mode: screen; background: transparent; }

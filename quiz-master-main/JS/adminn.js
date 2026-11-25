@@ -2,7 +2,7 @@
 
 /* ============================================================
    admin.js — لوحة التحكم
-   تعتمد بالكامل على window.Api (المعرف في api.js).
+   تعتمد بالكامل على window.Api (المعرف في apin.js).
    ============================================================ */
 
 // التحقق من تسجيل الدخول والتوجيه لصفحة loginn.html عند الحاجة
@@ -20,6 +20,7 @@ const I18N = {
   "brand.sub": "ADMIN PANEL",
   "menu.workspace": "WORKSPACE",
   "nav.dashboard": "Dashboard",
+  "nav.churches": "Churches",
   "nav.home": "Home",
   "home.tagline": "Learn · Play · Grow",
   "home.sub": "Test your knowledge and grow together in faith.",
@@ -30,11 +31,12 @@ const I18N = {
   "nav.results": "Results",
   "nav.leaderboard": "Leaderboard",
   "nav.settings": "Settings",
+  "nav.manageRoles": "Manage Roles",
   "nav.back": "← Back to website",
   "crumb.admin": "Admin",
   "user.default": "Admin",
   "dash.eyebrow": "YOUR COMMUNITY, YOUR QUIZZES",
-  "dash.welcome": "Welcome to your dashboard.",
+  "dash.welcome": "Welcome to your Kokquiz",
   "dash.intro": "Create meaningful quiz experiences and help your community grow together.",
   "dash.createBtn": "＋ Create a quiz",
   "stat.total": "Total quizzes",
@@ -151,7 +153,7 @@ const I18N = {
   "lb.note": "Showing each participant's best saved result. All attempts remain in Results.",
   "lb.emptySub": "Finished live games will appear here.",
   "common.participant": "Participant",
-  "common.churchQuiz": "Church Quiz",
+  "common.churchQuiz": "Kokquiz",
   "set.sub": "Configure the basic details of your workspace.",
   "set.section": "Workspace settings",
   "set.sectionSub": "These details are stored locally in this demo.",
@@ -177,7 +179,7 @@ const I18N = {
   "host.desc": "Bring friendly competition to this kahoot. Participants need to answer quickly and correctly to secure a top spot on the podium.",
   "host.start": "Start",
   "host.quizTitle": "Quiz Title",
-  "footer.a": "Church Quiz Admin",
+  "footer.a": "Kokquiz Admin",
   "footer.b": "Learn, Play, Grow",
   "msg.deleted": "Quiz deleted.",
   "msg.confirmDelete": "Delete \"{title}\"?",
@@ -209,6 +211,7 @@ const I18N = {
   "brand.sub": "لوحة التحكم",
   "menu.workspace": "مساحة العمل",
   "nav.dashboard": "لوحة المعلومات",
+  "nav.churches": "الكنايس",
   "nav.home": "الرئيسية",
   "home.tagline": "تعلّم · العب · انمُ",
   "home.sub": "اختبر معلوماتك وانمُ مع إخوتك في الإيمان.",
@@ -219,11 +222,12 @@ const I18N = {
   "nav.results": "النتائج",
   "nav.leaderboard": "لوحة الصدارة",
   "nav.settings": "الإعدادات",
+  "nav.manageRoles": "إدارة الصلاحيات",
   "nav.back": "→ العودة للموقع",
   "crumb.admin": "الأدمن",
   "user.default": "الأدمن",
   "dash.eyebrow": "مجتمعك، مسابقاتك",
-  "dash.welcome": "أهلاً بك في لوحة التحكم.",
+  "dash.welcome": "أهلاً بك في Kokquiz",
   "dash.intro": "أنشئ مسابقات هادفة وساعد مجتمعك على النمو معاً.",
   "dash.createBtn": "＋ إنشاء مسابقة",
   "stat.total": "إجمالي المسابقات",
@@ -340,7 +344,7 @@ const I18N = {
   "lb.note": "يتم عرض أفضل نتيجة محفوظة لكل مشارك. كل المحاولات متاحة في صفحة النتائج.",
   "lb.emptySub": "ستظهر الألعاب المباشرة المنتهية هنا.",
   "common.participant": "مشارك",
-  "common.churchQuiz": "كويز الكنيسة",
+  "common.churchQuiz": "Kokquiz",
   "set.sub": "اضبط التفاصيل الأساسية لمساحة عملك.",
   "set.section": "إعدادات مساحة العمل",
   "set.sectionSub": "يتم حفظ هذه البيانات محلياً في هذه النسخة التجريبية.",
@@ -366,7 +370,7 @@ const I18N = {
   "host.desc": "أضف روح المنافسة إلى هذه المسابقة. على المشاركين الإجابة بسرعة وبشكل صحيح لحجز مركز على منصة التتويج.",
   "host.start": "ابدأ",
   "host.quizTitle": "عنوان المسابقة",
-  "footer.a": "لوحة كويز الكنيسة",
+  "footer.a": "لوحة Kokquiz",
   "footer.b": "اتعلّم • العب • انمُ",
   "msg.deleted": "تم حذف المسابقة.",
   "msg.confirmDelete": "هل تريد حذف \"{title}\"؟",
@@ -429,7 +433,6 @@ function applyStaticTranslations() {
   const heading = $("page-heading");
   if (heading) heading.textContent = t(`nav.${currentPage}`);
 
-  // زرار اللغة بيعرض اللغة التانية
   const langLabel = $("lang-label");
   if (langLabel) langLabel.textContent = currentLang === "ar" ? "English" : "العربية";
 }
@@ -441,6 +444,7 @@ function renderAllPages() {
   const jobs = [renderDashboard, renderQuizzes, renderParticipants, renderResults, renderLeaderboard];
   if (currentPage === "explore") jobs.push(() => renderExplore({ refetch: false }));
   jobs.forEach((job) => job().catch(showError));
+  if (window.KokChurches && typeof KokChurches.refresh === "function") KokChurches.refresh();
 }
 
 function setLanguage(lang, { rerender = true } = {}) {
@@ -474,14 +478,16 @@ function getAccountInfo() {
   return { name, email, key: first(email, s.id, c.sub, name) };
 }
 
-// الإعدادات بتتخزن للمتصفح كله، فبنربطها بصاحب الحساب عشان ما يظهرش اسم حد تاني
 let userSettings = {};
 
 function renderUserBadge() {
   const info = getAccountInfo();
   const name = (userSettings.name || "").trim() || info.name || (info.email ? info.email.split("@")[0] : "") || t("user.default");
+  const email = (userSettings.email || "").trim() || info.email || "";
   if ($("user-name")) $("user-name").textContent = name;
   if ($("user-avatar")) $("user-avatar").textContent = [...name][0]?.toUpperCase() || "A";
+  if ($("dropdown-user-name")) $("dropdown-user-name").textContent = name;
+  if ($("dropdown-user-email")) $("dropdown-user-email").textContent = email;
 }
 
 /* ============================================================
@@ -493,7 +499,6 @@ const WA_ICON = `<svg viewBox="0 0 24 24" width="28" height="28" fill="currentCo
 function renderSupport() {
   const grid = $("support-grid");
   if (!grid) return;
-  // الكروت جنب بعض (عمودين)، ولو الشاشة ضيقة بتنزل تحت بعض
   grid.style.cssText = "display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;width:100%;";
   grid.innerHTML = SUPPORT_CONTACTS.map((p) => {
     const digits = String(p.phone || "").replace(/\D/g, "");
@@ -559,6 +564,7 @@ function showPage(name) {
 
   const renderers = {
     dashboard: renderDashboard,
+    churches: async () => { if (window.KokChurches) await KokChurches.onShow(); },
     quizzes: renderQuizzes,
     explore: renderExplore,
     participants: renderParticipants,
@@ -664,7 +670,6 @@ async function deleteQuiz(id) {
 let hostingQuizId = null;
 
 async function openHostModal(quizId) {
-  // مسابقات الآخرين (صفحة Quizzes) مش موجودة في /mine، فبناخد بياناتها من القايمة العامة
   const quiz = publicQuizCache.get(String(quizId)) || await Api.quizzes.get(quizId);
   if (!quiz) return toast(t("msg.notFound"));
   hostingQuizId = quizId;
@@ -681,15 +686,12 @@ async function startHosting() {
   if (!hostingQuizId) return;
   const quizId = hostingQuizId;
 
-  const tab = window.open("about:blank", "_blank");
   try {
     await Api.game.create(quizId);
     closeHostModal();
     toast(t("msg.sessionCreated"));
-    if (tab) tab.location.href = "lobbyn.html";
-    else window.location.href = "lobbyn.html";
+    window.location.href = "lobbyn.html";
   } catch (err) {
-    tab?.close();
     closeHostModal();
     showError(err);
   }
@@ -934,7 +936,6 @@ function bindStudio() {
     if (problem) {
       loadQuestionToCanvas(problem.index);
       toast(problem.message);
-      // نعلّم الخانات الفاضية بالأحمر ونحط المؤشر على أول واحدة
       let firstEmpty = null;
       for (let i = 0; i < 4; i++) {
         const input = $(`ans-text-${i}`);
@@ -955,7 +956,7 @@ function bindStudio() {
     const categorySelect = $("modal-quiz-category");
     if (categorySelect && !isEdit) {
       categorySelect.value = studioQuiz.category || "";
-      if (categorySelect.selectedIndex < 0) categorySelect.selectedIndex = 0;   // لو التصنيف مش في القايمة نختار أول واحد
+      if (categorySelect.selectedIndex < 0) categorySelect.selectedIndex = 0;
     }
     if ($("studio-save-modal")) $("studio-save-modal").style.display = "flex";
     if ($("modal-quiz-name") && !$("modal-quiz-name").value) $("modal-quiz-name").focus();
@@ -974,7 +975,6 @@ function bindStudio() {
     }
     studioQuiz.title = quizName;
     if ($("studio-quiz-title")) $("studio-quiz-title").value = quizName;
-    // المسابقة الموجودة بتحتفظ بتصنيفها، والجديدة بتاخد اللي اتختار
     if (studioQuiz.id == null) studioQuiz.category = $("modal-quiz-category")?.value || "General";
     studioQuiz.status = "Ready";
 
@@ -1002,7 +1002,6 @@ let publicQuizzes = [];
 const publicQuizCache = new Map();
 
 async function loadPublicQuizzes() {
-  // بنجمع: مسابقاتي (GET /Quizzes/mine) + المسابقات العامة بتاعت غيري (GET /Quizzes/public)
   const hasPublic = typeof Api.quizzes.listPublic === "function";
   const [mine, pub] = await Promise.all([
     Api.quizzes.list().catch((e) => { console.warn("mine failed", e); return []; }),
@@ -1012,7 +1011,7 @@ async function loadPublicQuizzes() {
   const byId = new Map();
   [...(Array.isArray(mine) ? mine : []), ...(Array.isArray(pub) ? pub : [])].forEach((q) => byId.set(String(q.id), q));
 
-  publicQuizzes = [...byId.values()].sort((a, b) => (Number(b.id) || 0) - (Number(a.id) || 0));   // الأحدث الأول
+  publicQuizzes = [...byId.values()].sort((a, b) => (Number(b.id) || 0) - (Number(a.id) || 0));
   publicQuizCache.clear();
   publicQuizzes.forEach((q) => publicQuizCache.set(String(q.id), q));
 }
@@ -1180,7 +1179,6 @@ async function exportResults() {
 async function loadSettings() {
   const stored = (await Api.settings.get()) || {};
   const info = getAccountInfo();
-  // لو الإعدادات دي لحساب تاني على نفس المتصفح بنتجاهلها
   userSettings = !stored.owner || stored.owner === info.key ? stored : {};
 
   if ($("user-display-name")) $("user-display-name").value = userSettings.name || info.name || "";
@@ -1284,6 +1282,66 @@ function init() {
   renderParticipants().catch(showError);
   renderResults().catch(showError);
   renderLeaderboard().catch(showError);
+
+  const rolesLink = document.getElementById("nav-manage-roles");
+  if (rolesLink) {
+    let isAdmin = false;
+    try {
+      if (window.Api?.auth?.isAdmin) {
+        isAdmin = Api.auth.isAdmin();
+      } else {
+        const s = (window.Api && Api.auth.getSession()) || JSON.parse(localStorage.getItem("churchQuizSession") || "{}");
+        const token = s.token || localStorage.getItem("token") || localStorage.getItem("churchQuizToken");
+        const c = token ? decodeJwt(token) : {};
+        const role = s.role || c.role || c["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || "";
+        isAdmin = String(role).toLowerCase() === "admin" || role === 0 || role === "0";
+      }
+    } catch { /* ignore */ }
+
+    if (isAdmin) {
+      rolesLink.hidden = false;
+      rolesLink.style.display = "";
+    }
+  }
+
+  // فتح التبويب المطلوب لو جاي من صفحة Manage Roles عبر ?page=...
+  const requestedPage = new URLSearchParams(window.location.search).get("page");
+  if (requestedPage) {
+    goTo(requestedPage);
+    window.history.replaceState({}, "", "adminn.html");
+  }
+
+  // قائمة الحساب (Account Dropdown)
+  const userWrap = $("user-menu-wrap");
+  const userBtn = $("user-menu-btn");
+  const userDrop = $("user-dropdown");
+
+  const closeUserMenu = () => {
+    userWrap?.classList.remove("open");
+    if (userDrop) userDrop.hidden = true;
+    userBtn?.setAttribute("aria-expanded", "false");
+  };
+
+  userBtn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = userWrap?.classList.toggle("open");
+    if (userDrop) userDrop.hidden = !isOpen;
+    userBtn.setAttribute("aria-expanded", String(Boolean(isOpen)));
+  });
+
+  $("drop-settings-btn")?.addEventListener("click", () => {
+    closeUserMenu();
+    showPage("settings");
+  });
+
+  $("drop-logout-btn")?.addEventListener("click", () => {
+    closeUserMenu();
+    logout();
+  });
+
+  document.addEventListener("click", (e) => {
+    if (userWrap && !userWrap.contains(e.target)) closeUserMenu();
+  });
 }
 
 document.addEventListener("DOMContentLoaded", init);

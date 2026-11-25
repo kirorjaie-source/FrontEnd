@@ -7,7 +7,7 @@
    =========================================================================== */
 
 const RECONNECT_KEY = "churchQuizReconnect"; // نفس المفتاح اللي في apin.js
-const VIEWS = ["join-card", "waiting-card", "get-ready-card", "answer-pad", "result-card"];
+const VIEWS = ["join-card", "waiting-card", "get-ready-card", "answer-pad", "result-card", "final-card"];
 const COLORS = { correct: "#26890C", wrong: "#E21B3C", none: "#555B66", over: "#1368CE" };
 
 const $ = (id) => document.getElementById(id);
@@ -42,7 +42,7 @@ function buildAvatarPicker() {
   mark();
 }
 
-// يحط إيموجي الشخصية في كارت الانتظار والنتيجة والفوتر
+// يحط إيموجي الشخصية في كارت الانتظار والنتيجة والنهاية والفوتر
 function applyAvatar(key) {
   const emoji = window.Kok?.avatarEmoji(key) || "🦊";
   document.querySelectorAll(".avatar-emoji, .player-avatar-mini").forEach((el) => { el.textContent = emoji; });
@@ -149,27 +149,79 @@ function onReveal(d) {
   show("result-card");
 }
 
+// كارتين واتساب من contacts.js (SUPPORT_CONTACTS: الاسم + الرقم)
+function renderSupport() {
+  const box = $("final-support");
+  const links = $("support-links");
+  if (!box || !links || typeof SUPPORT_CONTACTS === "undefined" || !SUPPORT_CONTACTS.length) return;
+
+  const WA = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.27-1.38a9.9 9.9 0 0 0 4.77 1.22c5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm5.8 14.05c-.25.7-1.45 1.34-2 1.4-.52.06-1.17.09-1.88-.12-.43-.14-.98-.32-1.69-.63-2.97-1.28-4.9-4.27-5.05-4.47-.15-.2-1.2-1.6-1.2-3.05 0-1.45.76-2.16 1.03-2.46.27-.3.59-.37.79-.37h.57c.18 0 .43-.07.67.51.25.6.85 2.07.92 2.22.07.15.12.32.02.52-.1.2-.15.32-.3.5-.15.17-.31.39-.45.52-.15.15-.3.31-.13.6.17.3.77 1.27 1.65 2.05 1.13 1.01 2.09 1.32 2.39 1.47.3.15.47.12.65-.07.17-.2.75-.87.95-1.17.2-.3.4-.25.67-.15.27.1 1.72.81 2.02.96.3.15.5.22.57.35.07.12.07.72-.18 1.42z"/></svg>';
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[c]);
+
+  links.innerHTML = SUPPORT_CONTACTS.slice(0, 2).map((p) => {
+    const digits = String(p.phone || "").replace(/\D/g, "");
+    return `<a class="support-link" target="_blank" rel="noopener noreferrer" href="${digits ? "https://wa.me/" + digits : "#"}">` +
+           `<span class="sup-name">${esc(p.name)}</span><span class="sup-wa">${WA}</span></a>`;
+  }).join("");
+  box.hidden = false;
+}
+
+// قصاصات ورق ملونة بتنزل على الشاشة
+function launchConfetti() {
+  const box = $("final-confetti");
+  if (!box) return;
+  const colors = ["#FFD966", "#FFFFFF", "#6EC6FF", "#E5B869", "#FF7A96", "#8CF0B0"];
+  box.innerHTML = Array.from({ length: 48 }, () => {
+    const left = (Math.random() * 100).toFixed(1);
+    const dur = (3 + Math.random() * 3.5).toFixed(2);
+    const delay = (Math.random() * 4).toFixed(2);
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    return `<i style="left:${left}%;background:${color};animation-duration:${dur}s;animation-delay:${delay}s"></i>`;
+  }).join("");
+}
+
+// عدّاد النقاط: من 0 للقيمة النهائية
+function countUpNumber(el, to) {
+  const t0 = performance.now();
+  const dur = 1400;
+  const step = (now) => {
+    const p = Math.min(1, (now - t0) / dur);
+    el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3)));
+    if (p < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
 // GameFinished: List<StandingDto> (playerId, name, totalScore, rank, ...)
 function onFinished(board) {
   console.log("[player] GameFinished", board);
   Countdown.stop();
   const list = asArray(board);
   const mine = list.find((s) => me && s.playerId === me.playerId);
+  const rank = mine?.rank;
 
-  const banner = $("result-banner");
-  if (banner) {
-    banner.textContent = "Game Over";
-    banner.style.background = COLORS.over;
-    banner.style.color = "#fff";
+  if ($("final-name")) $("final-name").textContent = me?.nickname || "";
+  if ($("final-medal")) $("final-medal").textContent = ({ 1: "🥇", 2: "🥈", 3: "🥉" })[rank] || "🏆";
+  if ($("final-headline")) {
+    $("final-headline").textContent =
+      rank === 1 ? "مبروك! أنت المركز الاول  🏆" :
+      rank === 2 || rank === 3 ? "  كنت قريب انك تكسب👌   🎉" :
+      "شكراً لمشاركتك! ✝️";
   }
-  if ($("score-gained-text")) $("score-gained-text").textContent = mine ? `${mine.totalScore} pts` : "";
-  if ($("podium-text")) {
-    $("podium-text").textContent = mine ? `You finished #${mine.rank} of ${list.length}` : "Thanks for playing!";
+  if ($("final-rank")) {
+    $("final-rank").textContent = mine ? `المركز ${rank} من ${list.length}` : "";
+    $("final-rank").classList.toggle("hidden", !mine);
+  }
+  if ($("final-score")) {
+    $("final-score").classList.toggle("hidden", !mine);
+    if (mine && $("final-score-num")) countUpNumber($("final-score-num"), Number(mine.totalScore) || 0);
   }
   if (mine) setFooterScore(mine.totalScore);
 
+  renderSupport();
+  launchConfetti();
   localStorage.removeItem(RECONNECT_KEY); // اللعبة خلصت: مفيش رجوع
-  show("result-card");
+  show("final-card");
 }
 
 /* ---------------- الدخول ---------------- */

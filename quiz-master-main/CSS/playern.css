@@ -1,5 +1,5 @@
 /* ===========================================================================
-   playern.css — كل شاشات اللاعب بشكل Kokquiz (دخول، انتظار، إجابة، نتيجة).
+   playern.css — كل شاشات اللاعب بشكل Kokquiz (دخول، انتظار، إجابة، نتيجة، نهاية).
    ملف واحد كامل: مفيش حاجة تانية محتاجة تتحمّل غير countdown.css.
    =========================================================================== */
 
@@ -264,6 +264,155 @@ body {
 }
 .podium-text { margin: 0; font-weight: 800; font-size: 20px; }
 
+/* ---- شاشة النهاية ---- */
+html, body { overflow-x: hidden; }
+.final-card {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 520px;
+}
+
+/* أشعة ذهبية بتلف ورا الميدالية */
+.final-rays {
+  position: absolute;
+  top: -250px;
+  left: 50%;
+  width: 720px;
+  height: 720px;
+  z-index: -1;
+  pointer-events: none;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 217, 102, .26) 0 8deg, transparent 8deg 20deg);
+  -webkit-mask: radial-gradient(circle, #000 0 16%, transparent 60%);
+  mask: radial-gradient(circle, #000 0 16%, transparent 60%);
+  transform: translateX(-50%);
+  animation: final-spin 28s linear infinite;
+}
+@keyframes final-spin {
+  from { transform: translateX(-50%) rotate(0deg); }
+  to   { transform: translateX(-50%) rotate(360deg); }
+}
+
+/* قصاصات ورق */
+.final-confetti { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 4; }
+.final-confetti i {
+  position: absolute;
+  top: -24px;
+  width: 10px;
+  height: 16px;
+  border-radius: 2px;
+  opacity: .95;
+  animation: final-fall linear infinite;
+}
+@keyframes final-fall { to { transform: translateY(112vh) rotate(720deg); } }
+
+.final-eyebrow {
+  padding: 7px 22px;
+  border-radius: 999px;
+  background: rgba(8, 28, 70, .55);
+  border: 1px solid rgba(255, 217, 102, .6);
+  color: #FFD966;
+  font: 800 14px/1 "Montserrat", "Inter", sans-serif;
+  letter-spacing: .08em;
+  box-shadow: 0 0 18px rgba(255, 217, 102, .25);
+}
+
+.final-medal {
+  font-size: clamp(110px, 32vw, 160px);
+  line-height: 1;
+  filter: drop-shadow(0 0 30px rgba(255, 217, 102, .9)) drop-shadow(0 10px 0 rgba(11, 30, 54, .25));
+  animation: final-pop .8s cubic-bezier(.2, 1.5, .4, 1) both, final-float 3s ease-in-out .8s infinite;
+}
+@keyframes final-pop { from { transform: scale(.2) rotate(-25deg); opacity: 0; } to { transform: scale(1) rotate(0); opacity: 1; } }
+@keyframes final-float { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-10px) rotate(2deg); } }
+
+.final-name {
+  margin: 0;
+  font-family: "Pacifico", cursive;
+  font-weight: 400;
+  font-size: clamp(44px, 12vw, 72px);
+  line-height: 1.2;
+  color: #fff;
+  word-break: break-word;
+  text-shadow: 0 0 4px #CDEBFF, 0 0 14px rgba(110, 198, 255, .95), 0 0 34px rgba(60, 150, 255, .7), 0 4px 0 #1B63C7;
+}
+
+.final-score {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 38px 12px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #FBEFC4 0%, #EBCB6E 100%);
+  color: #0B1E36;
+  font-weight: 900;
+  font-size: clamp(40px, 11vw, 60px);
+  line-height: 1.1;
+  box-shadow: 0 6px 0 #B8962E, 0 16px 34px rgba(5, 25, 70, .45), 0 0 30px rgba(255, 217, 102, .35);
+}
+.final-score small { font-size: .4em; font-weight: 800; }
+
+.final-rank {
+  padding: 9px 24px;
+  border-radius: 14px;
+  background: rgba(8, 28, 70, .55);
+  border: 2px solid rgba(255, 255, 255, .35);
+  font-weight: 900;
+  font-size: 20px;
+  color: #fff;
+}
+
+.final-message {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(92vw, 440px);
+  padding: 18px 20px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, .12);
+  border: 1px solid rgba(255, 255, 255, .28);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 14px 40px rgba(5, 25, 70, .4), inset 0 1px 0 rgba(255, 255, 255, .25);
+}
+.final-message b { font-size: 24px; color: #FFD966; text-shadow: 0 0 12px rgba(255, 217, 102, .5); }
+.final-message span { font-weight: 700; font-size: 16px; line-height: 1.8; color: #DCE9FF; }
+
+.final-support { width: min(92vw, 440px); }
+.final-support > p { margin: 0 0 12px; font-weight: 800; font-size: 15px; opacity: .95; }
+.support-links { display: flex; flex-direction: column; gap: 10px; direction: ltr; }
+.support-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 8px 8px 8px 20px;
+  border-radius: 999px;
+  text-decoration: none;
+  color: #fff;
+  background: rgba(255, 255, 255, .12);
+  border: 1px solid rgba(255, 255, 255, .28);
+  transition: transform .15s, background .15s;
+}
+.support-link:hover { transform: translateY(-2px); background: rgba(255, 255, 255, .2); }
+.support-link .sup-name { font-weight: 800; font-size: 15px; }
+.support-link .sup-wa {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #25D366;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(37, 211, 102, .45);
+}
+.support-link .sup-wa svg { width: 26px; height: 26px; }
+
 /* ---- الفوتر: اسم اللاعب ونقاطه ---- */
 .player-footer {
   position: fixed;
@@ -294,7 +443,7 @@ body {
 .player-score { font-weight: 800; font-size: 16px; color: #FFD966; }
 
 @media (prefers-reduced-motion: reduce) {
-  .kok-sparkles i, .ready-loader { animation: none; }
+  .kok-sparkles i, .ready-loader, .final-rays, .final-medal, .final-confetti i { animation: none; }
 }
 
 /* ---- اختيار الشخصية ---- */

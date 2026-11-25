@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1C55AE">
+  <title>Email verification | Kokquiz</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Pacifico&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../CSS/verify-emailn.css">
+</head>
+<body>
+  <div class="vf-sparkles" aria-hidden="true">
+    <i style="left:7%;top:10%;font-size:22px;animation-delay:.2s">✦</i>
+    <i style="left:88%;top:16%;font-size:16px;animation-delay:1.1s">✦</i>
+    <i style="left:12%;top:70%;font-size:14px;animation-delay:2s">✦</i>
+    <i style="left:92%;top:78%;font-size:24px;animation-delay:.7s">✦</i>
+  </div>
+
+  <main class="vf-page">
+    <div class="vf-logo">
+      <svg class="vf-cross" viewBox="0 0 60 90" aria-hidden="true">
+        <defs><linearGradient id="vfGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF3B0"/><stop offset="1" stop-color="#E4B93C"/></linearGradient></defs>
+        <rect x="23" y="2" width="14" height="86" rx="7" fill="url(#vfGold)"/>
+        <rect x="4" y="24" width="52" height="14" rx="7" fill="url(#vfGold)"/>
+      </svg>
+      <span class="vf-word kok-word">Kokquiz</span>
+    </div>
+
+    <section class="vf-card">
+      <h1 class="vf-title">Verify your email</h1>
+      <p class="vf-sub">We sent a 6-digit code to</p>
+      <p class="vf-email" id="email-shown" dir="ltr">—</p>
+
+      <div class="vf-otp" id="otp" dir="ltr">
+        <input type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="1" aria-label="1">
+        <input type="text" inputmode="numeric" maxlength="1" aria-label="2">
+        <input type="text" inputmode="numeric" maxlength="1" aria-label="3">
+        <input type="text" inputmode="numeric" maxlength="1" aria-label="4">
+        <input type="text" inputmode="numeric" maxlength="1" aria-label="5">
+        <input type="text" inputmode="numeric" maxlength="1" aria-label="6">
+      </div>
+
+      <div class="vf-msg" id="msg" role="alert"></div>
+
+      <button type="button" class="vf-btn" id="btn-verify">Verify</button>
+
+      <div class="vf-resend">
+        <span>Didn't get the code?</span>
+        <button type="button" class="vf-link" id="btn-resend">Resend code</button>
+      </div>
+      <p class="vf-hint">Check your spam folder if you can't find it.</p>
+      <a class="vf-back" href="indexn.html">Change email</a>
+    </section>
+  </main>
+
+  <script src="../JS/i18n.js"></script>
+  <script src="../JS/apin.js"></script>
+  <script src="../JS/verify-emailn.js"></script>
+</body>
+</html>

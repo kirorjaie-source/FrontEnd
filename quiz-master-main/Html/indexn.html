@@ -1,63 +1,115 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0B1E36">
-  <title>Church Quiz</title>
+  <title>Create Account | Kokquiz</title>
   <link rel="stylesheet" href="../CSS/stylen.css">
+  <style>
+    /* لوجو Kokquiz */
+    .brand-logo { margin: 0 0 6px; line-height: 0; }
+    .brand-logo img { display: block; height: clamp(70px, 11vw, 120px); width: auto; max-width: 100%; mix-blend-mode: screen; }
+
+    /* ضبط أيقونة العين في العربي والإنجليزي */
+    html[dir="rtl"] .password-wrapper input { padding-left: 42px; padding-right: 14px; }
+    html[dir="rtl"] .eye-btn { right: auto; left: 12px; }
+
+    /* مؤشر شروط كلمة السر */
+    .pwd-hints {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 6px 0 12px;
+    }
+    .pwd-chip {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      transition: all 0.15s;
+    }
+    .pwd-chip.ok {
+      background: rgba(34, 197, 94, 0.2);
+      color: #86efac;
+      border-color: rgba(134, 239, 172, 0.45);
+    }
+
+    /* أزرار الدعم عبر واتساب */
+    .support-box { margin-top: 22px; text-align: center; }
+    .support-box > p { margin: 0 0 12px; font-weight: 700; opacity: .9; }
+    .support-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+    .support-link {
+      display: inline-flex; align-items: center; justify-content: space-between; gap: 14px;
+      min-width: 210px; padding: 8px 8px 8px 18px;
+      border-radius: 999px; text-decoration: none; color: inherit;
+      background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.28);
+      -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+      transition: transform .15s, background .15s;
+    }
+    html[dir="rtl"] .support-link { padding: 8px 18px 8px 8px; }
+    .support-link:hover { transform: translateY(-2px); background: rgba(255,255,255,.2); }
+    .support-link .sup-name { font-weight: 800; font-size: 14px; }
+    .support-link .sup-wa {
+      display: grid; place-items: center; flex: 0 0 auto;
+      width: 42px; height: 42px; border-radius: 50%;
+      background: #25D366; color: #fff;
+      box-shadow: 0 4px 12px rgba(37, 211, 102, .45);
+    }
+    .support-link .sup-wa svg { width: 26px; height: 26px; }
+    @media (max-width: 520px) { .support-link { width: 100%; } }
+  </style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="cross" aria-label="Church Quiz">✝</div>
-    <button class="language-btn" id="language_btn" type="button">
-      عربي / EN
-    </button>
-  </header>
 
   <main>
     <section id="home_screen" class="screen active">
       <div class="hero">
         <div class="hero-content">
-          <div class="eyebrow" id="eyebrow">LEARN • PLAY • GROW</div>
-          <h1>Church <span>Quiz</span></h1>
-          <h2 id="welcome_title">Create Your Account</h2>
-          <p id="welcome_text">
+          <div class="eyebrow" id="eyebrow" data-i18n="reg.eyebrow">LEARN • PLAY • GROW</div>
+          <h1 class="brand-logo"><img src="../kokquiz-logo.png" alt="Kokquiz"></h1>
+          <h2 id="welcome_title" data-i18n="reg.title">Create Your Account</h2>
+          <p id="welcome_text" data-i18n="reg.subtitle">
             Create your account and grow together in faith.
           </p>
 
-          <form id="registerForm" class="register-form">
-            <label for="fullName">Your name *</label>
+          <form id="registerForm" class="register-form" novalidate>
+            <label for="fullName" data-i18n="reg.nameLabel">Your name *</label>
             <input
               id="fullName"
               name="fullName"
               type="text"
               placeholder="Enter your full name"
+              data-i18n-ph="reg.namePh"
               autocomplete="name"
               maxlength="100"
               required
             >
 
-            <label for="email">Email address *</label>
+            <label for="email" data-i18n="reg.emailLabel">Email address *</label>
             <input
               id="email"
               name="email"
               type="email"
               placeholder="Enter your email"
+              data-i18n-ph="reg.emailPh"
               autocomplete="email"
               required
             >
 
-            <label for="password">Password *</label>
+            <label for="password" data-i18n="reg.pwdLabel">Password *</label>
             <div class="password-wrapper">
               <input
                 id="password"
                 name="password"
                 type="password"
-                placeholder="Create a password"
+                placeholder="Create a strong password"
+                data-i18n-ph="reg.pwdPh"
                 autocomplete="new-password"
-                minlength="6"
+                minlength="8"
                 required
               >
               <button
@@ -65,40 +117,31 @@
                 class="eye-btn"
                 type="button"
                 aria-label="Show password"
+                data-i18n-label="login.showPwd"
                 aria-pressed="false"
               >◉</button>
             </div>
 
-            <div class="role-heading">
-              Choose Your Role <b>*</b>
+            <div class="pwd-hints" aria-hidden="true">
+              <span class="pwd-chip" id="chipLen">8+ chars</span>
+              <span class="pwd-chip" id="chipUpper">A-Z</span>
+              <span class="pwd-chip" id="chipLower">a-z</span>
+              <span class="pwd-chip" id="chipDigit">0-9</span>
+              <span class="pwd-chip" id="chipSpecial">@#$!</span>
             </div>
 
-            <div class="role-options">
-              <label class="role-option">
-                <input
-                  type="radio"
-                  name="requestedRole"
-                  value="Creator"
-                  required
-                >
-                <span class="role-info">
-                  <strong>Creator</strong>
-                  <small>Create quizzes</small>
-                </span>
-              </label>
-
-              <label class="role-option">
-                <input
-                  type="radio"
-                  name="requestedRole"
-                  value="Player"
-                  required
-                >
-                <span class="role-info">
-                  <strong>Player</strong>
-                  <small>Play quizzes</small>
-                </span>
-              </label>
+            <div style="display:none" aria-hidden="true">
+              <div class="role-heading">Choose Your Role <b>*</b></div>
+              <div class="role-options">
+                <label class="role-option">
+                  <input type="radio" name="requestedRole" value="Creator" checked required>
+                  <span class="role-info"><strong>Creator</strong><small>Create quizzes</small></span>
+                </label>
+                <label class="role-option">
+                  <input type="radio" name="requestedRole" value="Player" disabled>
+                  <span class="role-info"><strong>Player</strong><small>Play quizzes</small></span>
+                </label>
+              </div>
             </div>
 
             <div
@@ -112,21 +155,28 @@
               id="register_btn"
               class="primary-btn"
               type="submit"
+              data-i18n="reg.submit"
             >
-              Create Account <span>→</span>
+              Create Account →
             </button>
           </form>
 
           <p class="login-link">
-            Already have an account?
-            <a href="loginn.html">Log in</a>
+            <span data-i18n="reg.haveAccount">Already have an account?</span>
+            <a href="loginn.html" data-i18n="reg.loginLink">Log in</a>
           </p>
+
+          <!-- الدعم عبر واتساب -->
+          <div class="support-box" id="support-box" hidden>
+            <p data-i18n="reg.supportTitle">Need help?</p>
+            <div class="support-links" id="support-links"></div>
+          </div>
         </div>
 
         <div class="hero-art">
           <img
-            src="Gemini_Generated_Image_eqn1boeqn1boeqn1.jpg"
-            alt="Church Quiz"
+            src="../Gemini_Generated_Image_eqn1boeqn1boeqn1.jpg"
+            alt="Kokquiz"
             class="hero-image"
           >
           <div class="floating-star star-one">✦</div>
@@ -137,7 +187,23 @@
   </main>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="../JS/i18n.js"></script>
+  <script src="../JS/contacts.js"></script>
   <script src="../JS/apin.js"></script>
-   <script src="../JS/scriptn.js"></script>
+  <script src="../JS/scriptn.js"></script>
+  <script src="../JS/Register.js"></script>
+  <script>
+    (function () {
+      var WA = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.27-1.38a9.9 9.9 0 0 0 4.77 1.22c5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm5.8 14.05c-.25.7-1.45 1.34-2 1.4-.52.06-1.17.09-1.88-.12-.43-.14-.98-.32-1.69-.63-2.97-1.28-4.9-4.27-5.05-4.47-.15-.2-1.2-1.6-1.2-3.05 0-1.45.76-2.16 1.03-2.46.27-.3.59-.37.79-.37h.57c.18 0 .43-.07.67.51.25.6.85 2.07.92 2.22.07.15.12.32.02.52-.1.2-.15.32-.3.5-.15.17-.31.39-.45.52-.15.15-.3.31-.13.6.17.3.77 1.27 1.65 2.05 1.13 1.01 2.09 1.32 2.39 1.47.3.15.47.12.65-.07.17-.2.75-.87.95-1.17.2-.3.4-.25.67-.15.27.1 1.72.81 2.02.96.3.15.5.22.57.35.07.12.07.72-.18 1.42z"/></svg>';
+      if (typeof SUPPORT_CONTACTS === "undefined" || !SUPPORT_CONTACTS.length) return;
+      var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[c]; }); };
+      document.getElementById("support-links").innerHTML = SUPPORT_CONTACTS.map(function (p) {
+        var digits = String(p.phone || "").replace(/\D/g, "");
+        return '<a class="support-link" target="_blank" rel="noopener noreferrer" href="' + (digits ? "https://wa.me/" + digits : "#") + '">' +
+               '<span class="sup-name">' + esc(p.name) + '</span><span class="sup-wa">' + WA + '</span></a>';
+      }).join("");
+      document.getElementById("support-box").hidden = false;
+    })();
+  </script>
 </body>
 </html>

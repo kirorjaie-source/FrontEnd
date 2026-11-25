@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Roles | Kokquiz Admin</title>
+  <link rel="stylesheet" href="../CSS/adminn.css">
+  <link rel="stylesheet" href="../CSS/manage-roles.css">
+
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background-color: #f4f7fb;
+    }
+
+    .sidebar .nav-link {
+      text-decoration: none;
+    }
+
+    .main-area {
+      margin-inline-start: 260px;
+      width: calc(100% - 260px);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      transition: margin-inline-start 0.25s ease, width 0.25s ease;
+    }
+
+    body.sidebar-collapsed .main-area {
+      margin-inline-start: 82px;
+      width: calc(100% - 82px);
+    }
+
+    @media (max-width: 900px) {
+      .main-area,
+      body.sidebar-collapsed .main-area {
+        margin-inline-start: 0;
+        width: 100%;
+      }
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .super-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 999px;
+      border: 1.5px solid #e3b565;
+      background: linear-gradient(135deg, #0b1e36 0%, #163763 100%);
+      color: #f3c875;
+      font-size: 13.5px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(11, 30, 54, 0.22);
+      transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+    }
+
+    .super-btn:hover {
+      transform: translateY(-2px);
+      background: linear-gradient(135deg, #102a4c 0%, #1d4982 100%);
+      box-shadow: 0 10px 22px rgba(11, 30, 54, 0.3);
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 20, 38, 0.65);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      z-index: 10000;
+    }
+
+    .modal-backdrop[hidden] {
+      display: none !important;
+    }
+
+    .super-modal-box {
+      width: 100%;
+      max-width: 460px;
+      background: #ffffff;
+      border-radius: 20px;
+      overflow: hidden;
+      padding: 0 !important;
+      box-shadow: 0 24px 60px rgba(8, 20, 38, 0.38);
+      border: 1px solid rgba(227, 181, 101, 0.35);
+      animation: popModal 0.18s ease-out;
+    }
+
+    @keyframes popModal {
+      from { opacity: 0; transform: scale(0.95) translateY(8px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .super-modal-header {
+      background: linear-gradient(135deg, #0b1e36 0%, #173d70 100%);
+      color: #ffffff;
+      padding: 18px 22px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 2px solid #e3b565;
+    }
+
+    .super-header-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .super-crown {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: rgba(227, 181, 101, 0.16);
+      border: 1px solid rgba(227, 181, 101, 0.45);
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .super-modal-header h3 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 800;
+      color: #f3c875;
+    }
+
+    .super-modal-header p {
+      margin: 3px 0 0;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.78);
+      line-height: 1.4;
+    }
+
+    .super-close-x {
+      background: rgba(255, 255, 255, 0.12);
+      border: none;
+      color: #ffffff;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 14px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+
+    .super-close-x:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .super-modal-body {
+      padding: 20px 22px 22px;
+    }
+
+    .s-field {
+      margin-bottom: 14px;
+    }
+
+    .s-label {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 6px;
+    }
+
+    .s-input-wrap {
+      position: relative;
+      width: 100%;
+    }
+
+    .s-input {
+      width: 100%;
+      box-sizing: border-box;
+      height: 44px;
+      padding: 0 42px 0 14px;
+      border-radius: 12px;
+      border: 1.5px solid #cbd5e1;
+      background: #f8fafc;
+      color: #0f172a;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    }
+
+    .s-input.no-eye {
+      padding-right: 14px;
+    }
+
+    .s-input:focus {
+      background: #ffffff;
+      border-color: #1c68c7;
+      box-shadow: 0 0 0 3.5px rgba(28, 104, 199, 0.14);
+    }
+
+    .s-eye {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      color: #64748b;
+      padding: 4px;
+      line-height: 1;
+    }
+
+    .s-eye:hover {
+      color: #0f172a;
+    }
+
+    .s-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .s-chip {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+      transition: all 0.15s ease;
+    }
+
+    .s-chip::before {
+      content: "• ";
+    }
+
+    .s-chip.valid {
+      background: #dcfce7;
+      color: #15803d;
+      border-color: #86efac;
+    }
+
+    .s-chip.valid::before {
+      content: "✓ ";
+    }
+
+    .s-err {
+      min-height: 18px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #dc2626;
+      margin: 4px 0 12px;
+      text-align: center;
+    }
+
+    .s-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .s-btn-cancel {
+      height: 42px;
+      padding: 0 18px;
+      border-radius: 12px;
+      border: 1.5px solid #cbd5e1;
+      background: #ffffff;
+      color: #475569;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .s-btn-cancel:hover {
+      background: #f1f5f9;
+    }
+
+    .s-btn-save {
+      height: 42px;
+      padding: 0 22px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, #e3b565 0%, #d49b3b 100%);
+      color: #0b1e36;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(212, 155, 59, 0.35);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .s-btn-save:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(212, 155, 59, 0.45);
+    }
+
+    .s-btn-save:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ===== Page tabs (Roles / Ameens) ===== */
+    .page-tabs {
+      display: inline-flex;
+      gap: 4px;
+      padding: 4px;
+      margin-bottom: 16px;
+      background: #e8eef7;
+      border-radius: 999px;
+    }
+
+    .page-tab {
+      border: none;
+      background: transparent;
+      color: #475569;
+      font-size: 13px;
+      font-weight: 800;
+      padding: 8px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+    }
+
+    .page-tab:hover { color: #0b1e36; }
+
+    .page-tab.active {
+      background: linear-gradient(135deg, #0b1e36 0%, #173d70 100%);
+      color: #f3c875;
+      box-shadow: 0 4px 12px rgba(11, 30, 54, 0.25);
+    }
+
+    .pane[hidden] { display: none !important; }
+
+    /* ===== Ameens pane ===== */
+    .ameen-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .ameen-select {
+      height: 40px;
+      padding: 0 12px;
+      border-radius: 10px;
+      border: 1.5px solid #cbd5e1;
+      background: #fff;
+      font-size: 13.5px;
+      color: #0f172a;
+    }
+
+    .ameen-add-btn {
+      height: 40px;
+      padding: 0 18px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, #e3b565 0%, #d49b3b 100%);
+      color: #0b1e36;
+      font-weight: 800;
+      font-size: 13.5px;
+      cursor: pointer;
+    }
+
+    .ameen-btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-inline-start: auto;
+    }
+
+    textarea.s-input {
+      height: auto;
+      min-height: 84px;
+      padding: 10px 14px;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    .mini-btn {
+      border: 1.5px solid #cbd5e1;
+      background: #fff;
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-inline-end: 6px;
+    }
+
+    .mini-btn:hover { background: #f1f5f9; }
+    .mini-btn.danger { color: #b91c1c; border-color: #fecaca; }
+    .mini-btn.danger:hover { background: #fef2f2; }
+    .s-input[readonly], .s-input:disabled { background: #eef2f7; color: #64748b; }
+    select.s-input { padding-right: 14px; }
+  </style>
+</head>
+<body>
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <a class="brand" href="adminn.html">
+      <span class="brand-cross">✝</span>
+      <span>
+        <b>Kokquiz</b>
+        <small data-i18n="roles.panelSub">ADMIN PANEL</small>
+      </span>
+    </a>
+
+    <div class="menu-caption" data-i18n="roles.workspace">WORKSPACE</div>
+
+    <nav class="navigation" aria-label="Admin navigation">
+      <a class="nav-link active" href="manage-roles.html">
+        <span>🛡</span><i class="nav-label" data-i18n="roles.navRoles">Manage Roles</i>
+      </a>
+
+      <a class="nav-link" href="adminn.html?page=home">
+        <span>⌂</span><i class="nav-label">Home</i>
+      </a>
+
+      <a class="nav-link" href="adminn.html?page=dashboard">
+        <span>▦</span><i class="nav-label" data-i18n="roles.navDash">Dashboard</i>
+      </a>
+
+      <a class="nav-link" href="adminn.html?page=churches">
+        <span>⛪</span><i class="nav-label">Churches</i>
+      </a>
+
+      <a class="nav-link" href="adminn.html?page=create">
+        <span>＋</span><i class="nav-label">Create Quiz</i>
+      </a>
+
+      <a class="nav-link" href="adminn.html?page=quizzes">
+        <span>▤</span><i class="nav-label">My Quizzes</i>
+      </a>
+
+      <a class="nav-link" href="adminn.html?page=explore">
+        <span>▧</span><i class="nav-label">Quizzes</i>
+      </a>
+
+      <a class="nav-link" href="adminn.html?page=participants">
+        <span>♙</span><i class="nav-label">Participants</i>
+      </a>
+
+      <a class="nav-link" href="adminn.html?page=results">
+        <span>▥</span><i class="nav-label">Results</i>
+      </a>
+
+      <a class="nav-link" href="adminn.html?page=settings">
+        <span>⚙</span><i class="nav-label">Settings</i>
+      </a>
+    </nav>
+
+    <div class="sidebar-bottom"></div>
+  </aside>
+
+  <div class="main main-area">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="mobile-menu" id="rolesMenuToggle" type="button" aria-label="Toggle menu">☰</button>
+        <div>
+          <div class="breadcrumb" data-i18n="roles.crumb">Kokquiz / Admin / Roles</div>
+          <h1 data-i18n="roles.pageTitle">Manage User Roles</h1>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <button type="button" class="lang-btn" id="rolesLangToggle" aria-label="Language">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/>
+          </svg>
+          <span data-i18n="lang.switch">العربية</span>
+        </button>
+
+        <button type="button" id="openSuperResetBtn" class="super-btn" title="Reset any account including Admins using X-Admin Key">
+          👑 Super Reset
+        </button>
+      </div>
+    </header>
+
+    <main class="content">
+      <!-- Page tabs -->
+      <div class="page-tabs" role="tablist">
+        <button type="button" class="page-tab active" id="tabRolesBtn" role="tab" aria-selected="true">🛡 الصلاحيات · Roles</button>
+        <button type="button" class="page-tab" id="tabAmeensBtn" role="tab" aria-selected="false">⛪ الأمناء · Ameens</button>
+      </div>
+
+      <!-- ===== Roles pane (old page) ===== -->
+      <div id="rolesPane" class="pane">
+      <section class="hero-banner">
+        <div>
+          <h2 data-i18n="roles.heroTitle">Kokquiz Member Permissions</h2>
+          <p data-i18n="roles.heroSub">Promote members, verify accounts, or reset non-admin passwords.</p>
+        </div>
+        <div class="stats-pills">
+          <div class="stat-pill"><span data-i18n="roles.total">Total:</span> <span id="countAll">0</span></div>
+          <div class="stat-pill"><span data-i18n="roles.admins">Admins:</span> <span id="countAdmin">0</span></div>
+          <div class="stat-pill"><span data-i18n="roles.creators">Creators:</span> <span id="countCreator">0</span></div>
+        </div>
+      </section>
+
+      <section class="table-card">
+        <div class="toolbar">
+          <div class="search-box">
+            <input id="searchUser" type="search" placeholder="Search by name or email..." data-i18n-ph="roles.searchPh">
+          </div>
+          <div id="statusMsg" class="status-banner"></div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="roles-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th data-i18n="roles.thUser">User</th>
+                <th data-i18n="roles.thEmail">Email</th>
+                <th data-i18n="roles.thStatus">Account Status</th>
+                <th data-i18n="roles.thRole">Role</th>
+                <th data-i18n="roles.thPwd">Password</th>
+              </tr>
+            </thead>
+            <tbody id="usersBody">
+              <tr><td colspan="6">Loading users...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      </div>
+
+      <!-- ===== Ameens pane ===== -->
+      <div id="ameensPane" class="pane" hidden>
+        <section class="hero-banner">
+          <div>
+            <h2>الأمناء · Ameens</h2>
+            <p>عرض وتعديل أمناء كل الكنائس، إضافة أمين أو إزالته. · View, edit, add or remove church Ameens.</p>
+          </div>
+          <div class="stats-pills">
+            <div class="stat-pill">الأمناء · Ameens: <span id="countAmeens">0</span></div>
+            <div class="stat-pill">الكنائس · Churches: <span id="countChurches">0</span></div>
+          </div>
+        </section>
+
+        <section class="table-card">
+          <div class="toolbar ameen-toolbar">
+            <div class="search-box">
+              <input id="searchAmeen" type="search" placeholder="بحث بالاسم / الموبايل / الإيميل — Search...">
+            </div>
+            <select id="ameenChurchFilter" class="ameen-select" aria-label="Church"></select>
+            <div id="ameenStatus" class="status-banner"></div>
+            <div class="ameen-btn-group">
+              <button type="button" id="openAddChurchBtn" class="ameen-add-btn">⛪ إضافة كنيسة · Add Church</button>
+              <button type="button" id="openAddAmeenBtn" class="ameen-add-btn">＋ إضافة أمين · Add Ameen</button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="roles-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>الاسم · Name</th>
+                  <th>الكنيسة · Church</th>
+                  <th>الموبايل · Phone</th>
+                  <th>واتساب · WhatsApp</th>
+                  <th>الإيميل · Email</th>
+                  <th>إجراءات · Actions</th>
+                </tr>
+              </thead>
+              <tbody id="ameensBody">
+                <tr><td colspan="7">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- Church Modal (Add) -->
+  <div id="churchModal" class="modal-backdrop" hidden>
+    <div class="modal-box super-modal-box" role="dialog" aria-modal="true" aria-labelledby="churchModalTitle">
+      <div class="super-modal-header">
+        <div class="super-header-info">
+          <span class="super-crown">⛪</span>
+          <div>
+            <h3 id="churchModalTitle">إضافة كنيسة · Add Church</h3>
+            <p>كنيسة جديدة في النظام · Create a new church</p>
+          </div>
+        </div>
+        <button type="button" id="closeChurchXBtn" class="super-close-x" aria-label="Close">✕</button>
+      </div>
+
+      <form id="churchForm" class="super-modal-body" novalidate>
+        <div class="s-field">
+          <label class="s-label" for="churchNameInput">⛪ اسم الكنيسة · Name *</label>
+          <div class="s-input-wrap">
+            <input id="churchNameInput" class="s-input no-eye" type="text" maxlength="120">
+          </div>
+        </div>
+
+        <div class="s-field">
+          <label class="s-label" for="churchCityInput">📍 المدينة · City</label>
+          <div class="s-input-wrap">
+            <input id="churchCityInput" class="s-input no-eye" type="text" maxlength="80">
+          </div>
+        </div>
+
+        <div class="s-field">
+          <label class="s-label" for="churchDescInput">📝 الوصف · Description</label>
+          <div class="s-input-wrap">
+            <textarea id="churchDescInput" class="s-input no-eye" maxlength="400"></textarea>
+          </div>
+        </div>
+
+        <div id="churchModalErr" class="s-err"></div>
+
+        <div class="s-actions">
+          <button type="button" id="cancelChurchBtn" class="s-btn-cancel">إلغاء · Cancel</button>
+          <button type="submit" id="saveChurchBtn" class="s-btn-save">حفظ · Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Ameen Modal (Add / Edit) -->
+  <div id="ameenModal" class="modal-backdrop" hidden>
+    <div class="modal-box super-modal-box" role="dialog" aria-modal="true" aria-labelledby="ameenModalTitle">
+      <div class="super-modal-header">
+        <div class="super-header-info">
+          <span class="super-crown">⛪</span>
+          <div>
+            <h3 id="ameenModalTitle">أمين · Ameen</h3>
+            <p id="ameenModalSub"></p>
+          </div>
+        </div>
+        <button type="button" id="closeAmeenXBtn" class="super-close-x" aria-label="Close">✕</button>
+      </div>
+
+      <form id="ameenForm" class="super-modal-body" novalidate>
+        <div class="s-field">
+          <label class="s-label" for="ameenChurchSelect">⛪ الكنيسة · Church</label>
+          <div class="s-input-wrap">
+            <select id="ameenChurchSelect" class="s-input no-eye"></select>
+          </div>
+        </div>
+
+        <div class="s-field" id="ameenNameField" hidden>
+          <label class="s-label" for="ameenNameInput">👤 الاسم · Name</label>
+          <div class="s-input-wrap">
+            <input id="ameenNameInput" class="s-input no-eye" type="text" maxlength="100">
+          </div>
+        </div>
+
+        <div class="s-field">
+          <label class="s-label" for="ameenEmailInput">📧 الإيميل · Email</label>
+          <div class="s-input-wrap">
+            <input id="ameenEmailInput" class="s-input no-eye" type="email" placeholder="user@example.com">
+          </div>
+        </div>
+
+        <div class="s-field">
+          <label class="s-label" for="ameenPhoneInput">📱 رقم الموبايل · Phone</label>
+          <div class="s-input-wrap">
+            <input id="ameenPhoneInput" class="s-input no-eye" type="tel" inputmode="numeric" maxlength="11" placeholder="01xxxxxxxxx" dir="ltr">
+          </div>
+        </div>
+
+        <div id="ameenModalErr" class="s-err"></div>
+
+        <div class="s-actions">
+          <button type="button" id="cancelAmeenBtn" class="s-btn-cancel">إلغاء · Cancel</button>
+          <button type="submit" id="saveAmeenBtn" class="s-btn-save">حفظ · Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Password Modal (Non-Admin Users) -->
+  <div id="pwdModal" class="modal-backdrop" hidden>
+    <div class="modal-box super-modal-box" role="dialog" aria-modal="true" aria-labelledby="pwdModalTitle">
+      <div class="super-modal-header">
+        <div class="super-header-info">
+          <span class="super-crown">🔑</span>
+          <div>
+            <h3 id="pwdModalTitle" data-i18n="roles.modalTitle">Change User Password</h3>
+            <p id="pwdModalUser"></p>
+          </div>
+        </div>
+        <button type="button" id="closePwdXBtn" class="super-close-x" aria-label="Close">✕</button>
+      </div>
+
+      <form id="pwdForm" class="super-modal-body" novalidate>
+        <div class="s-field">
+          <label class="s-label" for="newPwdInput">🔒 New Password</label>
+          <div class="s-input-wrap">
+            <input id="newPwdInput" class="s-input" type="password" required placeholder="New password" data-i18n-ph="roles.newPwdPh">
+            <button type="button" id="togglePwdBtn" class="s-eye" title="Show/Hide password">👁</button>
+          </div>
+
+          <div class="s-chips" id="pwdRules">
+            <span class="s-chip" id="ruleLen">8+ Chars</span>
+            <span class="s-chip" id="ruleUpper">A-Z</span>
+            <span class="s-chip" id="ruleLower">a-z</span>
+            <span class="s-chip" id="ruleDigit">0-9</span>
+            <span class="s-chip" id="ruleSpecial">@#$!</span>
+          </div>
+        </div>
+
+        <div class="s-field">
+          <label class="s-label" for="confirmPwdInput">✅ Confirm Password</label>
+          <div class="s-input-wrap">
+            <input id="confirmPwdInput" class="s-input no-eye" type="password" required placeholder="Confirm new password" data-i18n-ph="roles.confirmPwdPh">
+          </div>
+        </div>
+
+        <div id="pwdModalErr" class="s-err"></div>
+
+        <div class="s-actions">
+          <button type="button" id="cancelPwdBtn" class="s-btn-cancel" data-i18n="roles.cancel">Cancel</button>
+          <button type="submit" id="savePwdBtn" class="s-btn-save" data-i18n="roles.savePwd">Save Password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Super Reset Modal (Any User / Admin via X-Admin Key) -->
+  <div id="superModal" class="modal-backdrop" hidden>
+    <div class="modal-box super-modal-box" role="dialog" aria-modal="true" aria-labelledby="superModalTitle">
+      <div class="super-modal-header">
+        <div class="super-header-info">
+          <span class="super-crown">👑</span>
+          <div>
+            <h3 id="superModalTitle">Super Password Reset</h3>
+            <p>Override any account password (including Admins) via <strong>X-Admin</strong> key</p>
+          </div>
+        </div>
+        <button type="button" id="closeSuperXBtn" class="super-close-x" aria-label="Close">✕</button>
+      </div>
+
+      <form id="superForm" class="super-modal-body" novalidate>
+        <div class="s-field">
+          <label class="s-label" for="superAdminKey">🔑 Private X-Admin Key</label>
+          <div class="s-input-wrap">
+            <input id="superAdminKey" class="s-input" type="password" autocomplete="off" required placeholder="Enter your X-Admin secret key">
+            <button type="button" id="toggleSuperKeyBtn" class="s-eye" title="Show/Hide key">👁</button>
+          </div>
+        </div>
+
+        <div class="s-field">
+          <label class="s-label" for="superEmailInput">📧 Target Account Email</label>
+          <div class="s-input-wrap">
+            <input id="superEmailInput" class="s-input no-eye" type="email" list="allUsersEmails" required placeholder="Choose or type user/admin email...">
+          </div>
+          <datalist id="allUsersEmails"></datalist>
+        </div>
+
+        <div class="s-field">
+          <label class="s-label" for="superNewPwd">🔒 New Password</label>
+          <div class="s-input-wrap">
+            <input id="superNewPwd" class="s-input" type="password" required placeholder="Create new strong password">
+            <button type="button" id="toggleSuperPwdBtn" class="s-eye" title="Show/Hide password">👁</button>
+          </div>
+
+          <div class="s-chips" id="superPwdRules">
+            <span class="s-chip" id="sRuleLen">8+ Chars</span>
+            <span class="s-chip" id="sRuleUpper">A-Z</span>
+            <span class="s-chip" id="sRuleLower">a-z</span>
+            <span class="s-chip" id="sRuleDigit">0-9</span>
+            <span class="s-chip" id="sRuleSpecial">@#$!</span>
+          </div>
+        </div>
+
+        <div class="s-field">
+          <label class="s-label" for="superConfirmPwd">✅ Confirm Password</label>
+          <div class="s-input-wrap">
+            <input id="superConfirmPwd" class="s-input no-eye" type="password" required placeholder="Re-enter new password">
+          </div>
+        </div>
+
+        <div id="superModalErr" class="s-err"></div>
+
+        <div class="s-actions">
+          <button type="button" id="cancelSuperBtn" class="s-btn-cancel" data-i18n="roles.cancel">Cancel</button>
+          <button type="submit" id="saveSuperBtn" class="s-btn-save">👑 Reset Password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../JS/i18n.js"></script>
+  <script src="../JS/apin.js"></script>
+  <script src="../JS/manage-roles.js"></script>
+  <script>
+    if (localStorage.getItem("churchQuizSidebarCollapsed") === "1") {
+      document.body.classList.add("sidebar-collapsed");
+    }
+    document.getElementById("rolesLangToggle")?.addEventListener("click", () => {
+      if (window.KokI18n) KokI18n.toggleLang();
+    });
+    document.getElementById("rolesMenuToggle")?.addEventListener("click", () => {
+      if (window.matchMedia("(max-width: 900px)").matches) {
+        document.getElementById("sidebar")?.classList.toggle("open");
+      } else {
+        const collapsed = document.body.classList.toggle("sidebar-collapsed");
+        localStorage.setItem("churchQuizSidebarCollapsed", collapsed ? "1" : "0");
+      }
+    });
+  </script>
+</body>
+</html>

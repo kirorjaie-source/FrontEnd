@@ -13,7 +13,6 @@ const PODIUM_PAGE = "podium.html";   // صفحة المنصة النهائية �
 const SHAPES = ["▲", "◆", "●", "■"];
 const RESULTS_SECONDS = 3500; // نعرض الرسم البياني، وبعدها الترتيب لحد السؤال الجاي
 const TOP_N = 5;              // عدد المراكز في شاشة الترتيب (والباقي في "Show all")
-const PODIUM_N = 3;
 
 const $ = (id) => document.getElementById(id);
 const escapeHTML = (value) =>
@@ -27,6 +26,17 @@ const pick = (o, ...names) => {
     if (k !== undefined) return o[k];
   }
   return undefined;
+};
+
+// السيرفر بيخزّن key (زي "fox") — هنا بنحوّله لإيموجي (مش بيعتمد على avatars.js)
+const AVATAR_MAP = {
+  fox: "🦊", lamb: "🐼", dove: "🕊️", lion: "🦁", fish: "🐊", tiger: "🐯", cat: "🐱",
+  dog: "🐶", owl: "🦉", frog: "🐸", rabbit: "🐰", monkey: "🐵", penguin: "🐧",
+  katkot: "🐥", unicorn: "🦄", gorilla: "🦧", butterfly: "🦋", koala: "🐨", bear: "🐻"
+};
+const avatarOf = (s) => {
+  const v = String(pick(s, "avatar") ?? "").trim();
+  return window.Kok?.avatarEmoji?.(v) || AVATAR_MAP[v] || (/[^\x00-\x7F]/.test(v) ? v : "");
 };
 
 let session = null;
@@ -214,7 +224,7 @@ function onReveal(d) {
 
 /* ---------------- شاشة المراكز (Leaderboard) ---------------- */
 
-// صف واحد في الترتيب: رقم المركز + حرف أول الاسم + الاسم + الصعود/النزول + streak + النقاط
+// صف واحد في الترتيب: رقم المركز + الشخصية + الاسم + الصعود/النزول + streak + النقاط
 function rowHTML(s, i, max, delayIndex = i) {
   const rank = Number(pick(s, "rank")) || i + 1;
   const rawName = String(pick(s, "name", "playerName", "nickname") ?? "Player");
@@ -228,8 +238,8 @@ function rowHTML(s, i, max, delayIndex = i) {
     : change < 0 ? `<span class="lb2-chg down">▼ ${Math.abs(change)}</span>` : "";
   const fire = streak > 1 ? `<span class="lb2-streak">🔥 ${streak}</span>` : "";
   const crown = rank === 1 ? `<span class="lb2-crown">👑</span>` : "";
-  // الشخصية اللي اللاعب اختارها، ولو مفيش نعرض أول حرف من اسمه
-  const initial = escapeHTML(pick(s, "avatar") || ([...rawName.trim()][0] ?? "?"));
+  // الشخصية اللي اللاعب اختارها (key → إيموجي)، ولو مفيش نعرض أول حرف من اسمه
+  const initial = escapeHTML(avatarOf(s) || ([...rawName.trim()][0] ?? "?"));
 
   return `
     <div class="lb2-row r${rank <= 3 ? rank : "x"}" style="--i:${delayIndex};--w:${pct}%">
@@ -260,7 +270,7 @@ function countUp(root) {
 
 const scoreOf = (s) => Number(pick(s, "totalScore", "score", "points")) || 0;
 
-// StandingDto: playerId, name, totalScore, pointsEarned, rank, rankChange, streak
+// StandingDto: playerId, name, totalScore, pointsEarned, rank, rankChange, streak, avatar
 function renderLeaderboard(standings) {
   lastStandings = standings;
   const list = $("leaderboard-list");
@@ -308,58 +318,18 @@ function onFinished(board) {
   finalBoard = top;
 
   // نحفظ الترتيب النهائي عشان صفحة المنصة (podium.html) تعرض النتيجة الحقيقية
+  // الـ avatar بيتحفظ إيموجي جاهز (محوَّل من الـ key)
   try {
     localStorage.setItem("churchQuizFinalStandings", JSON.stringify(top.map((s, i) => ({
       name: pick(s, "name", "playerName", "nickname") ?? "Player",
       score: scoreOf(s),
-      avatar: pick(s, "avatar") ?? "",
+      avatar: avatarOf(s),
       rank: Number(pick(s, "rank")) || i + 1
     }))));
   } catch { /* ignore */ }
 
-  // نروح لصفحة المنصة الجديدة فوراً (من غير ما نعرض المنصة القديمة)
+  // نروح لصفحة المنصة
   window.location.replace(PODIUM_PAGE);
-  return;
-
-  for (let place = 1; place <= 3; place++) {
-    const el = $(`podium-${place}`);
-    const s = top[place - 1];
-    if (!el) continue;
-    if (s) {
-      const name = pick(s, "name", "playerName", "nickname") ?? "Player";
-      const score = pick(s, "totalScore", "score", "points") ?? 0;
-      if ($(`w-name-${place}`)) $(`w-name-${place}`).textContent = name;
-      if ($(`w-score-${place}`)) $(`w-score-${place}`).textContent = score;
-      el.classList.remove("hidden");
-
-      // نكتب الاسم والنقاط جوه العمود نفسه (تحت الميدالية) عشان يظهروا مهما كان الـ CSS
-      const block = el.querySelector(".podium-block");
-      const oldInfo = el.querySelector(".winner-info");
-      if (oldInfo) oldInfo.style.display = "none";
-      if (block) {
-        if (getComputedStyle(block).position === "static") block.style.position = "relative";
-        block.querySelector(".podium-live")?.remove();
-        const box = document.createElement("div");
-        box.className = "podium-live";
-        box.style.cssText = "position:absolute;left:0;right:0;top:112px;padding:0 10px;text-align:center;color:#fff;font-family:'Montserrat',sans-serif";
-        box.innerHTML =
-          `<div style="font-weight:800;font-size:clamp(20px,2.6vw,38px);line-height:1.15;word-break:break-word">${escapeHTML(name)}</div>` +
-          `<div style="margin-top:8px;font-weight:900;font-size:clamp(22px,3vw,44px);color:#FFD54A">${escapeHTML(score)}</div>`;
-        block.appendChild(box);
-      }
-    } else {
-      el.classList.add("hidden");
-    }
-  }
-
-  // زرار "Show all players" على المنصة لو فيه أكتر من 3
-  const more = $("btn-show-all-final");
-  if (more) {
-    more.classList.toggle("hidden", top.length <= PODIUM_N);
-    more.textContent = `Show all players (${top.length})`;
-  }
-  $("btn-return-admin")?.classList.remove("hidden");
-  showScreen("screen-final-podium");
 }
 
 /* ---------------- التشغيل ---------------- */

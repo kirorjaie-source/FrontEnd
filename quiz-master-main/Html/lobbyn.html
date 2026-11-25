@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Game Lobby | Church Quiz</title>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <title>Game Lobby | Kokquiz</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Montserrat:wght@700;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../CSS/lobbyn.css">
-  
+
   <!-- مكتبة توليد QR Code -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
@@ -15,8 +15,33 @@
 
   <!-- شاشة التحميل الأولية -->
   <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-sparkles" aria-hidden="true">
+      <i style="left:8%;top:12%;font-size:22px;animation-delay:.2s">✦</i>
+      <i style="left:88%;top:16%;font-size:16px;animation-delay:1.1s">✦</i>
+      <i style="left:16%;top:46%;font-size:13px;animation-delay:2s">✦</i>
+      <i style="left:92%;top:52%;font-size:24px;animation-delay:.7s">✦</i>
+      <i style="left:7%;top:78%;font-size:18px;animation-delay:1.6s">✦</i>
+      <i style="left:80%;top:86%;font-size:14px;animation-delay:2.4s">✦</i>
+      <i style="left:48%;top:94%;font-size:12px;animation-delay:.9s">✦</i>
+    </div>
+
     <div class="loading-box">
-      <h1>Get ready to join</h1>
+      <svg class="loading-cross" viewBox="0 0 60 90" aria-hidden="true">
+        <defs>
+          <linearGradient id="lobGold" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#FFF3B0"/><stop offset="1" stop-color="#E4B93C"/>
+          </linearGradient>
+        </defs>
+        <rect x="23" y="2" width="14" height="86" rx="7" fill="url(#lobGold)"/>
+        <rect x="4" y="24" width="52" height="14" rx="7" fill="url(#lobGold)"/>
+      </svg>
+
+      <img class="loading-logo" src="../kokquiz-logo.png" alt="Kokquiz">
+
+      <h1>Get ready to <span>join</span></h1>
+
+      <div class="loading-loader" aria-hidden="true"></div>
+
       <div class="loading-bar-container">
         <div class="loading-bar-text">Loading Game PIN...</div>
       </div>
@@ -25,14 +50,14 @@
 
   <!-- خلفية اللوبي -->
   <div class="lobby-wrapper">
-    
+
     <!-- الشريط العلوي (ألوان المشروع) -->
     <header class="lobby-header">
       <div class="header-content">
         <div class="join-info">
           <span>Join at <strong class="join-host">---</strong><br>or scan the QR code</span>
         </div>
-        
+
         <div class="pin-section">
           <span class="pin-label">Game PIN:</span>
           <strong class="pin-number" id="display-pin">------</strong>
@@ -47,8 +72,12 @@
     <!-- منطقة الوسط -->
     <main class="lobby-main">
       <div class="lobby-brand">
-        <h1>Church Quiz!</h1>
-        <p id="quiz-title-display" style="color: var(--gold); font-size: 1.5rem; font-family: 'Inter', sans-serif; margin-top: 5px; font-weight: bold;"></p>
+        <div class="brand-hero">
+          <h1 class="brand-word"><img src="../kokquiz-logo.png" alt="Kokquiz"></h1>
+          <span class="brand-hero-cross">✝</span>
+        </div>
+        <p class="brand-tag">Learn · Play · Grow</p>
+        <p id="quiz-title-display" class="quiz-title-pill"></p>
       </div>
 
       <div class="players-container" id="players-list">

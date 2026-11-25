@@ -1,33 +1,97 @@
 "use strict";
 
 /* ============================================================
-   register.js — إنشاء حساب جديد
-   مربوط مباشرة بالباك إند عبر Api.auth.register
+   Register.js — إنشاء حساب جديد مع الترجمة والتحقق الكامل
    ============================================================ */
 
 const registerForm = document.getElementById("registerForm");
 const passwordField = document.getElementById("password");
 const passwordToggle = document.getElementById("togglePassword");
 const authMessage = document.getElementById("authMessage");
+const registerBtn = document.getElementById("register_btn");
 
-function showMessage(message, type = "error") {
+const chipLen = document.getElementById("chipLen");
+const chipUpper = document.getElementById("chipUpper");
+const chipLower = document.getElementById("chipLower");
+const chipDigit = document.getElementById("chipDigit");
+const chipSpecial = document.getElementById("chipSpecial");
+
+let lastMsgKey = "";
+let lastRawError = null;
+let lastMsgType = "";
+
+function t(key) {
+  return window.KokI18n ? KokI18n.t(key) : key;
+}
+
+function showMessage(message, type = "error", msgKey = "", rawError = null) {
   if (!authMessage) return;
+  lastMsgKey = msgKey;
+  lastRawError = rawError;
+  lastMsgType = type;
 
+  if (!message) {
+    authMessage.textContent = "";
+    authMessage.className = "auth-message";
+    return;
+  }
   authMessage.textContent = message;
   authMessage.className = `auth-message show ${type}`;
 }
+
+function checkPasswordStrength(pwd) {
+  const okLen = pwd.length >= 8;
+  const okUpper = /[A-Z]/.test(pwd);
+  const okLower = /[a-z]/.test(pwd);
+  const okDigit = /[0-9]/.test(pwd);
+  const okSpecial = /[^A-Za-z0-9]/.test(pwd);
+
+  chipLen?.classList.toggle("ok", okLen);
+  chipUpper?.classList.toggle("ok", okUpper);
+  chipLower?.classList.toggle("ok", okLower);
+  chipDigit?.classList.toggle("ok", okDigit);
+  chipSpecial?.classList.toggle("ok", okSpecial);
+
+  return okLen && okUpper && okLower && okDigit && okSpecial;
+}
+
+passwordField?.addEventListener("input", () => {
+  checkPasswordStrength(passwordField.value);
+});
+
+// مزامنة زرار اللغة الأساسي (من scriptn.js) مع نظام KokI18n
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("button");
+  if (!btn || btn.id === "togglePassword" || btn.type === "submit") return;
+  const txt = (btn.textContent || "").trim();
+  if (txt.includes("العربية") || txt.includes("English")) {
+    setTimeout(() => {
+      const docLang = document.documentElement.lang === "ar" ? "ar" : "en";
+      if (window.KokI18n && KokI18n.getLang() !== docLang) {
+        KokI18n.setLang(docLang);
+      }
+    }, 0);
+  }
+});
+
+window.addEventListener("kok:langchange", () => {
+  document.title = KokI18n.isAr() ? "إنشاء حساب جديد | كوك كويز" : "Create Account | Kokquiz";
+  if (registerBtn && !registerBtn.disabled) {
+    registerBtn.textContent = t("reg.submit");
+  }
+  if (lastMsgKey) {
+    showMessage(t(lastMsgKey), lastMsgType, lastMsgKey, null);
+  } else if (lastRawError) {
+    showMessage(KokI18n.translateError(lastRawError), lastMsgType, "", lastRawError);
+  }
+});
 
 // إظهار / إخفاء كلمة المرور
 if (passwordField && passwordToggle) {
   passwordToggle.addEventListener("click", () => {
     const show = passwordField.type === "password";
     passwordField.type = show ? "text" : "password";
-
-    passwordToggle.setAttribute(
-      "aria-label",
-      show ? "Hide password" : "Show password"
-    );
-
+    passwordToggle.setAttribute("aria-label", t(show ? "login.hidePwd" : "login.showPwd"));
     passwordToggle.setAttribute("aria-pressed", String(show));
   });
 }
@@ -35,6 +99,8 @@ if (passwordField && passwordToggle) {
 if (registerForm) {
   registerForm.addEventListener("submit", async (event) => {
     event.preventDefault();
+    event.stopImmediatePropagation();
+    showMessage("", "");
 
     const fullNameInput = document.getElementById("fullName");
     const emailInput = document.getElementById("email");
@@ -42,54 +108,62 @@ if (registerForm) {
     const fullName = fullNameInput ? fullNameInput.value.trim() : "";
     const email = emailInput ? emailInput.value.trim().toLowerCase() : "";
     const password = passwordField ? passwordField.value : "";
+    const requestedRole = registerForm.querySelector('input[name="requestedRole"]:checked')?.value || "Creator";
 
-    const requestedRole = registerForm.querySelector(
-      'input[name="requestedRole"]:checked'
-    )?.value;
-
-    // التحقق من المدخلات الأساسية
     if (!fullName || !email || !password) {
-      showMessage("من فضلك املأ كل البيانات المطلوب.");
+      showMessage(t("reg.msgEmpty"), "error", "reg.msgEmpty");
       return;
     }
 
-    if (!requestedRole) {
-      showMessage("من فضلك اختر نوع الحساب (Creator أو Player).");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showMessage(t("reg.msgInvalidEmail"), "error", "reg.msgInvalidEmail");
+      emailInput?.focus();
       return;
     }
 
-    if (!["Creator", "Player"].includes(requestedRole)) {
-      showMessage("اختيار نوع الحساب غير صحيح.");
+    if (!checkPasswordStrength(password)) {
+      showMessage(t("reg.msgWeakPwd"), "error", "reg.msgWeakPwd");
+      passwordField?.focus();
       return;
     }
 
     try {
-      showMessage("جاري الاتصال بالسيرفر وإنشاء الحساب...", "info");
+      if (registerBtn) {
+        registerBtn.disabled = true;
+        registerBtn.textContent = t("reg.submitting");
+      }
 
-      // إرسال الطلب إلى C# API عبر طبقة Api الموحدة
+      showMessage(t("reg.msgConnecting"), "info", "reg.msgConnecting");
+
       await window.Api.auth.register({
-        fullName: fullName,
-        email: email,
-        password: password,
-        requestedRole: requestedRole
+        fullName,
+        email,
+        password,
+        requestedRole
       });
 
-      showMessage(
-        requestedRole === "Creator"
-          ? "تم إنشاء الحساب بنجاح! طلب Creator يحتاج لموافقة Admin."
-          : "تم إنشاء حسابك بنجاح! جاري التوجيه لصفحة الدخول...",
-        "success"
-      );
+      sessionStorage.setItem("verifyEmail", email);
+      localStorage.setItem("verifyEmail", email);
 
-      // التوجيه لصفحة تسجيل الدخول تلقائياً بعد ثانية ونصف
+      showMessage(t("reg.msgSuccess"), "success", "reg.msgSuccess");
+
       setTimeout(() => {
-        window.location.href = "login.html";
-      }, 1500);
+        window.location.href = `verify-email.html?email=${encodeURIComponent(email)}`;
+      }, 1200);
 
     } catch (error) {
       console.error("Registration Error:", error);
-      const errorText = error.message || "حدث خطأ أثناء إنشاء الحساب. تأكد من تشغيل الباك إند.";
-      showMessage(errorText, "error");
+
+      if (registerBtn) {
+        registerBtn.disabled = false;
+        registerBtn.textContent = t("reg.submit");
+      }
+
+      const translated = window.KokI18n
+        ? KokI18n.translateError(error)
+        : (error.message || t("reg.msgGeneric"));
+
+      showMessage(translated, "error", "", error);
     }
-  });
+  }, true);
 }
