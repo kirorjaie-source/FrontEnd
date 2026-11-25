@@ -831,3 +831,38 @@ tbody tr:hover { background: #FBFCFE; }
   .admin-label { display: none; }
   .content { padding: 12px 10px 20px; }
 }
+
+
+/* ===== زرار قفل السايدبار + الخلفية ===== */
+.sidebar-close, .sidebar-backdrop { display: none; }
+
+@media (max-width: 900px) {
+  .sidebar-close {
+    display: grid;
+    place-items: center;
+    position: absolute;
+    top: 18px;
+    right: 14px;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, .22);
+    background: rgba(255, 255, 255, .08);
+    color: #fff;
+    font-size: 20px;
+    line-height: 1;
+  }
+  .sidebar-close:hover { background: rgba(255, 255, 255, .16); }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 1050;
+    background: rgba(0, 0, 0, .5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease;
+  }
+  .sidebar-backdrop.show { opacity: 1; pointer-events: auto; }
+}
