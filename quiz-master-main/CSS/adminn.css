@@ -755,3 +755,79 @@ tbody tr:hover { background: #FBFCFE; }
 
 /* لوجو Kokquiz (صورة) في الصفحة الرئيسية */
 #page-home .kq-hero-logo { display: block; height: clamp(70px, 12vw, 150px); width: auto; max-width: 100%; mix-blend-mode: screen; background: transparent; }
+
+/* ===========================================================
+   MOBILE FIXES — تظبيط الموبايل (آخر الملف عشان يكسب)
+   =========================================================== */
+.main-footer { padding: 18px 20px; text-align: center; }
+
+@media (max-width: 900px) {
+  .mobile-menu {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--navy);
+    font-size: 20px;
+    line-height: 1;
+  }
+  .sidebar.open { z-index: 1100; box-shadow: 0 0 40px rgba(0, 0, 0, .45); }
+}
+
+@media (max-width: 720px) {
+  .topbar { min-height: 64px; padding: 12px 14px; gap: 10px; }
+  .topbar > div:not(.top-actions) { min-width: 0; }
+  .topbar h1 { font-size: 20px; line-height: 1.25; }
+  .breadcrumb { margin-bottom: 4px; }
+  .top-actions { gap: 8px; }
+  .lang-btn { padding: 6px 10px; font-size: 13px; }
+
+  .content { padding: 14px 12px 24px; }
+
+  .welcome-banner { min-height: 0; padding: 22px 18px; margin-bottom: 16px; }
+  .banner-cross { display: none; }
+
+  .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 20px; }
+  .stat-card { padding: 14px; }
+  .stat-card > strong { font-size: 24px; margin: 10px 0 4px; }
+
+  .section-heading { flex-wrap: wrap; margin: 20px 0 14px; }
+  .section-heading .button { flex-shrink: 0; }
+
+  .toolbar { grid-template-columns: 1fr; }
+  th, td { padding: 12px 14px; }
+  .form-card { padding: 18px; }
+
+  .toast { left: 12px; right: 12px; bottom: 16px; }
+  .modal-card { padding: 22px; }
+  .host-modal-right { padding: 20px; }
+  .main-footer { padding: 14px 12px; font-size: 12.5px; }
+
+  .studio-brand { justify-content: flex-start; gap: 10px; }
+  #studio-quiz-title { width: auto; flex: 1; min-width: 0; }
+  .studio-actions { gap: 10px; }
+  .studio-actions > button { flex: 1; }
+  .studio-main-canvas { padding: 14px 10px; }
+  .canvas-question-box { margin-bottom: 14px; }
+  .canvas-question-box input { font-size: 18px; padding: 14px; }
+  .canvas-media-box { min-height: 160px; margin-bottom: 18px; }
+  .canvas-answers-grid { gap: 10px; }
+  .answer-card { min-height: 64px; padding: 12px; gap: 12px; }
+  .ans-input { font-size: 16px; }
+  .correct-tick { width: 34px; height: 34px; border-width: 3px; }
+}
+
+@media (max-width: 600px) {
+  .quiz-card { aspect-ratio: auto; }
+  .quiz-cover { flex: 0 0 100px; }
+  .quiz-card-body { flex: 1 1 auto; gap: 8px; }
+}
+
+@media (max-width: 480px) {
+  .admin-label { display: none; }
+  .content { padding: 12px 10px 20px; }
+}
