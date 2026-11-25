@@ -285,3 +285,9 @@
   .kc-hint { padding: 12px 14px; font-size: 13.5px; }
   .kc-settings { padding: 18px; }
 }
+
+/* ===== الصور: متكبرش عن مكانها أبدًا (كانت بتكبّر الصفحة كلها) ===== */
+#kc-root img, .kc-modal-box img { max-width: 100%; height: auto; }
+.kc-church-ico { overflow: hidden; flex-shrink: 0; }
+.kc-church-ico img { width: 100%; height: 100%; max-width: none; object-fit: cover; display: block; border-radius: inherit; }
+     
