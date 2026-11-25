@@ -4,12 +4,15 @@
    apin.js  —  الطبقة الموحدة للتعامل مع البيانات والـ Realtime (REST + SignalR)
    =========================================================================== */
 (function () {
-  const API_HOST = (!location.hostname || location.hostname === "127.0.0.1") ? "localhost" : location.hostname;
+  const IS_LOCAL = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+  const SERVER_ORIGIN = IS_LOCAL
+    ? "https://localhost:7152"
+    : "https://kokquiz-gaekbbdrcnhjdtd6.denmarkeast-01.azurewebsites.net";
 
   const CONFIG = {
     USE_MOCK: false,
-    API_BASE: `https://${API_HOST}:7152/api`,
-    HUB_URL: `https://${API_HOST}:7152/gamehub`,
+    API_BASE: `${SERVER_ORIGIN}/api`,
+    HUB_URL: `${SERVER_ORIGIN}/gamehub`,
     TOKEN_KEY: "token"
   };
 
