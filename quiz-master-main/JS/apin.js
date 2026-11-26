@@ -101,6 +101,7 @@
       res = await fetch(url, {
         method,
         headers,
+        cache: "no-store",
         body: body ? (isForm ? body : JSON.stringify(body)) : undefined
       });
     } catch (netErr) {
@@ -695,7 +696,35 @@
       },
 
       submitAnswer: (answerId) => realtime.invoke("SubmitAnswer", Number(answerId)),
-      async players() { return readJSON(KEYS.players, []); }
+
+      async players(pin) {
+        const cur = readJSON(KEYS.game, {});
+        const sid = cur.sessionId ?? cur.id;
+        const p = pin ?? cur.roomCode;
+        const paths = [
+          sid ? `/Games/sessions/${sid}/players` : null,
+          p ? `/Games/${p}/players` : null
+        ].filter(Boolean);
+
+        for (const path of paths) {
+          try {
+            const res = await http("GET", path);
+            const arr = toArray(res);
+            if (Array.isArray(arr) && arr.length) {
+              const normalized = arr.map((x) => ({
+                id: x.id ?? x.playerId ?? uuid(),
+                nickname: x.nickname ?? x.name ?? x.userName ?? "",
+                avatar: x.avatar ?? x.avatarKey ?? null
+              })).filter((x) => x.nickname);
+              if (normalized.length) {
+                writeJSON(KEYS.players, normalized);
+                return normalized;
+              }
+            }
+          } catch { /* نجرب المسار اللي بعده أو نرجع للكاش */ }
+        }
+        return readJSON(KEYS.players, []);
+      }
     }
   };
 
@@ -753,8 +782,11 @@
 
       this._conn.onreconnected(async () => {
         try {
-          if (this._role === "host") await this._conn.invoke("HostJoin", this._pin);
-          else {
+          if (this._role === "host") {
+            const res = await this._conn.invoke("HostJoin", this._pin);
+            const arr = toArray(res?.players ?? res).map(mapPlayer).filter(Boolean);
+            if (arr.length) writeJSON(KEYS.players, arr);
+          } else {
             const saved = readJSON(KEYS.reconnect, null);
             if (saved) await this._conn.invoke("RejoinGame", saved.pin, saved.reconnectToken);
           }
@@ -768,7 +800,11 @@
         throw new ApiError("HUB_CONNECTION_FAILED", "تعذر الاتصال بـ GameHub.");
       }
 
-      if (role === "host") await this.invoke("HostJoin", pin);
+      if (role === "host") {
+        const res = await this.invoke("HostJoin", pin);
+        const arr = toArray(res?.players ?? res).map(mapPlayer).filter(Boolean);
+        if (arr.length) writeJSON(KEYS.players, arr);
+      }
     },
 
     async invoke(method, ...args) {
@@ -818,14 +854,32 @@
     }
   };
 
+  const mapPlayer = (p) => {
+    const nick = typeof p === "string" ? p : p?.name ?? p?.nickname ?? p?.userName;
+    if (!nick) return null;
+    return { id: p?.id ?? p?.playerId ?? uuid(), nickname: nick, avatar: p?.avatar ?? p?.avatarKey ?? null };
+  };
+
   realtime.on("PlayerJoined", (payload) => {
-    const nick = typeof payload === "string" ? payload : payload?.name ?? payload?.nickname;
-    if (!nick) return;
+    const item = mapPlayer(payload);
+    if (!item) return;
     const list = readJSON(KEYS.players, []);
-    if (!list.some((p) => p.nickname === nick)) {
-      list.push({ id: uuid(), nickname: nick, avatar: payload?.avatar ?? payload?.avatarKey ?? null });
+    if (!list.some((p) => p.nickname === item.nickname)) {
+      list.push(item);
       writeJSON(KEYS.players, list);
     }
+  });
+
+  realtime.on("UpdatePlayerList", (payload) => {
+    const arr = toArray(payload).map(mapPlayer).filter(Boolean);
+    if (arr.length) writeJSON(KEYS.players, arr);
+  });
+
+  realtime.on("PlayerLeft", (payload) => {
+    const nick = typeof payload === "string" ? payload : payload?.name ?? payload?.nickname;
+    if (!nick) return;
+    const list = readJSON(KEYS.players, []).filter((p) => p.nickname !== nick);
+    writeJSON(KEYS.players, list);
   });
 
   const impl = CONFIG.USE_MOCK ? mock : remote;
@@ -846,9 +900,9 @@
         return null;
       },
       logout() {
-        localStorage.removeItem(KEYS.session);
         localStorage.removeItem(CONFIG.TOKEN_KEY);
         localStorage.removeItem("churchQuizToken");
+        localStorage.removeItem(KEYS.session);
         localStorage.removeItem(KEYS.game);
         localStorage.removeItem(KEYS.players);
         localStorage.removeItem(KEYS.reconnect);

@@ -25,24 +25,24 @@ function drawQr(elementId, text, size) {
   el.innerHTML = `<div style="font:600 12px/1.4 sans-serif;word-break:break-all;color:#0B1E36;max-width:${size}px">${escapeHTML(text)}</div>`;
 }
 
-let displayedPlayersCount = -1;
+let lastPlayersSignature = null;
 
 function updatePlayersUI(players) {
   const container = document.getElementById("players-list");
   const countDisplay = document.getElementById("player-count-num");
 
   if (!players || players.length === 0) {
-    if (displayedPlayersCount !== 0) {
+    if (lastPlayersSignature !== "") {
       container.innerHTML = `<div class="waiting-badge">Waiting for participants...</div>`;
       countDisplay.textContent = "0";
-      displayedPlayersCount = 0;
+      lastPlayersSignature = "";
     }
     return;
   }
 
-  // مفيش إعادة رسم لو العدد ما اتغيرش (لمنع الوميض)
-  if (players.length === displayedPlayersCount) return;
-  displayedPlayersCount = players.length;
+  const signature = players.map((p) => `${p.nickname}:${p.avatar ?? ""}`).join("|");
+  if (signature === lastPlayersSignature) return;
+  lastPlayersSignature = signature;
 
   countDisplay.textContent = players.length;
   container.innerHTML = players.map((p) => {
@@ -94,6 +94,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.location.href = HOST_GAME_PAGE;
   });
 
+  const refreshPlayers = async () => {
+    try {
+      updatePlayersUI(await Api.game.players(pin));
+    } catch (e) {
+      console.warn("players refresh failed", e);
+    }
+  };
+
+  // تحديث فوري عند وصول أي لاعب عبر SignalR
+  Api.realtime.on("PlayerJoined", refreshPlayers);
+  Api.realtime.on("UpdatePlayerList", refreshPlayers);
+  Api.realtime.on("PlayerLeft", refreshPlayers);
+
   // الاتصال بالـ Hub كمدرّس من أول ما الصفحة تفتح (عشان نستقبل PlayerJoined)
   try {
     await Api.realtime.connect({ pin, role: "host" });
@@ -102,9 +115,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     alert("Could not connect to the live server: " + (err.message || err.code));
   }
 
-  const refreshPlayers = async () => {
-    try { updatePlayersUI(await Api.game.players(pin)); } catch (e) { console.warn("players refresh failed", e); }
-  };
   refreshPlayers();
   setInterval(refreshPlayers, 1000);
 });
