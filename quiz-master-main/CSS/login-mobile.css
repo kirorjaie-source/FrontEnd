@@ -1,0 +1,33 @@
+/* ============================================================
+   login-mobile.css — صفحة الدخول على الموبايل
+   مبني على loginn.css + الـ <style> اللي جوه loginn.html
+   يتربط بعد loginn.css
+   ============================================================ */
+
+.login-page { min-height: 100dvh; }
+
+/* 16px عشان iPhone ميعملش zoom لما تدوس على الخانة */
+form input { font-size: 16px; }
+#togglePassword { padding: 10px; }
+
+@media (max-width: 600px) {
+  .login-page { padding: 14px 12px; align-items: flex-start; }
+  .login-card { padding: 22px 18px; border-radius: 20px; }
+
+  .card-top-bar { flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+  .back-link { font-size: 13px; }
+  .lang-toggle-btn { padding: 7px 14px; }
+
+  .login-eyebrow { font-size: 10px; letter-spacing: .22em; }
+  .brand-logo img { height: 72px; margin-inline: auto; }
+  .subtitle { margin-bottom: 18px; font-size: 14px; }
+  form label { margin: 14px 0 6px; }
+  .login-button { padding: 14px; }
+  .signup-text { margin-top: 18px; }
+}
+
+/* الموبايل واقف أفقي أو الكيبورد مفتوح */
+@media (max-height: 520px) {
+  .login-page { align-items: flex-start; }
+  .brand-logo img { height: 56px; }
+}

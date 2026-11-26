@@ -1,0 +1,23 @@
+/* ============================================================
+   controller-mobile.css — جهاز التحكم (player-controller.html)
+   يتربط بعد player-controller.css
+   ============================================================ */
+
+/* 100vh كان بيقص الأزرار تحت بسبب شريط المتصفح */
+body {
+  height: 100dvh;
+  min-height: 100dvh;
+}
+.main-screen { padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); min-height: 0; }
+.gamepad-grid { min-height: 0; }
+.gamepad-btn { font-size: clamp(3rem, 16vw, 5.5rem); }
+.player-header { padding: 12px 16px; gap: 10px; }
+.player-badge { min-width: 0; }
+#nameDisplay { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 46vw; }
+
+@media (max-height: 480px) and (orientation: landscape) {
+  .player-header { padding: 6px 14px; }
+  .status-card { padding: 18px 20px; }
+  .waiting-spinner, .check-icon, .feedback-icon { font-size: 2.4rem; margin-bottom: 6px; }
+  .gamepad-grid { grid-template-columns: repeat(4, 1fr); grid-template-rows: 1fr; }
+}

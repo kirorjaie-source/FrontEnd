@@ -1,0 +1,32 @@
+/* ============================================================
+   player-mobile.css — صفحة اللاعب (playern.html) على الموبايل
+   playern.css أصلاً مبني للموبايل، دي تفاصيل بس:
+   - شريط المتصفح بيقص الشاشة (100vh) → 100dvh
+   - الفوتر ياخد safe-area في أجهزة النوتش
+   - الوضع الأفقي
+   يتربط بعد playern.css و countdown.css
+   ============================================================ */
+
+.player-screen { min-height: 100dvh; padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
+.player-footer { height: calc(68px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); }
+.pad-grid { height: min(62dvh, 540px); }
+
+/* أسماء طويلة */
+.player-name-bottom { max-width: 52vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.final-name, .player-name-tilted { overflow-wrap: anywhere; }
+
+@media (max-width: 380px) {
+  .join-card { padding: 16px; }
+  .join-card input, .btn-join { height: 52px; font-size: 17px; }
+  .final-message b { font-size: 20px; }
+  .final-message span { font-size: 14px; }
+}
+
+/* الموبايل واقف أفقي */
+@media (max-height: 480px) and (orientation: landscape) {
+  .player-screen { justify-content: flex-start; padding-top: 12px; gap: 10px; }
+  .pad-grid { height: 62dvh; }
+  .kok-word { font-size: 40px; }
+  .avatar-large-box { width: 90px; height: 90px; }
+  .avatar-emoji { font-size: 54px; }
+}
