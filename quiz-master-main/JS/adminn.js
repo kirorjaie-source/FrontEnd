@@ -204,7 +204,27 @@ const I18N = {
   "csv.file": "church-quiz-results.csv",
   "csv.date": "Date",
   "csv.total": "Total",
-  "csv.seconds": "Time (seconds)"
+  "csv.seconds": "Time (seconds)",
+  "theme.toLight": "Switch to light mode",
+  "theme.toDark": "Switch to dark mode",
+  "email.title": "Login email",
+  "email.sub": "Change the email you use to sign in.",
+  "email.current": "Current email",
+  "email.new": "New email",
+  "email.password": "Current password",
+  "email.passwordPh": "Enter your password to confirm",
+  "email.save": "Change email",
+  "email.invalid": "Enter a valid email address.",
+  "email.same": "The new email is the same as the current one.",
+  "email.needPwd": "Enter your current password.",
+  "email.done": "Email changed. Please sign in again.",
+  "email.fail": "Could not change the email.",
+  "email.sendCode": "Send verification code",
+  "email.code": "Verification code",
+  "email.codePh": "Code sent to the new email",
+  "email.confirm": "Confirm change",
+  "email.codeSent": "We sent a code to the new email. Enter it below.",
+  "email.needCode": "Enter the verification code."
  },
  "ar": {
   "brand.name": "كوك كويز",
@@ -395,7 +415,27 @@ const I18N = {
   "csv.file": "church-quiz-results.csv",
   "csv.date": "التاريخ",
   "csv.total": "المجموع",
-  "csv.seconds": "الوقت (بالثواني)"
+  "csv.seconds": "الوقت (بالثواني)",
+  "theme.toLight": "التبديل للوضع النهاري",
+  "theme.toDark": "التبديل للوضع الليلي",
+  "email.title": "إيميل تسجيل الدخول",
+  "email.sub": "غيّر الإيميل اللي بتدخل بيه.",
+  "email.current": "الإيميل الحالي",
+  "email.new": "الإيميل الجديد",
+  "email.password": "كلمة السر الحالية",
+  "email.passwordPh": "اكتب كلمة السر للتأكيد",
+  "email.save": "تغيير الإيميل",
+  "email.invalid": "اكتب إيميل صحيح.",
+  "email.same": "الإيميل الجديد هو نفسه الحالي.",
+  "email.needPwd": "اكتب كلمة السر الحالية.",
+  "email.done": "تم تغيير الإيميل. سجّل الدخول من جديد.",
+  "email.fail": "تعذّر تغيير الإيميل.",
+  "email.sendCode": "إرسال كود التأكيد",
+  "email.code": "كود التأكيد",
+  "email.codePh": "الكود اللي وصل للإيميل الجديد",
+  "email.confirm": "تأكيد التغيير",
+  "email.codeSent": "بعتنا كود للإيميل الجديد. اكتبه تحت.",
+  "email.needCode": "اكتب كود التأكيد."
  }
 };
 
@@ -403,10 +443,7 @@ const LANG_KEY = "kokLang";   // نفس المفتاح في كل الصفحات 
 let currentLang = localStorage.getItem(LANG_KEY) === "ar" ? "ar" : "en";
 let currentPage = "home";      // الرئيسية هي أول صفحة بتفتح
 
-/* ============================================================
-   آية اليوم (الرسالة اللي في الصفحة الرئيسية) — بتتغير تلقائي كل يوم
-   عشان تزود آية: ضيف عنصر جديد { en: "...", ar: "..." } في القايمة
-   ============================================================ */
+/* ===== آية اليوم: بتتغير تلقائي كل يوم (بتفضل ثابتة طول اليوم) ===== */
 const DAILY_VERSES = [
   { en: "The Lord is my shepherd; I shall not want. — Psalm 23:1",
     ar: "الرَّبُّ رَاعِيَّ فَلاَ يُعْوِزُنِي شَيْءٌ. — مزمور ٢٣: ١" },
@@ -432,44 +469,40 @@ const DAILY_VERSES = [
     ar: "كُلُّ الأَشْيَاءِ تَعْمَلُ مَعًا لِلْخَيْرِ لِلَّذِينَ يُحِبُّونَ اللهَ. — رومية ٨: ٢٨" },
   { en: "God is our refuge and strength, a very present help in trouble. — Psalm 46:1",
     ar: "اللهُ لَنَا مَلْجَأٌ وَقُوَّةٌ، عَوْنًا فِي الضِّيقَاتِ وُجِدَ شَدِيدًا. — مزمور ٤٦: ١" },
-  { en: "For God so loved the world that He gave His only begotten Son, that whoever believes in Him should not perish but have everlasting life. — John 3:16",
-    ar: "لأَنَّهُ هكَذَا أَحَبَّ اللهُ الْعَالَمَ حَتَّى بَذَلَ ابْنَهُ الْوَحِيدَ، لِكَيْ لاَ يَهْلِكَ كُلُّ مَنْ يُؤْمِنُ بِهِ، بَلْ تَكُونُ لَهُ الْحَيَاةُ الأَبَدِيَّةُ. — يوحنا ٣: ١٦" },
-  { en: "I am the way, the truth, and the life. No one comes to the Father except through Me. — John 14:6",
-    ar: "أَنَا هُوَ الطَّرِيقُ وَالْحَقُّ وَالْحَيَاةُ. لَيْسَ أَحَدٌ يَأْتِي إِلَى الآبِ إِلاَّ بِي. — يوحنا ١٤: ٦" },
-  { en: "Let your light so shine before men, that they may see your good works and glorify your Father in heaven. — Matthew 5:16",
-    ar: "فَلْيُضِئْ نُورُكُمْ هكَذَا قُدَّامَ النَّاسِ، لِكَيْ يَرَوْا أَعْمَالَكُمُ الْحَسَنَةَ وَيُمَجِّدُوا أَبَاكُمُ الَّذِي فِي السَّمَاوَاتِ. — متى ٥: ١٦" },
+  { en: "I am the way, the truth, and the life. — John 14:6",
+    ar: "أَنَا هُوَ الطَّرِيقُ وَالْحَقُّ وَالْحَيَاةُ. — يوحنا ١٤: ٦" },
+  { en: "I am the light of the world. He who follows Me shall not walk in darkness, but have the light of life. — John 8:12",
+    ar: "أَنَا هُوَ نُورُ الْعَالَمِ. مَنْ يَتْبَعْنِي فَلاَ يَمْشِي فِي الظُّلْمَةِ بَلْ يَكُونُ لَهُ نُورُ الْحَيَاةِ. — يوحنا ٨: ١٢" },
   { en: "The Lord is my light and my salvation; whom shall I fear? — Psalm 27:1",
     ar: "الرَّبُّ نُورِي وَخَلاَصِي، مِمَّنْ أَخَافُ؟ — مزمور ٢٧: ١" },
-  { en: "The fear of the Lord is the beginning of wisdom, and the knowledge of the Holy One is understanding. — Proverbs 9:10",
-    ar: "بَدْءُ الْحِكْمَةِ مَخَافَةُ الرَّبِّ، وَمَعْرِفَةُ الْقُدُّوسِ فَهْمٌ. — أمثال ٩: ١٠" },
-  { en: "Taste and see that the Lord is good; blessed is the one who trusts in Him. — Psalm 34:8",
-    ar: "ذُوقُوا وَانْظُرُوا مَا أَطْيَبَ الرَّبَّ! طُوبَى لِلرَّجُلِ الْمُتَوَكِّلِ عَلَيْهِ. — مزمور ٣٤: ٨" },
-  { en: "I know the thoughts that I think toward you, thoughts of peace and not of evil, to give you a future and a hope. — Jeremiah 29:11",
-    ar: "لأَنِّي عَرَفْتُ الأَفْكَارَ الَّتِي أَنَا مُفْتَكِرٌ بِهَا عَنْكُمْ، أَفْكَارَ سَلاَمٍ لاَ شَرٍّ، لأُعْطِيَكُمْ آخِرَةً وَرَجَاءً. — إرميا ٢٩: ١١" },
   { en: "My help comes from the Lord, who made heaven and earth. — Psalm 121:2",
     ar: "مَعُونَتِي مِنْ عِنْدِ الرَّبِّ، صَانِعِ السَّمَاوَاتِ وَالأَرْضِ. — مزمور ١٢١: ٢" },
+  { en: "Commit your works to the Lord, and your thoughts will be established. — Proverbs 16:3",
+    ar: "أَلْقِ عَلَى الرَّبِّ أَعْمَالَكَ فَتَثْبُتَ أَفْكَارُكَ. — أمثال ١٦: ٣" },
   { en: "Rejoice always, pray without ceasing, in everything give thanks. — 1 Thessalonians 5:16-18",
     ar: "افْرَحُوا كُلَّ حِينٍ. صَلُّوا بِلاَ انْقِطَاعٍ. اشْكُرُوا فِي كُلِّ شَيْءٍ. — ١ تسالونيكي ٥: ١٦-١٨" },
-  { en: "If any of you lacks wisdom, let him ask of God, who gives to all generously, and it will be given to him. — James 1:5",
-    ar: "إِنْ كَانَ أَحَدُكُمْ تُعْوِزُهُ حِكْمَةٌ، فَلْيَطْلُبْ مِنَ اللهِ الَّذِي يُعْطِي الْجَمِيعَ بِسَخَاءٍ، فَسَيُعْطَى لَهُ. — يعقوب ١: ٥" },
-  { en: "Commit your way to the Lord, trust also in Him, and He shall bring it to pass. — Psalm 37:5",
-    ar: "سَلِّمْ لِلرَّبِّ طَرِيقَكَ وَاتَّكِلْ عَلَيْهِ وَهُوَ يُجْرِي. — مزمور ٣٧: ٥" },
+  { en: "Be anxious for nothing, but in everything by prayer and supplication, with thanksgiving, let your requests be made known to God. — Philippians 4:6",
+    ar: "لاَ تَهْتَمُّوا بِشَيْءٍ، بَلْ فِي كُلِّ شَيْءٍ بِالصَّلاَةِ وَالدُّعَاءِ مَعَ الشُّكْرِ لِتُعْلَمْ طِلْبَاتُكُمْ لَدَى اللهِ. — فيلبي ٤: ٦" },
+  { en: "Rejoicing in hope, patient in tribulation, continuing steadfastly in prayer. — Romans 12:12",
+    ar: "فَرِحِينَ فِي الرَّجَاءِ، صَابِرِينَ فِي الضِّيقِ، مُواظِبِينَ عَلَى الصَّلاَةِ. — رومية ١٢: ١٢" },
+  { en: "Let us not grow weary while doing good, for in due season we shall reap if we do not lose heart. — Galatians 6:9",
+    ar: "فَلاَ نَفْشَلْ فِي عَمَلِ الْخَيْرِ، لأَنَّنَا سَنَحْصُدُ فِي وَقْتِهِ إِنْ كُنَّا لاَ نَكِلُّ. — غلاطية ٦: ٩" },
   { en: "Faith is the substance of things hoped for, the evidence of things not seen. — Hebrews 11:1",
     ar: "وَأَمَّا الإِيمَانُ فَهُوَ الثِّقَةُ بِمَا يُرْجَى وَالإِيقَانُ بِأُمُورٍ لاَ تُرَى. — عبرانيين ١١: ١" },
+  { en: "If any of you lacks wisdom, let him ask of God, who gives to all liberally. — James 1:5",
+    ar: "إِنْ كَانَ أَحَدُكُمْ تُعْوِزُهُ حِكْمَةٌ، فَلْيَطْلُبْ مِنَ اللهِ الَّذِي يُعْطِي الْجَمِيعَ بِسَخَاءٍ. — يعقوب ١: ٥" },
+  { en: "God is love. — 1 John 4:8",
+    ar: "اللهُ مَحَبَّةٌ. — ١ يوحنا ٤: ٨" },
+  { en: "Oh, taste and see that the Lord is good; blessed is the man who trusts in Him. — Psalm 34:8",
+    ar: "ذُوقُوا وَانْظُرُوا مَا أَطْيَبَ الرَّبَّ! طُوبَى لِلرَّجُلِ الْمُتَوَكِّلِ عَلَيْهِ. — مزمور ٣٤: ٨" },
+  { en: "I know the thoughts that I think toward you, thoughts of peace and not of evil, to give you a future and a hope. — Jeremiah 29:11",
+    ar: "أَفْكَارَ سَلاَمٍ لاَ شَرٍّ، لأُعْطِيَكُمْ آخِرَةً وَرَجَاءً. — إرميا ٢٩: ١١" },
   { en: "Seek first the kingdom of God and His righteousness, and all these things shall be added to you. — Matthew 6:33",
     ar: "اطْلُبُوا أَوَّلاً مَلَكُوتَ اللهِ وَبِرَّهُ، وَهذِهِ كُلُّهَا تُزَادُ لَكُمْ. — متى ٦: ٣٣" },
   { en: "No one knows the things of God except the Spirit of God. — 1 Corinthians 2:11",
     ar: "أُمُورُ اللهِ لاَ يَعْرِفُهَا أَحَدٌ إِلاَّ رُوحُ اللهِ. — ١ كورنثوس ٢: ١١" },
   { en: "As for me and my house, we will serve the Lord. — Joshua 24:15",
     ar: "أَمَّا أَنَا وَبَيْتِي فَنَعْبُدُ الرَّبَّ. — يشوع ٢٤: ١٥" },
-  { en: "Let us not grow weary while doing good, for in due season we shall reap if we do not lose heart. — Galatians 6:9",
-    ar: "فَلاَ نَفْشَلْ فِي عَمَلِ الْخَيْرِ، لأَنَّنَا سَنَحْصُدُ فِي وَقْتِهِ إِنْ كُنَّا لاَ نَكِلُّ. — غلاطية ٦: ٩" },
-  { en: "The name of the Lord is a strong tower; the righteous run to it and are safe. — Proverbs 18:10",
-    ar: "اسْمُ الرَّبِّ بُرْجٌ حَصِينٌ، يَرْكُضُ إِلَيْهِ الصِّدِّيقُ وَيَتَمَنَّعُ. — أمثال ١٨: ١٠" },
-  { en: "Behold, how good and how pleasant it is for brethren to dwell together in unity! — Psalm 133:1",
-    ar: "هُوَذَا مَا أَحْسَنَ وَمَا أَجْمَلَ أَنْ يَسْكُنَ الإِخْوَةُ مَعًا! — مزمور ١٣٣: ١" },
-  { en: "Whatever you do, do it heartily, as to the Lord and not to men. — Colossians 3:23",
-    ar: "وَكُلُّ مَا فَعَلْتُمْ، فَاعْمَلُوا مِنَ الْقَلْبِ، كَمَا لِلرَّبِّ لَيْسَ لِلنَّاسِ. — كولوسي ٣: ٢٣" },
   { en: "No one knows God's purposes except God.",
     ar: "مقاصد الله لا يعلمها إلا الله." }
 ];
@@ -482,7 +515,7 @@ function dailyVerse() {
 }
 
 function t(key, vars) {
-  if (key === "home.sub") return dailyVerse();   // آية اليوم
+  if (key === "home.sub") return dailyVerse();
   let text = (I18N[currentLang] && I18N[currentLang][key]) ?? I18N.en[key] ?? key;
   if (vars) Object.keys(vars).forEach((k) => { text = text.split(`{${k}}`).join(vars[k]); });
   return text;
@@ -531,6 +564,7 @@ function setLanguage(lang, { rerender = true } = {}) {
   localStorage.setItem(LANG_KEY, currentLang);
   if ($("dashboard-language")) $("dashboard-language").value = currentLang;
   applyStaticTranslations();
+  applyTheme(getTheme());
   if (rerender) renderAllPages();
 }
 
@@ -1303,7 +1337,153 @@ async function loadCategories() {
   }
 }
 
+/* ============================================================
+   الوضع الليلي (Dark mode) — الزرار فوق جنب اللغة، والاختيار بيتحفظ
+   ============================================================ */
+const THEME_KEY = "kokTheme";
+const getTheme = () => (localStorage.getItem(THEME_KEY) === "dark" ? "dark" : "light");
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem(THEME_KEY, theme);
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute("content", theme === "dark" ? "#0A1626" : "#0B1E36");
+  const btn = $("theme-toggle");
+  if (btn) {
+    btn.textContent = theme === "dark" ? "☀️" : "🌙";
+    const label = t(theme === "dark" ? "theme.toLight" : "theme.toDark");
+    btn.title = label;
+    btn.setAttribute("aria-label", label);
+  }
+}
+
+function mountThemeToggle() {
+  const box = document.querySelector(".top-actions");
+  if (!box || $("theme-toggle")) return;
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.id = "theme-toggle";
+  btn.className = "lang-btn";
+  btn.style.fontSize = "16px";
+  btn.addEventListener("click", () => applyTheme(getTheme() === "dark" ? "light" : "dark"));
+  box.insertBefore(btn, $("lang-toggle") || box.firstChild);
+  applyTheme(getTheme());
+}
+// نطبّق الوضع المحفوظ فورًا عشان مفيش وميض أبيض
+document.documentElement.setAttribute("data-theme", getTheme());
+
+/* ============================================================
+   تغيير إيميل الدخول (كارت جوه صفحة الإعدادات)
+   بيكلم الباك: PUT {API}/Auth/change-email  { newEmail, currentPassword }
+   ============================================================ */
+const ADMIN_API_BASE = (window.Api && Api.config && Api.config.API_BASE) || "https://localhost:7152/api";
+
+let emailStep = 1;   // 1 = إرسال الكود، 2 = تأكيد الكود
+
+function mountEmailCard() {
+  const page = $("page-settings");
+  if (!page || $("email-card")) return;
+  const card = document.createElement("div");
+  card.className = "card form-card";
+  card.id = "email-card";
+  card.innerHTML = `
+    <div class="form-section-title">
+      <span>✉</span>
+      <div>
+        <h3 data-i18n="email.title">Login email</h3>
+        <p data-i18n="email.sub">Change the email you use to sign in.</p>
+      </div>
+    </div>
+    <form id="email-form" novalidate>
+      <div class="field">
+        <label for="email-current" data-i18n="email.current">Current email</label>
+        <input id="email-current" type="email" readonly dir="ltr">
+      </div>
+      <div class="field">
+        <label for="email-new" data-i18n="email.new">New email</label>
+        <input id="email-new" type="email" placeholder="new@example.com" autocomplete="email" dir="ltr">
+      </div>
+      <div class="field" id="email-pwd-field">
+        <label for="email-password" data-i18n="email.password">Current password</label>
+        <input id="email-password" type="password" data-i18n-ph="email.passwordPh" autocomplete="current-password">
+      </div>
+      <div class="field" id="email-code-field" style="display:none">
+        <label for="email-code" data-i18n="email.code">Verification code</label>
+        <input id="email-code" type="text" inputmode="numeric" maxlength="8" data-i18n-ph="email.codePh" autocomplete="one-time-code" dir="ltr">
+      </div>
+      <p id="email-msg" role="status" style="min-height:20px;margin:0 0 12px;font-size:13px;font-weight:700"></p>
+      <button class="button gold-button" type="submit" id="email-save-btn"></button>
+    </form>`;
+  const support = page.querySelector(".support-card");
+  page.insertBefore(card, support || null);
+  $("email-current").value = getAccountInfo().email || "";
+  $("email-save-btn").textContent = t("email.sendCode");
+  $("email-form").addEventListener("submit", changeLoginEmail);
+}
+
+function emailAuthHeaders() {
+  const s = (window.Api && Api.auth.getSession()) || {};
+  const token = s.token || localStorage.getItem("token") || localStorage.getItem("churchQuizToken") || "";
+  return { "Content-Type": "application/json", Authorization: "Bearer " + token };
+}
+
+async function changeLoginEmail(event) {
+  event.preventDefault();
+  const msg = $("email-msg");
+  const show = (text, ok) => { msg.textContent = text; msg.style.color = ok ? "#15803d" : "#dc2626"; };
+  const newEmail = $("email-new").value.trim();
+  const btn = $("email-save-btn");
+
+  if (emailStep === 1) {
+    const password = $("email-password").value;
+    const current = getAccountInfo().email;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) return show(t("email.invalid"));
+    if (current && newEmail.toLowerCase() === current.toLowerCase()) return show(t("email.same"));
+    if (!password) return show(t("email.needPwd"));
+    btn.disabled = true; show("", true);
+    try {
+      const res = await fetch(`${ADMIN_API_BASE}/Auth/change-email/request`, {
+        method: "POST", headers: emailAuthHeaders(),
+        body: JSON.stringify({ newEmail, currentPassword: password })
+      });
+      if (!res.ok) {
+        let m = t("email.fail");
+        try { const d = await res.json(); if (d && d.message) m = d.message; } catch { /* ignore */ }
+        return show(m);
+      }
+      emailStep = 2;
+      $("email-pwd-field").style.display = "none";
+      $("email-code-field").style.display = "";
+      $("email-new").readOnly = true;
+      btn.textContent = t("email.confirm");
+      show(t("email.codeSent"), true);
+    } catch { show(t("email.fail")); }
+    finally { btn.disabled = false; }
+    return;
+  }
+
+  const code = $("email-code").value.trim();
+  if (!code) return show(t("email.needCode"));
+  btn.disabled = true; show("", true);
+  try {
+    const res = await fetch(`${ADMIN_API_BASE}/Auth/change-email/confirm`, {
+      method: "POST", headers: emailAuthHeaders(),
+      body: JSON.stringify({ newEmail, code })
+    });
+    if (!res.ok) {
+      let m = t("email.fail");
+      try { const d = await res.json(); if (d && d.message) m = d.message; } catch { /* ignore */ }
+      return show(m);
+    }
+    show(t("email.done"), true);
+    toast(t("email.done"));
+    setTimeout(logout, 1800);   // الإيميل جزء من التوكن، فلازم دخول جديد
+  } catch { show(t("email.fail")); }
+  finally { btn.disabled = false; }
+}
+
 /* ---------------- Init ---------------- */
+
 
 const ACTIONS = {
   "toggle-menu": (el) => {
@@ -1321,7 +1501,10 @@ function init() {
   if (!AUTH_OK) return;
 
   if (localStorage.getItem(SIDEBAR_KEY) === "1") document.body.classList.add("sidebar-collapsed");
+  mountEmailCard();
+  mountThemeToggle();
   applyStaticTranslations();
+  applyTheme(getTheme());
   bindStudio();
 
   document.addEventListener("click", (event) => {
