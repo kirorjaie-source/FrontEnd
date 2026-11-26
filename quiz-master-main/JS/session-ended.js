@@ -43,6 +43,11 @@
     }
   };
 
+  /* بيمسح هوية اللاعب المحفوظة (reconnect) عشان الصفحة ما ترجّعوش لجلسة خلصت */
+  function clearPlayerState() {
+    try { localStorage.removeItem("churchQuizReconnect"); } catch { /* ignore */ }
+  }
+
   function injectStyle() {
     if (document.getElementById(STYLE_ID)) return;
     const css = `
@@ -116,25 +121,28 @@
       </div>`;
     document.body.appendChild(overlay);
     document.documentElement.style.overflow = "hidden";
-    overlay.querySelector("#kok-end-btn")?.focus();
+    const btn = overlay.querySelector("#kok-end-btn");
+    if (opts.kind !== "host") btn?.addEventListener("click", clearPlayerState);
+    btn?.focus();
   }
 
   /* ---------- فحص تلقائي في صفحة اللاعب ---------- */
   async function checkPlayerLink() {
     if (!document.getElementById("pin-input")) return;      // مش صفحة اللاعب
-    const pin = (new URLSearchParams(location.search).get("pin") || "").trim();
+
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem("churchQuizReconnect") || "null"); } catch { /* ignore */ }
+
+    // PIN من الرابط، وإلا PIN اللاعب المحفوظ (لو فتح الصفحة من غير رابط)
+    const urlPin = (new URLSearchParams(location.search).get("pin") || "").trim();
+    const pin = urlPin || (saved && saved.pin ? String(saved.pin) : "");
     if (!/^\d{4,8}$/.test(pin)) return;
+    const isMySession = !!saved && String(saved.pin) === pin;
 
     const base = (window.Api && Api.config && Api.config.API_BASE) ||
       ((location.hostname === "localhost" || location.hostname === "127.0.0.1")
         ? "https://localhost:7152/api"
         : "https://kokquiz-gaekbbdrcnhjdtd6.denmarkeast-01.azurewebsites.net/api");
-
-    // لو اللاعب كان أصلاً جوه اللعبة دي (إعادة اتصال) منعرضش الشاشة
-    try {
-      const saved = JSON.parse(localStorage.getItem("churchQuizReconnect") || "null");
-      if (saved && String(saved.pin) === pin) return;
-    } catch { /* ignore */ }
 
     try {
       const ctrl = new AbortController();
@@ -144,8 +152,13 @@
       if (!res.ok) return;                                    // الـ endpoint مش منشور؟ منعملش حاجة
       const data = await res.json();
       const status = String(data?.status || "").toLowerCase();
-      if (status === "ended") show({ kind: "ended" });
-      else if (status === "running") show({ kind: "started" });
+
+      if (status === "ended") {
+        if (isMySession) clearPlayerState();                  // اللاعب القديم يتمسح عشان مايرجعش للجلسة الميتة
+        show({ kind: "ended" });
+      } else if (status === "running" && !isMySession) {
+        show({ kind: "started" });                            // لاعب جديد على لعبة بدأت
+      }
     } catch { /* مفيش نت أو السيرفر نايم: نسيب الصفحة تشتغل عادي */ }
   }
 
