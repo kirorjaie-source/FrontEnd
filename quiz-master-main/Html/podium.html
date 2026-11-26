@@ -102,6 +102,21 @@
     @media (prefers-reduced-motion: reduce) { .ko-row, .ko-fill { animation: none; opacity: 1; transform: none; } }
   </style>
 
+  <script>
+    // إنهاء الجلسة تلقائياً بمجرد الوصول لمنصة التتويج النهائية
+    try {
+      const raw = localStorage.getItem("churchQuizGameSession");
+      if (raw) {
+        const s = JSON.parse(raw);
+        if (s && s.status !== "finished") {
+          s.status = "finished";
+          localStorage.setItem("churchQuizGameSession", JSON.stringify(s));
+        }
+      }
+      localStorage.removeItem("churchQuizPlayers");
+    } catch {}
+  </script>
+
   <!-- استدعاء المكتبة الاحتفالية مرة واحدة فقط -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 

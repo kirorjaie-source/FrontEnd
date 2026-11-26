@@ -778,7 +778,9 @@ function openConfirmModal({ title, message, confirmText, cancelText, danger = tr
    ============================================================ */
 function getActiveSession() {
   const s = window.Api?.game?.current ? Api.game.current() : null;
-  if (!s || !s.roomCode || s.status === "finished") return null;
+  if (!s || !s.roomCode) return null;
+  const st = String(s.status || "").toLowerCase();
+  if (st === "finished" || st === "ended" || st === "completed") return null;
   return s;
 }
 
@@ -793,7 +795,7 @@ function isQuizActive(quiz) {
 function activeSessionButtonsHTML(session) {
   if (!session) return "";
   return `
-    <div class="quiz-session-controls" style="display:flex;flex-wrap:wrap;gap:6px;width:100%;margin-top:8px;">
+    <div class="quiz-session-controls" style="display:flex;flex-wrap:wrap;gap:6px;width:100%;margin-top:6px;">
       <button type="button" class="button" data-action="resume-session"
         style="flex:1 1 130px;min-width:0;justify-content:center;background:#16a34a;color:#fff;font-weight:800;padding:8px 10px;border-radius:10px;font-size:12.5px;white-space:nowrap;">
         ${escapeHTML(t("session.resumeShort", { pin: session.roomCode }))}
@@ -805,6 +807,7 @@ function activeSessionButtonsHTML(session) {
     </div>
   `;
 }
+
 function resumeActiveSession() {
   const s = getActiveSession();
   if (!s) return;
@@ -1080,10 +1083,15 @@ async function renderQuizzes() {
         </div>
         <div class="quiz-card-body">
           <h3 class="quiz-card-title">${escapeHTML(quiz.title)}</h3>
-          <div class="my-quiz-actions" style="flex-wrap:wrap;">
-            <button type="button" class="button gold-button quiz-host-btn" data-action="host" data-id="${id}">${t("explore.host")}</button>
-            <button type="button" class="icon-btn" data-action="edit" data-id="${id}" title="${t("menu.edit")}" aria-label="${t("menu.edit")}">✏️</button>
-            <button type="button" class="icon-btn icon-btn-danger" data-action="delete-quiz" data-id="${id}" title="${t("menu.delete")}" aria-label="${t("menu.delete")}">🗑️</button>
+          <div class="my-quiz-actions" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+            <button type="button" class="button gold-button quiz-host-btn" data-action="host" data-id="${id}"
+              style="flex:1 1 100%;justify-content:center;min-width:0;padding:9px 10px;">
+              ${t("explore.host")}
+            </button>
+            <button type="button" class="icon-btn" data-action="edit" data-id="${id}" title="${t("menu.edit")}" aria-label="${t("menu.edit")}"
+              style="flex:1;justify-content:center;">✏️</button>
+            <button type="button" class="icon-btn icon-btn-danger" data-action="delete-quiz" data-id="${id}" title="${t("menu.delete")}" aria-label="${t("menu.delete")}"
+              style="flex:1;justify-content:center;">🗑️</button>
             ${activeSessionButtonsHTML(activeSess)}
           </div>
         </div>
@@ -1531,7 +1539,10 @@ function quizCardHTML(q) {
       <div class="quiz-card-body">
         <h3 class="quiz-card-title">${escapeHTML(q.title)}</h3>
         <p class="quiz-card-meta">${escapeHTML(q.category || t("common.general"))}${creator ? ` · ${t("explore.by", { name: escapeHTML(creator) })}` : ""}</p>
-        <button type="button" class="button gold-button quiz-host-btn" data-action="host" data-id="${escapeHTML(q.id)}">${t("explore.host")}</button>
+        <button type="button" class="button gold-button quiz-host-btn" data-action="host" data-id="${escapeHTML(q.id)}"
+          style="width:100%;justify-content:center;min-width:0;padding:9px 10px;">
+          ${t("explore.host")}
+        </button>
         ${activeSessionButtonsHTML(activeSess)}
       </div>
     </article>`;
