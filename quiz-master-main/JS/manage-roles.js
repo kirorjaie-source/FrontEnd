@@ -37,7 +37,7 @@
       return KokI18n.translateError(raw);
     }
     const lower = String(raw || "").toLowerCase();
-    if (lower.includes("invalid admin") || lower.includes("x-admin") || lower.includes("401")) {
+    if (lower.includes("invalid admin") || lower.includes("x-admin") || lower.includes("401") || lower.includes("403")) {
       return isAr() ? "مفتاح X-Admin غير صحيح." : "Invalid X-Admin key.";
     }
     if (lower.includes("user not found")) {
@@ -55,18 +55,25 @@
     return res.json();
   }
 
-  async function apiUpdateRole(userId, newRole) {
-    if (typeof Api.auth.updateUserRole === "function") return Api.auth.updateUserRole(userId, newRole);
+  async function apiUpdateRole(userId, newRole, adminKey = "") {
+    if (!adminKey && typeof Api.auth.updateUserRole === "function") {
+      return Api.auth.updateUserRole(userId, newRole);
+    }
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + getToken()
+    };
+    if (adminKey) headers["X-Admin"] = adminKey;
+
     const res = await fetch(`${API_BASE}/Auth/users/${userId}/role`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + getToken()
-      },
+      headers,
       body: JSON.stringify({ role: Number(newRole) })
     });
     if (!res.ok) {
-      let msg = `Server error (${res.status})`;
+      let msg = res.status === 401 || res.status === 403
+        ? (isAr() ? "مفتاح تأكيد الهوية (X-Admin) غير صحيح." : "Invalid X-Admin key.")
+        : `Server error (${res.status})`;
       try { const data = await res.json(); if (data?.message) msg = data.message; } catch {}
       throw new Error(msg);
     }
@@ -444,19 +451,37 @@
     if (!select) return;
 
     const userId = Number(select.dataset.userId);
+    const oldRole = Number(select.dataset.role);
     const newRole = Number(select.value);
+
+    let adminKey = "";
+    // طلب تأكيد الهوية بمفتاح X-Admin إذا كان الحساب المستهدف Admin أو يتم ترقيته إلى Admin
+    if (oldRole === 0 || newRole === 0) {
+      const entered = prompt(
+        isAr()
+          ? "تأكيد الهوية: أدخل مفتاح X-Admin السري لتعديل صلاحية الأدمن:"
+          : "Identity Verification: Enter the secret X-Admin key to modify an Admin role:"
+      );
+      if (!entered || !entered.trim()) {
+        select.value = String(oldRole);
+        return;
+      }
+      adminKey = entered.trim();
+    }
+
     select.disabled = true;
-    select.dataset.role = String(newRole);
     setStatus(isAr() ? "جاري حفظ الصلاحية..." : "Saving role...", "info");
 
     try {
-      await apiUpdateRole(userId, newRole);
+      await apiUpdateRole(userId, newRole, adminKey);
       const target = allUsers.find((u) => u.id === userId);
       if (target) target.role = newRole;
+      select.dataset.role = String(newRole);
       updateStats();
       render(getFilteredUsers());
       setStatus(isAr() ? "تم تحديث الصلاحية بنجاح ✓" : "Role updated successfully ✓", "ok");
     } catch (err) {
+      select.value = String(oldRole);
       setStatus(friendlyMsg(err.message), "err");
       await loadUsers();
     } finally {
