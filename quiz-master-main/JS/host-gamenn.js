@@ -50,6 +50,7 @@ let countdownId = null;
 let isLastQuestion = false;
 let lastStandings = [];    // آخر ترتيب وصل (لشاشة الترتيب و"Show all")
 let finalBoard = [];       // الترتيب النهائي
+let leavingToAdmin = false; // المدرّس داس "إنهاء الجلسة": منروحش للمنصة، نرجع للوحة التحكم
 
 /* ---------------- الشاشات ---------------- */
 
@@ -309,6 +310,7 @@ function closeAllOverlay() {
 // GameFinished: List<StandingDto>
 function onFinished(board) {
   console.log("[host] GameFinished", board);
+  if (leavingToAdmin) return;   // المدرّس هو اللي أنهى الجلسة وهيرجع للوحة التحكم
   Countdown.stop();
   closeAllOverlay();
   stopTimer();
@@ -349,7 +351,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   updateHeaderPlayers((await Api.game.players()).length);
   showScreen("screen-get-ready");
 
+  // إنهاء الجلسة: بيقفل الجيم فعلاً في السيرفر (EndGame) وبعدين يرجّع للوحة التحكم
   $("btn-return-admin")?.addEventListener("click", async () => {
+    if (!confirm("إنهاء الجلسة للجميع؟\nEnd this session for everyone?")) return;
+    const btn = $("btn-return-admin");
+    if (btn) btn.disabled = true;
+    leavingToAdmin = true;
+    try {
+      await Api.game.end();               // GameHub.EndGame → الجلسة تبقى Finished
+    } catch (err) {
+      leavingToAdmin = false;
+      if (btn) btn.disabled = false;
+      alert("Could not end the session: " + (err.message || err.code));
+      return;                             // منسيبش المدرّس يخرج والجلسة لسه شغالة
+    }
     try { await Api.realtime.disconnect(); } catch { /* ignore */ }
     window.location.href = ADMIN_PAGE;
   });
