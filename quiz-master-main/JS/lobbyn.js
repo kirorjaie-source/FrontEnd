@@ -119,7 +119,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     await refreshPlayers();
   } catch (err) {
     console.error("Hub connection failed:", err);
-    alert("Could not connect to the live server: " + (err.message || err.code));
+    const msg = String(err?.message || err?.code || "");
+    if (/not found/i.test(msg)) {
+      localStorage.removeItem("churchQuizGameSession");
+      localStorage.removeItem("churchQuizPlayers");
+      alert("انتهت صلاحية هذه الجلسة على السيرفر. سيتم الرجوع للوحة التحكم لبدء جلسة جديدة.");
+      window.location.href = ADMIN_PAGE;
+      return;
+    }
+    alert("Could not connect to the live server: " + msg);
   }
 
   setInterval(refreshPlayers, 1500);

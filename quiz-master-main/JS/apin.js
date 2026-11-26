@@ -683,6 +683,17 @@
         }
         const info = await waitJoined;
         writeJSON(KEYS.reconnect, { pin: p, playerId: info.playerId, reconnectToken: info.reconnectToken, nickname: name, avatar });
+
+        // حفظ اللاعب في قايمة لاعبين الغرفة فوراً عشان يظهر لما ترجع اللوبي
+        const cur = readJSON(KEYS.game, null);
+        if (cur && String(cur.roomCode) === p) {
+          const list = readJSON(KEYS.players, []);
+          if (!list.some((x) => x.nickname.toLowerCase() === name.toLowerCase())) {
+            list.push({ id: info.playerId || uuid(), nickname: name, avatar });
+            writeJSON(KEYS.players, list);
+          }
+        }
+
         return { id: info.playerId, playerId: info.playerId, nickname: name, avatar, reconnectToken: info.reconnectToken };
       },
 
