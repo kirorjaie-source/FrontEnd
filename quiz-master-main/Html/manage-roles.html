@@ -26,40 +26,61 @@
       text-decoration: none;
     }
 
-    /* ضبط المسافات بدقة مع القائمة الجانبية في الكمبيوتر والموبايل والعربي والإنجليزي */
-    .main.main-area {
+    /* توحيد عرض السايدبار والمسافة بدقة 100% على الكمبيوتر */
+    @media (min-width: 901px) {
+      html body aside#sidebar.sidebar {
+        width: 260px !important;
+        min-width: 260px !important;
+        max-width: 260px !important;
+      }
+
+      html body.sidebar-collapsed aside#sidebar.sidebar {
+        width: 82px !important;
+        min-width: 82px !important;
+        max-width: 82px !important;
+      }
+
+      html body .main.main-area {
+        position: relative !important;
+        left: 0 !important;
+        right: 0 !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        margin-inline-start: 260px !important;
+        width: calc(100% - 260px) !important;
+        max-width: calc(100% - 260px) !important;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        box-sizing: border-box;
+        transition: margin-inline-start 0.25s ease, width 0.25s ease, max-width 0.25s ease;
+      }
+
+      html body.sidebar-collapsed .main.main-area {
+        margin-inline-start: 82px !important;
+        width: calc(100% - 82px) !important;
+        max-width: calc(100% - 82px) !important;
+      }
+    }
+
+    html body .main.main-area > .topbar,
+    html body .main.main-area > .content {
+      width: 100% !important;
+      max-width: 100% !important;
       margin-left: 0 !important;
       margin-right: 0 !important;
-      margin-inline-start: var(--sidebar-width, 260px) !important;
-      width: calc(100% - var(--sidebar-width, 260px)) !important;
-      max-width: calc(100% - var(--sidebar-width, 260px)) !important;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      box-sizing: border-box;
-      transition: margin-inline-start 0.25s ease, width 0.25s ease, max-width 0.25s ease;
-    }
-
-    body.sidebar-collapsed .main.main-area {
-      margin-inline-start: var(--sidebar-collapsed, 82px) !important;
-      width: calc(100% - var(--sidebar-collapsed, 82px)) !important;
-      max-width: calc(100% - var(--sidebar-collapsed, 82px)) !important;
-    }
-
-    .main.main-area > .topbar,
-    .main.main-area > .content {
-      width: 100%;
-      max-width: 100%;
       box-sizing: border-box;
     }
 
-    .main.main-area > .content {
+    html body .main.main-area > .content {
       padding: 24px 28px 36px;
     }
 
     @media (max-width: 900px) {
-      .main.main-area,
-      body.sidebar-collapsed .main.main-area {
+      html body .main.main-area,
+      html body.sidebar-collapsed .main.main-area {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
         margin-inline-start: 0 !important;
         width: 100% !important;
         max-width: 100% !important;
@@ -447,7 +468,7 @@
       .topbar h1 { font-size: 20px !important; line-height: 1.25; }
       .topbar-actions { flex-wrap: nowrap; gap: 8px; margin-inline-start: auto; }
       .super-btn { padding: 8px 12px; font-size: 12.5px; }
-      .main.main-area > .content { padding: 14px 12px 24px !important; }
+      html body .main.main-area > .content { padding: 14px 12px 24px !important; }
       .page-tabs { display: flex; width: 100%; box-sizing: border-box; margin-bottom: 14px; }
       .page-tab { flex: 1; padding: 10px 6px; font-size: 13px; }
       .hero-banner { padding: 18px 16px !important; gap: 12px !important; margin-bottom: 14px; }
