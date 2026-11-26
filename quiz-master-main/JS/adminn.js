@@ -79,6 +79,9 @@ const I18N = {
   "modal.title": "Quiz Settings",
   "modal.sub": "Add the final details before saving.",
   "modal.category": "Category (Fetched from API)",
+  "modal.visibility": "Visibility",
+  "modal.public": "Public (Visible to everyone)",
+  "modal.private": "Private (Only me)",
   "modal.cancel": "Cancel",
   "modal.name": "Quiz name",
   "modal.done": "Done",
@@ -290,6 +293,9 @@ const I18N = {
   "modal.title": "إعدادات المسابقة",
   "modal.sub": "أضف التفاصيل الأخيرة قبل الحفظ.",
   "modal.category": "التصنيف (من السيرفر)",
+  "modal.visibility": "حالة الظهور",
+  "modal.public": "عامة (تظهر للجميع)",
+  "modal.private": "خاصة (لي أنا فقط)",
   "modal.cancel": "إلغاء",
   "modal.name": "اسم المسابقة",
   "modal.done": "تم",
@@ -558,7 +564,7 @@ const DAILY_VERSES = [
   { en: "Ask, and it will be given to you; seek, and you will find; knock, and it will be opened to you. — Luke 11:9",
     ar: "اسْأَلُوا تُعْطَوْا. اطْلُبُوا تَجِدُوا. اقْرَعُوا يُفْتَحْ لَكُمْ. — لوقا ١١: ٩" },
   { en: "A new commandment I give to you, that you love one another; as I have loved you. — John 13:34",
-    ar: "وَصِيَّةً جَدِيدَةً أَنَا أُعْطِيكُمْ: أَنْ تُحِبُّوا بَعْضُكُمْ بَعْضًا. كَمَا أَحْبَبْتُكُمْ أَنَا. — يوحنا ١٣: ٣٤" },
+    ar: "وَصِيَّةً جَدِيدَةً أَنَا أُعْْطِيكُمْ: أَنْ تُحِبُّوا بَعْضُكُمْ بَعْضًا. كَمَا أَحْبَبْتُكُمْ أَنَا. — يوحنا ١٣: ٣٤" },
   { en: "Enter into His gates with thanksgiving, and into His courts with praise. — Psalm 100:4",
     ar: "ادْخُلُوا أَبْوَابَهُ بِحَمْدٍ، دِيَارَهُ بِالتَّسْبِيحِ. — مزمور ١٠٠: ٤" },
   { en: "Let all that you do be done with love. — 1 Corinthians 16:14",
@@ -895,6 +901,7 @@ function createBlankQuiz() {
     title: "",
     description: "",
     category: "Bible Knowledge",
+    isPublic: true,
     status: "Ready",
     questions: [createBlankQuestion("mcq")]
   };
@@ -911,6 +918,7 @@ async function openStudio(quizId = null) {
       const existing = await Api.quizzes.get(quizId);
       if (!existing) return toast(t("msg.notFound"));
       studioQuiz = JSON.parse(JSON.stringify(existing));
+      if (typeof studioQuiz.isPublic !== "boolean") studioQuiz.isPublic = true;
       if (existing._partial) toast(t("msg.partialQuiz"));
       if (!studioQuiz.questions || !studioQuiz.questions.length) {
         studioQuiz.questions = [createBlankQuestion("mcq")];
@@ -1131,6 +1139,9 @@ function bindStudio() {
       categorySelect.value = studioQuiz.category || "";
       if (categorySelect.selectedIndex < 0) categorySelect.selectedIndex = 0;
     }
+    if ($("modal-quiz-public")) {
+      $("modal-quiz-public").value = studioQuiz.isPublic === false ? "false" : "true";
+    }
     if ($("studio-save-modal")) $("studio-save-modal").style.display = "flex";
     if ($("modal-quiz-name") && !$("modal-quiz-name").value) $("modal-quiz-name").focus();
   });
@@ -1149,6 +1160,9 @@ function bindStudio() {
     studioQuiz.title = quizName;
     if ($("studio-quiz-title")) $("studio-quiz-title").value = quizName;
     if (studioQuiz.id == null) studioQuiz.category = $("modal-quiz-category")?.value || "General";
+    if ($("modal-quiz-public")) {
+      studioQuiz.isPublic = $("modal-quiz-public").value === "true";
+    }
     studioQuiz.status = "Ready";
 
     try {
@@ -1176,18 +1190,14 @@ const publicQuizCache = new Map();
 
 async function loadPublicQuizzes() {
   const hasPublic = typeof Api.quizzes.listPublic === "function";
-  const errors = [];
-  const [mine, pub] = await Promise.all([
-    Api.quizzes.list().catch((e) => { console.warn("mine failed", e); errors.push(e); return []; }),
-    hasPublic ? Api.quizzes.listPublic().catch((e) => { console.warn("public failed", e); errors.push(e); return []; }) : Promise.resolve([])
-  ]);
-  // لو الاتنين فشلوا، نبيّن الخطأ الحقيقي بدل "No quizzes found"
-  if (errors.length >= (hasPublic ? 2 : 1)) throw errors[0];
-
-  const byId = new Map();
-  [...(Array.isArray(mine) ? mine : []), ...(Array.isArray(pub) ? pub : [])].forEach((q) => byId.set(String(q.id), q));
-
-  publicQuizzes = [...byId.values()].sort((a, b) => (Number(b.id) || 0) - (Number(a.id) || 0));
+  if (hasPublic) {
+    const pub = await Api.quizzes.listPublic();
+    const list = Array.isArray(pub) ? pub : [];
+    publicQuizzes = list.slice().sort((a, b) => (Number(b.id) || 0) - (Number(a.id) || 0));
+  } else {
+    const mine = await Api.quizzes.list();
+    publicQuizzes = (Array.isArray(mine) ? mine : []).sort((a, b) => (Number(b.id) || 0) - (Number(a.id) || 0));
+  }
   publicQuizCache.clear();
   publicQuizzes.forEach((q) => publicQuizCache.set(String(q.id), q));
 }
