@@ -111,15 +111,18 @@
     }
   }
 
-  async function apiDeleteUser(userId) {
+  async function apiDeleteUser(userId, adminKey) {
     const res = await fetch(`${API_BASE}/Auth/users/${userId}`, {
       method: "DELETE",
       headers: {
+        "X-Admin": adminKey,
         Authorization: "Bearer " + getToken()
       }
     });
     if (!res.ok) {
-      let msg = `Server error (${res.status})`;
+      let msg = res.status === 401 || res.status === 403
+        ? (isAr() ? "مفتاح تأكيد الهوية (X-Admin) غير صحيح." : "Invalid X-Admin key.")
+        : `Server error (${res.status})`;
       try { const data = await res.json(); if (data?.message) msg = data.message; } catch {}
       throw new Error(msg);
     }
@@ -144,6 +147,180 @@
     }
   }
 
+  // =====================================================
+  // ===== مودال تأكيد الهوية الاحترافي (X-Admin Key) =====
+  // =====================================================
+  function createVerifyModal() {
+    const overlay = document.createElement("div");
+    overlay.id = "xAdminVerifyModal";
+    overlay.hidden = true;
+    overlay.style.cssText = `
+      position:fixed; inset:0; z-index:9999; background:rgba(15,23,42,.62);
+      backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:16px;
+    `;
+    overlay.innerHTML = `
+      <div style="
+        background:var(--card, #ffffff); color:var(--text, #0f172a);
+        width:100%; max-width:420px; border-radius:20px; padding:24px;
+        box-shadow:0 24px 60px rgba(0,0,0,.28); border:1px solid rgba(148,163,184,.22);
+        font-family:inherit; position:relative; animation:popIn .18s ease-out;
+      ">
+        <button type="button" id="xAdminCloseX" style="
+          position:absolute; top:14px; inset-inline-end:14px; width:32px; height:32px;
+          border-radius:50%; border:none; background:rgba(148,163,184,.16);
+          color:inherit; font-size:16px; cursor:pointer; display:grid; place-items:center;
+        ">✕</button>
+
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+          <div style="
+            width:44px; height:44px; border-radius:14px; flex-shrink:0;
+            background:linear-gradient(135deg, #2563eb, #1d4ed8); color:#fff;
+            display:grid; place-items:center; font-size:20px; box-shadow:0 8px 20px rgba(37,99,235,.3);
+          ">🔐</div>
+          <div>
+            <h3 id="xAdminTitle" style="margin:0; font-size:17px; font-weight:800;"></h3>
+            <p id="xAdminSubtitle" style="margin:3px 0 0; font-size:13px; opacity:.75;"></p>
+          </div>
+        </div>
+
+        <form id="xAdminForm" style="margin-top:16px;">
+          <label id="xAdminLabel" for="xAdminKeyInput" style="display:block; font-size:13px; font-weight:700; margin-bottom:6px;"></label>
+          <div style="position:relative; display:flex; align-items:center;">
+            <input
+              id="xAdminKeyInput"
+              type="password"
+              autocomplete="off"
+              style="
+                width:100%; padding:11px 42px 11px 14px; border-radius:12px;
+                border:1.5px solid rgba(148,163,184,.4); background:var(--bg, #f8fafc);
+                color:inherit; font-size:14px; outline:none; transition:border-color .15s;
+              "
+            />
+            <button type="button" id="xAdminToggleEye" title="Show/Hide" style="
+              position:absolute; inset-inline-end:10px; background:none; border:none;
+              cursor:pointer; font-size:16px; opacity:.7; padding:4px;
+            ">👁</button>
+          </div>
+
+          <p id="xAdminErr" style="
+            margin:8px 0 0; font-size:12.5px; font-weight:700; color:#dc2626; min-height:18px;
+          "></p>
+
+          <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:16px;">
+            <button type="button" id="xAdminCancelBtn" style="
+              padding:10px 18px; border-radius:12px; border:1px solid rgba(148,163,184,.35);
+              background:transparent; color:inherit; font-weight:700; font-size:13.5px; cursor:pointer;
+            "></button>
+            <button type="submit" id="xAdminConfirmBtn" style="
+              padding:10px 20px; border-radius:12px; border:none;
+              background:linear-gradient(135deg, #2563eb, #1d4ed8); color:#fff;
+              font-weight:700; font-size:13.5px; cursor:pointer; box-shadow:0 6px 16px rgba(37,99,235,.28);
+            "></button>
+          </div>
+        </form>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const style = document.createElement("style");
+    style.textContent = `@keyframes popIn { from { opacity:0; transform:scale(.95); } to { opacity:1; transform:scale(1); } } #xAdminVerifyModal[hidden]{ display:none !important; }`;
+    document.head.appendChild(style);
+    return overlay;
+  }
+
+  const verifyOverlay = createVerifyModal();
+  const xAdminTitle = document.getElementById("xAdminTitle");
+  const xAdminSubtitle = document.getElementById("xAdminSubtitle");
+  const xAdminLabel = document.getElementById("xAdminLabel");
+  const xAdminKeyInput = document.getElementById("xAdminKeyInput");
+  const xAdminToggleEye = document.getElementById("xAdminToggleEye");
+  const xAdminErr = document.getElementById("xAdminErr");
+  const xAdminCancelBtn = document.getElementById("xAdminCancelBtn");
+  const xAdminCloseX = document.getElementById("xAdminCloseX");
+  const xAdminConfirmBtn = document.getElementById("xAdminConfirmBtn");
+  const xAdminForm = document.getElementById("xAdminForm");
+
+  let activeVerifyHandler = null;
+  let activeCancelHandler = null;
+
+  function closeVerifyModal(cancelled = false) {
+    verifyOverlay.hidden = true;
+    xAdminKeyInput.value = "";
+    xAdminErr.textContent = "";
+    xAdminConfirmBtn.disabled = false;
+    const cancelCb = activeCancelHandler;
+    activeVerifyHandler = null;
+    activeCancelHandler = null;
+    if (cancelled && typeof cancelCb === "function") cancelCb();
+  }
+
+  xAdminToggleEye.addEventListener("click", () => {
+    xAdminKeyInput.type = xAdminKeyInput.type === "password" ? "text" : "password";
+  });
+  xAdminKeyInput.addEventListener("input", () => { xAdminErr.textContent = ""; });
+  xAdminCancelBtn.addEventListener("click", () => closeVerifyModal(true));
+  xAdminCloseX.addEventListener("click", () => closeVerifyModal(true));
+  verifyOverlay.addEventListener("click", (e) => { if (e.target === verifyOverlay) closeVerifyModal(true); });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !verifyOverlay.hidden) closeVerifyModal(true);
+  });
+
+  xAdminForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const key = xAdminKeyInput.value.trim();
+    if (!key) {
+      xAdminErr.textContent = isAr() ? "من فضلك أدخل مفتاح X-Admin السري." : "Please enter the secret X-Admin key.";
+      xAdminKeyInput.focus();
+      return;
+    }
+    if (!activeVerifyHandler) return;
+
+    xAdminConfirmBtn.disabled = true;
+    const origText = xAdminConfirmBtn.textContent;
+    xAdminConfirmBtn.textContent = isAr() ? "جاري التحقق..." : "Verifying...";
+    xAdminErr.textContent = "";
+
+    try {
+      await activeVerifyHandler(key);
+      closeVerifyModal(false);
+    } catch (err) {
+      xAdminErr.textContent = friendlyMsg(err.message);
+      xAdminKeyInput.focus();
+      xAdminKeyInput.select();
+    } finally {
+      xAdminConfirmBtn.disabled = false;
+      xAdminConfirmBtn.textContent = origText;
+    }
+  });
+
+  /**
+   * يفتح مودال تأكيد الهوية وينفذ العملية المطلوبة بالمفتاح المدخل.
+   * إذا كان المفتاح خاطئاً يبقى المودال مفتوحاً ويعرض الخطأ داخله.
+   */
+  function openIdentityVerifyModal({ title, subtitle, danger = false, confirmText, onConfirm, onCancel }) {
+    xAdminTitle.textContent = title;
+    xAdminSubtitle.textContent = subtitle;
+    xAdminLabel.textContent = isAr() ? "مفتاح X-Admin السري" : "Secret X-Admin Key";
+    xAdminKeyInput.placeholder = isAr() ? "أدخل مفتاح الأدمن السري..." : "Enter secret admin key...";
+    xAdminKeyInput.value = "";
+    xAdminKeyInput.type = "password";
+    xAdminErr.textContent = "";
+    xAdminCancelBtn.textContent = isAr() ? "إلغاء" : "Cancel";
+    xAdminConfirmBtn.textContent = confirmText || (isAr() ? "تأكيد" : "Confirm");
+    xAdminConfirmBtn.style.background = danger
+      ? "linear-gradient(135deg, #ef4444, #dc2626)"
+      : "linear-gradient(135deg, #2563eb, #1d4ed8)";
+    xAdminConfirmBtn.style.boxShadow = danger
+      ? "0 6px 16px rgba(239,68,68,.3)"
+      : "0 6px 16px rgba(37,99,235,.28)";
+
+    activeVerifyHandler = onConfirm;
+    activeCancelHandler = onCancel;
+    verifyOverlay.hidden = false;
+    setTimeout(() => xAdminKeyInput.focus(), 30);
+  }
+
+  // =====================================================
   const tbody = document.getElementById("usersBody");
   const searchInput = document.getElementById("searchUser");
   const statusMsg = document.getElementById("statusMsg");
@@ -453,39 +630,48 @@
     const userId = Number(select.dataset.userId);
     const oldRole = Number(select.dataset.role);
     const newRole = Number(select.value);
+    const targetUser = allUsers.find((u) => u.id === userId);
 
-    let adminKey = "";
-    // طلب تأكيد الهوية بمفتاح X-Admin إذا كان الحساب المستهدف Admin أو يتم ترقيته إلى Admin
-    if (oldRole === 0 || newRole === 0) {
-      const entered = prompt(
-        isAr()
-          ? "تأكيد الهوية: أدخل مفتاح X-Admin السري لتعديل صلاحية الأدمن:"
-          : "Identity Verification: Enter the secret X-Admin key to modify an Admin role:"
-      );
-      if (!entered || !entered.trim()) {
-        select.value = String(oldRole);
-        return;
+    const executeRoleChange = async (adminKey = "") => {
+      select.disabled = true;
+      setStatus(isAr() ? "جاري حفظ الصلاحية..." : "Saving role...", "info");
+      try {
+        await apiUpdateRole(userId, newRole, adminKey);
+        if (targetUser) targetUser.role = newRole;
+        select.dataset.role = String(newRole);
+        updateStats();
+        render(getFilteredUsers());
+        setStatus(isAr() ? "تم تحديث الصلاحية بنجاح ✓" : "Role updated successfully ✓", "ok");
+      } finally {
+        select.disabled = false;
       }
-      adminKey = entered.trim();
+    };
+
+    // إذا كان الحساب المستهدف Admin أو يتم ترقيته إلى Admin -> افتح المودال الاحترافي
+    if (oldRole === 0 || newRole === 0) {
+      openIdentityVerifyModal({
+        title: isAr() ? "تأكيد الهوية لتعديل الصلاحية" : "Admin Identity Verification",
+        subtitle: isAr()
+          ? `تعديل صلاحية الحساب: ${targetUser?.userName || ""}`
+          : `Modifying Admin role for: ${targetUser?.userName || ""}`,
+        danger: false,
+        confirmText: isAr() ? "تأكيد التغيير" : "Confirm Change",
+        onConfirm: async (key) => {
+          await executeRoleChange(key);
+        },
+        onCancel: () => {
+          select.value = String(oldRole);
+        }
+      });
+      return;
     }
 
-    select.disabled = true;
-    setStatus(isAr() ? "جاري حفظ الصلاحية..." : "Saving role...", "info");
-
     try {
-      await apiUpdateRole(userId, newRole, adminKey);
-      const target = allUsers.find((u) => u.id === userId);
-      if (target) target.role = newRole;
-      select.dataset.role = String(newRole);
-      updateStats();
-      render(getFilteredUsers());
-      setStatus(isAr() ? "تم تحديث الصلاحية بنجاح ✓" : "Role updated successfully ✓", "ok");
+      await executeRoleChange("");
     } catch (err) {
       select.value = String(oldRole);
       setStatus(friendlyMsg(err.message), "err");
       await loadUsers();
-    } finally {
-      select.disabled = false;
     }
   });
 
@@ -504,26 +690,29 @@
       const user = allUsers.find((u) => u.id === userId);
       if (!user || Number(user.role) === 0) return;
 
-      const ok = confirm(
-        isAr()
-          ? `هل أنت متأكد من حذف الحساب "${user.userName}" نهائياً؟`
-          : `Are you sure you want to permanently delete "${user.userName}"?`
-      );
-      if (!ok) return;
-
-      delBtn.disabled = true;
-      setStatus(isAr() ? "جاري حذف الحساب..." : "Deleting user...", "info");
-
-      try {
-        await apiDeleteUser(userId);
-        allUsers = allUsers.filter((u) => u.id !== userId);
-        updateStats();
-        render(getFilteredUsers());
-        setStatus(isAr() ? `تم حذف الحساب ${user.userName} بنجاح ✓` : `User ${user.userName} deleted ✓`, "ok");
-      } catch (err) {
-        setStatus(friendlyMsg(err.message), "err");
-        delBtn.disabled = false;
-      }
+      openIdentityVerifyModal({
+        title: isAr() ? "تأكيد حذف الحساب نهائياً" : "Confirm Account Deletion",
+        subtitle: isAr()
+          ? `سيتم حذف "${user.userName}" وجميع بياناته نهائياً.`
+          : `Permanently delete "${user.userName}" and all related data.`,
+        danger: true,
+        confirmText: isAr() ? "🗑 حذف نهائي" : "🗑 Delete User",
+        onConfirm: async (key) => {
+          delBtn.disabled = true;
+          setStatus(isAr() ? "جاري حذف الحساب..." : "Deleting user...", "info");
+          try {
+            await apiDeleteUser(userId, key);
+            allUsers = allUsers.filter((u) => u.id !== userId);
+            updateStats();
+            render(getFilteredUsers());
+            setStatus(isAr() ? `تم حذف الحساب ${user.userName} بنجاح ✓` : `User ${user.userName} deleted ✓`, "ok");
+          } catch (err) {
+            delBtn.disabled = false;
+            setStatus("");
+            throw err; // يبقي المودال مفتوحاً ويعرض الخطأ داخله
+          }
+        }
+      });
       return;
     }
 
@@ -811,7 +1000,6 @@
 
     try {
       if (!editingAmeen) {
-        // تعيين أمين جديد
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
           ameenModalErr.textContent = t("من فضلك أدخل بريداً إلكترونياً صحيحاً.", "Please enter a valid email address.");
           ameenEmailInput.focus();
@@ -821,7 +1009,6 @@
         closeAmeenModal();
         setAmeenStatus(t("تم تعيين الأمين بنجاح ✓", "Ameen assigned successfully ✓"), "ok");
       } else {
-        // تعديل أمين موجود: PUT members/{id} أولاً، ولو السيرفر رفض نعيد التعيين بالإيميل
         const name = ameenNameInput.value.trim();
         if (!name) {
           ameenModalErr.textContent = t("الاسم مطلوب.", "Name is required.");
