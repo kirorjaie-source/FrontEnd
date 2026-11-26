@@ -228,14 +228,12 @@ const I18N = {
   "email.confirm": "Confirm change",
   "email.codeSent": "We sent a code to the new email. Enter it below.",
   "email.needCode": "Enter the verification code.",
-  "session.activeTitle": "Active live session in progress",
-  "session.waiting": "Waiting in Lobby",
-  "session.playing": "Game in progress",
-  "session.resume": "↩ Resume Game",
-  "session.end": "End Game",
+  "session.resumeShort": "↩ Resume ({pin})",
+  "session.endShort": "✖ End",
   "session.endedMsg": "Active session ended.",
   "session.choiceTitle": "You already have an active game",
   "session.choiceDesc": "Session \"{title}\" (PIN: {pin}) is still open. Would you like to resume it or end it and start a new one?",
+  "session.resume": "↩ Resume Game",
   "session.endAndNew": "End Old & Start New",
   "session.confirmEnd": "End active session (PIN: {pin})?"
  },
@@ -452,14 +450,12 @@ const I18N = {
   "email.confirm": "تأكيد التغيير",
   "email.codeSent": "بعتنا كود للإيميل الجديد. اكتبه تحت.",
   "email.needCode": "اكتب كود التأكيد.",
-  "session.activeTitle": "يوجد جيم شغال حالياً",
-  "session.waiting": "في انتظار اللاعبين (اللوبي)",
-  "session.playing": "اللعبة شغالة حالياً",
-  "session.resume": "↩ استكمال الجيم",
-  "session.end": "✖ إنهاء الجيم",
+  "session.resumeShort": "↩ استكمال ({pin})",
+  "session.endShort": "✖ إنهاء",
   "session.endedMsg": "تم إنهاء الجيم بنجاح.",
   "session.choiceTitle": "يوجد جيم مفتوح بالفعل",
   "session.choiceDesc": "مسابقة \"{title}\" بكود (PIN: {pin}) ما زالت مفتوحة. تحب تستكملها ولا تنهيها وتبدأ جيم جديد؟",
+  "session.resume": "↩ استكمال الجيم",
   "session.endAndNew": "إنهاء القديم وبدء جديد",
   "session.confirmEnd": "هل تريد إنهاء الجيم الحالي (PIN: {pin})؟"
  }
@@ -691,7 +687,6 @@ function applyStaticTranslations() {
 }
 
 function renderAllPages() {
-  renderActiveSessionBanner();
   renderUserBadge();
   renderSupport();
   renderSlidesList();
@@ -711,12 +706,36 @@ function setLanguage(lang, { rerender = true } = {}) {
 }
 
 /* ============================================================
-   إدارة الجلسة النشطة (استكمال أو إنهاء الجيم)
+   إدارة الجلسة النشطة (استكمال أو إنهاء الجيم داخل كارت المسابقة)
    ============================================================ */
 function getActiveSession() {
   const s = window.Api?.game?.current ? Api.game.current() : null;
   if (!s || !s.roomCode || s.status === "finished") return null;
   return s;
+}
+
+function isQuizActive(quiz) {
+  const s = getActiveSession();
+  if (!s) return null;
+  const sameId = s.quizId != null && quiz.id != null && String(s.quizId) === String(quiz.id);
+  const sameTitle = !s.quizId && s.quizTitle && quiz.title && s.quizTitle.trim() === quiz.title.trim();
+  return sameId || sameTitle ? s : null;
+}
+
+function activeSessionButtonsHTML(session) {
+  if (!session) return "";
+  return `
+    <div class="quiz-session-controls" style="display:flex;gap:6px;width:100%;margin-top:8px;">
+      <button type="button" class="button" data-action="resume-session"
+        style="flex:1;justify-content:center;background:#16a34a;color:#fff;font-weight:800;padding:8px 10px;border-radius:10px;font-size:13px;">
+        ${escapeHTML(t("session.resumeShort", { pin: session.roomCode }))}
+      </button>
+      <button type="button" class="button" data-action="end-session"
+        style="justify-content:center;background:#dc2626;color:#fff;font-weight:700;padding:8px 12px;border-radius:10px;font-size:13px;">
+        ${escapeHTML(t("session.endShort"))}
+      </button>
+    </div>
+  `;
 }
 
 function resumeActiveSession() {
@@ -734,14 +753,17 @@ async function finishSessionCompletely(session, { askConfirm = true } = {}) {
       await Api.realtime.connect({ pin: session.roomCode, role: "host" });
       await Api.game.end();
     }
-  } catch { /* لو الجلسة مقفولة أصلاً على السيرفر نكمل تنضيفها محلياً */ }
+  } catch { /* لو الجلسة مقفولة على السيرفر نكمل تنضيفها محلياً */ }
 
   try {
     Api.game.saveCurrent({ ...session, status: "finished" });
     localStorage.removeItem("churchQuizPlayers");
   } catch { /* ignore */ }
 
-  renderActiveSessionBanner();
+  await Promise.all([
+    renderQuizzes(),
+    renderExplore({ refetch: false })
+  ]).catch(() => {});
   return true;
 }
 
@@ -791,43 +813,6 @@ function openSessionChoiceModal(existingSession, onStartNew) {
     close();
     await onStartNew();
   };
-}
-
-function renderActiveSessionBanner() {
-  const host = document.querySelector(".main-content") || document.querySelector(".content") || document.querySelector("main");
-  if (!host) return;
-  let banner = $("active-session-banner");
-  const s = getActiveSession();
-
-  if (!s) {
-    if (banner) banner.remove();
-    return;
-  }
-
-  if (!banner) {
-    banner = document.createElement("div");
-    banner.id = "active-session-banner";
-    host.insertBefore(banner, host.firstChild);
-  }
-
-  const stateLabel = s.status === "playing" ? t("session.playing") : t("session.waiting");
-  banner.style.cssText = "display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;background:linear-gradient(135deg,#0B1E36,#1d3557);color:#fff;border:2px solid #F4B41A;border-radius:16px;padding:14px 18px;margin-bottom:18px;box-shadow:0 8px 20px rgba(11,30,54,.18);";
-  banner.innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:4px;">
-      <div style="font-size:12px;font-weight:700;color:#F4B41A;letter-spacing:.4px;">● ${escapeHTML(t("session.activeTitle"))}</div>
-      <div style="font-size:16px;font-weight:800;">
-        ${escapeHTML(s.quizTitle || "Kokquiz")} — <span dir="ltr" style="background:rgba(255,255,255,.14);padding:2px 8px;border-radius:8px;color:#F4B41A;">PIN: ${escapeHTML(s.roomCode)}</span>
-        <span style="font-size:13px;font-weight:600;opacity:.85;margin-inline-start:8px;">(${escapeHTML(stateLabel)})</span>
-      </div>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-      <button type="button" id="btn-resume-session" class="button gold-button" style="font-weight:800;">${escapeHTML(t("session.resume"))}</button>
-      <button type="button" id="btn-end-session" class="button" style="background:#ef4444;color:#fff;border:none;font-weight:700;">${escapeHTML(t("session.end"))}</button>
-    </div>
-  `;
-
-  $("btn-resume-session")?.addEventListener("click", resumeActiveSession);
-  $("btn-end-session")?.addEventListener("click", endActiveSession);
 }
 
 /* ============================================================
@@ -1004,6 +989,7 @@ async function renderQuizzes() {
       const id = escapeHTML(quiz.id);
       const count = Number(quiz.questionCount ?? (quiz.questions ? quiz.questions.length : 0)) || 0;
       const cover = quiz.imageUrl || quiz.coverImage || quiz.image || "";
+      const activeSess = isQuizActive(quiz);
       return `
       <article class="quiz-card my-quiz-card">
         <div class="quiz-cover tone-${coverTone(quiz.title || quiz.id)}">
@@ -1013,10 +999,11 @@ async function renderQuizzes() {
         </div>
         <div class="quiz-card-body">
           <h3 class="quiz-card-title">${escapeHTML(quiz.title)}</h3>
-          <div class="my-quiz-actions">
+          <div class="my-quiz-actions" style="flex-wrap:wrap;">
             <button type="button" class="button gold-button quiz-host-btn" data-action="host" data-id="${id}">${t("explore.host")}</button>
             <button type="button" class="icon-btn" data-action="edit" data-id="${id}" title="${t("menu.edit")}" aria-label="${t("menu.edit")}">✏️</button>
             <button type="button" class="icon-btn icon-btn-danger" data-action="delete-quiz" data-id="${id}" title="${t("menu.delete")}" aria-label="${t("menu.delete")}">🗑️</button>
+            ${activeSessionButtonsHTML(activeSess)}
           </div>
         </div>
       </article>`;
@@ -1435,6 +1422,7 @@ function quizCardHTML(q) {
   const count = Number(q.questionCount ?? (q.questions ? q.questions.length : 0)) || 0;
   const creator = q.creatorName || q.ownerName || q.createdBy || q.author || q.userName || "";
   const cover = q.imageUrl || q.coverImage || q.image || "";
+  const activeSess = isQuizActive(q);
   return `
     <article class="quiz-card">
       <div class="quiz-cover tone-${coverTone(q.title || q.id)}">
@@ -1446,6 +1434,7 @@ function quizCardHTML(q) {
         <h3 class="quiz-card-title">${escapeHTML(q.title)}</h3>
         <p class="quiz-card-meta">${escapeHTML(q.category || t("common.general"))}${creator ? ` · ${t("explore.by", { name: escapeHTML(creator) })}` : ""}</p>
         <button type="button" class="button gold-button quiz-host-btn" data-action="host" data-id="${escapeHTML(q.id)}">${t("explore.host")}</button>
+        ${activeSessionButtonsHTML(activeSess)}
       </div>
     </article>`;
 }
@@ -1791,8 +1780,15 @@ const ACTIONS = {
   },
   host: (el) => openHostModal(el.dataset.id),
   edit: (el) => openStudio(el.dataset.id),
-  "delete-quiz": (el) => deleteQuiz(el.dataset.id)
+  "delete-quiz": (el) => deleteQuiz(el.dataset.id),
+  "resume-session": () => resumeActiveSession(),
+  "end-session": () => endActiveSession()
 };
+
+function syncSessionCardsWithoutReload() {
+  renderQuizzes().catch(() => {});
+  renderExplore({ refetch: false }).catch(() => {});
+}
 
 function init() {
   if (!AUTH_OK) return;
@@ -1803,7 +1799,15 @@ function init() {
   applyStaticTranslations();
   applyTheme(getTheme());
   bindStudio();
-  renderActiveSessionBanner();
+
+  // تحديث تلقائي عند الرجوع من اللوبي أو اللعبة بدون Refresh
+  window.addEventListener("pageshow", syncSessionCardsWithoutReload);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") syncSessionCardsWithoutReload();
+  });
+  window.addEventListener("storage", (e) => {
+    if (e.key === "churchQuizGameSession") syncSessionCardsWithoutReload();
+  });
 
   document.addEventListener("click", (event) => {
     const el = event.target.closest("[data-action]");
