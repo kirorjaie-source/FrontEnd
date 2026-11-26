@@ -71,8 +71,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const session = Api.game.current();
   if (!session) {
-    alert("No active session found. Returning to Dashboard.");
-    window.location.href = ADMIN_PAGE;
+    if (window.KokSessionEnded) {
+      KokSessionEnded.show({ kind: "host", href: ADMIN_PAGE });
+    } else {
+      alert("No active session found. Returning to Dashboard.");
+      window.location.href = ADMIN_PAGE;
+    }
     return;
   }
 
@@ -136,8 +140,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (/not found/i.test(msg)) {
       localStorage.removeItem("churchQuizGameSession");
       localStorage.removeItem("churchQuizPlayers");
-      alert("انتهت صلاحية هذه الجلسة على السيرفر. سيتم الرجوع للوحة التحكم لبدء جلسة جديدة.");
-      window.location.href = ADMIN_PAGE;
+      if (window.KokSessionEnded) {
+        KokSessionEnded.show({ kind: "host", href: ADMIN_PAGE });
+      } else {
+        alert("انتهت صلاحية هذه الجلسة على السيرفر. سيتم الرجوع للوحة التحكم لبدء جلسة جديدة.");
+        window.location.href = ADMIN_PAGE;
+      }
       return;
     }
     alert("Could not connect to the live server: " + msg);
