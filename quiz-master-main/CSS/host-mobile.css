@@ -5,9 +5,70 @@
 
 html, body { overflow-x: hidden; }
 
+/* اسم Kokquiz المتحرك في الهيدر */
+.game-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.kq-brand-animated {
+  font-family: 'Pacifico', cursive;
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: #f3c66f;
+  text-shadow: 0 2px 12px rgba(243, 198, 111, 0.45);
+  display: inline-block;
+  animation: kqFloatBrand 2.4s ease-in-out infinite;
+}
+
+@keyframes kqFloatBrand {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-4px) scale(1.05); }
+}
+
+/* ضبط حاوية وصورة Kokquiz في نص الشاشة بدون قص أو تغطية على الاختيارات */
+.q-media {
+  overflow: hidden;
+  border-radius: 18px;
+}
+
+.media-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.media-placeholder .kq-ph-cross {
+  font-size: 1.5rem;
+  color: #f3c66f;
+  line-height: 1;
+}
+
+.media-placeholder .kq-ph-logo {
+  max-width: 210px;
+  max-height: 95px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.media-placeholder .kq-ph-sub {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
 @media (max-width: 720px) {
   /* الهيدر */
   .game-header { height: 52px; padding: 0 14px; }
+  .kq-brand-animated { font-size: 1.3rem; }
   .player-count { font-size: 1.1rem; }
 
   /* الحاوية: 100dvh عشان شريط المتصفح ميقصش حاجة */
@@ -36,8 +97,11 @@ html, body { overflow-x: hidden; }
   .timer-circle { width: 64px; height: 64px; border-width: 5px; font-size: 1.8rem; box-shadow: 0 6px 14px rgba(0,0,0,.4); }
   #q-answers-count { font-size: 2.6rem; }
   .answers-counter-wrapper small { font-size: .85rem; }
-  .q-media { order: 3; flex: 1 1 100%; width: 100%; height: auto; min-height: 0; max-height: 28vh; }
+  .q-media { order: 3; flex: 1 1 100%; width: 100%; height: auto; min-height: 0; max-height: 165px; padding: 6px 0; }
   .q-media img { max-height: 28vh; }
+  .media-placeholder .kq-ph-logo { max-width: 170px; max-height: 75px; }
+  .media-placeholder .kq-ph-cross { font-size: 1.25rem; }
+  .media-placeholder .kq-ph-sub { font-size: 0.75rem; }
   .media-placeholder .kq-ph-word { font-size: 2.4rem; }
 
   /* سؤال بصورة: الصورة تاخد المساحة والتايمر فوق ركنها */

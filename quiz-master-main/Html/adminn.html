@@ -732,6 +732,14 @@
                 </select>
               </div>
 
+              <div class="prop-group">
+                <label for="prop-quiz-public" data-i18n="modal.visibility">Visibility</label>
+                <select id="prop-quiz-public">
+                  <option value="true" data-i18n="modal.public">Public (Visible to everyone)</option>
+                  <option value="false" data-i18n="modal.private">Private (Only me)</option>
+                </select>
+              </div>
+
               <div class="prop-bottom-actions">
                 <button type="button" id="btn-duplicate-question" class="btn-duplicate" data-i18n="studio.duplicate">Duplicate</button>
                 <button type="button" id="btn-delete-question" class="btn-delete" data-i18n="common.delete">Delete</button>
@@ -750,18 +758,10 @@
               <input type="text" id="modal-quiz-name" maxlength="80" autocomplete="off" placeholder="Enter quiz title..." data-i18n-ph="studio.titlePh" style="width: 100%; padding: 10px; background: #0B1E36; color: white; border: 1px solid #1f3a59; border-radius: 6px; box-sizing: border-box;">
             </div>
 
-            <div class="field" id="modal-category-field" style="margin-bottom: 16px;">
+            <div class="field" id="modal-category-field" style="margin-bottom: 25px;">
               <label style="color:#A9BCCD;" data-i18n="modal.category">Category (Fetched from API)</label>
               <select id="modal-quiz-category" style="width: 100%; padding: 10px; background: #0B1E36; color: white; border: 1px solid #1f3a59; border-radius: 6px;">
                 <option value="">جاري تحميل الأقسام...</option>
-              </select>
-            </div>
-
-            <div class="field" id="modal-visibility-field" style="margin-bottom: 25px;">
-              <label for="modal-quiz-public" style="color:#A9BCCD;" data-i18n="modal.visibility">Visibility</label>
-              <select id="modal-quiz-public" style="width: 100%; padding: 10px; background: #0B1E36; color: white; border: 1px solid #1f3a59; border-radius: 6px;">
-                <option value="true" data-i18n="modal.public">Public (Visible to everyone)</option>
-                <option value="false" data-i18n="modal.private">Private (Only me)</option>
               </select>
             </div>
 

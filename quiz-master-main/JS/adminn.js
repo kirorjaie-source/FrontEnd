@@ -564,7 +564,7 @@ const DAILY_VERSES = [
   { en: "Ask, and it will be given to you; seek, and you will find; knock, and it will be opened to you. — Luke 11:9",
     ar: "اسْأَلُوا تُعْطَوْا. اطْلُبُوا تَجِدُوا. اقْرَعُوا يُفْتَحْ لَكُمْ. — لوقا ١١: ٩" },
   { en: "A new commandment I give to you, that you love one another; as I have loved you. — John 13:34",
-    ar: "وَصِيَّةً جَدِيدَةً أَنَا أُعْْطِيكُمْ: أَنْ تُحِبُّوا بَعْضُكُمْ بَعْضًا. كَمَا أَحْبَبْتُكُمْ أَنَا. — يوحنا ١٣: ٣٤" },
+    ar: "وَصِيَّةً جَدِيدَةً أَنَا أُعْطِيكُمْ: أَنْ تُحِبُّوا بَعْضُكُمْ بَعْضًا. كَمَا أَحْبَبْتُكُمْ أَنَا. — يوحنا ١٣: ٣٤" },
   { en: "Enter into His gates with thanksgiving, and into His courts with praise. — Psalm 100:4",
     ar: "ادْخُلُوا أَبْوَابَهُ بِحَمْدٍ، دِيَارَهُ بِالتَّسْبِيحِ. — مزمور ١٠٠: ٤" },
   { en: "Let all that you do be done with love. — 1 Corinthians 16:14",
@@ -968,6 +968,7 @@ function loadQuestionToCanvas(index) {
   ensureTimeOption(Number(q.timeLimit) || 20);
   if ($("prop-time-limit")) $("prop-time-limit").value = String(q.timeLimit || 20);
   if ($("prop-points-multiplier")) $("prop-points-multiplier").value = q.points === "zero" ? "none" : q.points || "standard";
+  if ($("prop-quiz-public")) $("prop-quiz-public").value = studioQuiz.isPublic === false ? "false" : "true";
 
   if ($("media-placeholder")) $("media-placeholder").style.display = q.image ? "none" : "flex";
   if ($("media-preview-container")) $("media-preview-container").style.display = q.image ? "flex" : "none";
@@ -983,6 +984,7 @@ function loadQuestionToCanvas(index) {
   for (let i = 0; i < 4; i++) {
     const input = $(`ans-text-${i}`);
     if (input) {
+      input.style.outline = "";
       input.readOnly = isTF && i < 2;
       input.value = isTF ? (i < 2 ? q.answers[i] || (i ? "False" : "True") : "") : q.answers[i] || "";
     }
@@ -1096,6 +1098,11 @@ function bindStudio() {
   $("prop-time-limit")?.addEventListener("change", () => { syncCurrentQuestionFromInputs(); renderSlidesList(); });
   $("prop-points-multiplier")?.addEventListener("change", syncCurrentQuestionFromInputs);
 
+  $("prop-quiz-public")?.addEventListener("change", (e) => {
+    studioQuiz.isPublic = e.target.value === "true";
+    markDirty();
+  });
+
   $("btn-duplicate-question")?.addEventListener("click", () => {
     syncCurrentQuestionFromInputs();
     const cloned = JSON.parse(JSON.stringify(studioQuiz.questions[activeQuestionIndex]));
@@ -1139,9 +1146,6 @@ function bindStudio() {
       categorySelect.value = studioQuiz.category || "";
       if (categorySelect.selectedIndex < 0) categorySelect.selectedIndex = 0;
     }
-    if ($("modal-quiz-public")) {
-      $("modal-quiz-public").value = studioQuiz.isPublic === false ? "false" : "true";
-    }
     if ($("studio-save-modal")) $("studio-save-modal").style.display = "flex";
     if ($("modal-quiz-name") && !$("modal-quiz-name").value) $("modal-quiz-name").focus();
   });
@@ -1160,8 +1164,8 @@ function bindStudio() {
     studioQuiz.title = quizName;
     if ($("studio-quiz-title")) $("studio-quiz-title").value = quizName;
     if (studioQuiz.id == null) studioQuiz.category = $("modal-quiz-category")?.value || "General";
-    if ($("modal-quiz-public")) {
-      studioQuiz.isPublic = $("modal-quiz-public").value === "true";
+    if ($("prop-quiz-public")) {
+      studioQuiz.isPublic = $("prop-quiz-public").value === "true";
     }
     studioQuiz.status = "Ready";
 
