@@ -1,0 +1,53 @@
+/* ============================================================
+   manage-roles-dark.css — الوضع الليلي لصفحة Manage Roles
+   يتربط آخر ملف CSS (بعد manage-roles.css و mobile.css).
+   ============================================================ */
+html[data-theme="dark"] body { background: #0A1626 !important; color: #E6EDF5; }
+html[data-theme="dark"] .main-area { background: #0A1626; }
+html[data-theme="dark"] .topbar { background: #102640 !important; border-bottom-color: #1E3450 !important; }
+html[data-theme="dark"] .topbar h1, html[data-theme="dark"] h2, html[data-theme="dark"] h3 { color: #F1F5F9; }
+html[data-theme="dark"] .breadcrumb { color: #9FB0C3; }
+html[data-theme="dark"] .lang-btn, html[data-theme="dark"] .mobile-menu {
+  background: #0D2038; color: #F3C66F; border-color: #1E3450;
+}
+html[data-theme="dark"] #theme-toggle { font-size: 16px; }
+
+/* الجداول والكروت */
+html[data-theme="dark"] .table-card { background: #102640 !important; border-color: #1E3450 !important; box-shadow: none; }
+html[data-theme="dark"] .toolbar { background: transparent !important; border-color: #1E3450 !important; }
+html[data-theme="dark"] .search-box input, html[data-theme="dark"] .ameen-select, html[data-theme="dark"] .toolbar input,
+html[data-theme="dark"] .toolbar select {
+  background: #0B1B30 !important; color: #E6EDF5 !important; border-color: #223650 !important;
+}
+html[data-theme="dark"] input::placeholder, html[data-theme="dark"] textarea::placeholder { color: #6F839A; }
+html[data-theme="dark"] .roles-table { color: #E6EDF5; }
+html[data-theme="dark"] .roles-table th { background: #0D2038 !important; color: #9FB0C3 !important; border-bottom-color: #1E3450 !important; }
+html[data-theme="dark"] .roles-table td { color: #E6EDF5 !important; border-bottom-color: #1E3450 !important; background: transparent !important; }
+html[data-theme="dark"] .roles-table tbody tr:hover td { background: #16304D !important; }
+html[data-theme="dark"] .roles-table select { background: #0B1B30; color: #E6EDF5; border-color: #223650; }
+html[data-theme="dark"] .status-banner { color: #9FB0C3; }
+
+/* التابات */
+html[data-theme="dark"] .page-tabs { background: #0D2038; }
+html[data-theme="dark"] .page-tab { color: #9FB0C3; }
+html[data-theme="dark"] .page-tab:hover { color: #F3C66F; }
+
+/* الأزرار الصغيرة */
+html[data-theme="dark"] .mini-btn { background: #0D2038; color: #E6EDF5; border-color: #223650; }
+html[data-theme="dark"] .mini-btn:hover { background: #16304D; }
+html[data-theme="dark"] .mini-btn.danger { color: #FCA5A5; border-color: #5B2230; }
+html[data-theme="dark"] .mini-btn.danger:hover { background: #3A1620; }
+
+/* النوافذ المنبثقة */
+html[data-theme="dark"] .super-modal-box { background: #102640 !important; border-color: #3A3320; }
+html[data-theme="dark"] .s-label { color: #CBD5E1; }
+html[data-theme="dark"] .s-input { background: #0B1B30; color: #E6EDF5; border-color: #223650; }
+html[data-theme="dark"] .s-input:focus { background: #0D2038; border-color: #3B82F6; }
+html[data-theme="dark"] .s-input[readonly], html[data-theme="dark"] .s-input:disabled { background: #0D2038; color: #7C8FA6; }
+html[data-theme="dark"] .s-eye { color: #9FB0C3; }
+html[data-theme="dark"] .s-eye:hover { color: #F1F5F9; }
+html[data-theme="dark"] .s-chip { background: #0D2038; color: #9FB0C3; border-color: #223650; }
+html[data-theme="dark"] .s-chip.valid { background: #0F2D22; color: #6EE7B7; border-color: #166534; }
+html[data-theme="dark"] .s-btn-cancel { background: #0D2038; color: #CBD5E1; border-color: #223650; }
+html[data-theme="dark"] .s-btn-cancel:hover { background: #16304D; }
+html[data-theme="dark"] .s-err { color: #FCA5A5; }

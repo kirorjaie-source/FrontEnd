@@ -7,6 +7,12 @@
   <link rel="stylesheet" href="../CSS/adminn.css">
   <link rel="stylesheet" href="../CSS/manage-roles.css">
   <link rel="stylesheet" href="../CSS/mobile.css">
+  <link rel="stylesheet" href="../CSS/manage-roles-dark.css">
+  
+  <script>
+    try { document.documentElement.setAttribute("data-theme", localStorage.getItem("kokTheme") === "dark" ? "dark" : "light"); } catch (e) {}
+  </script>
+  <script src="../JS/sidebar-close.js" defer></script>
 
   <style>
     body {
@@ -507,6 +513,8 @@
       </div>
 
       <div class="topbar-actions">
+        <button type="button" class="lang-btn" id="theme-toggle" aria-label="Theme">🌙</button>
+
         <button type="button" class="lang-btn" id="rolesLangToggle" aria-label="Language">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
             <circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/>
@@ -559,10 +567,11 @@
                 <th data-i18n="roles.thStatus">Account Status</th>
                 <th data-i18n="roles.thRole">Role</th>
                 <th data-i18n="roles.thPwd">Password</th>
+                <th>حذف · Delete</th>
               </tr>
             </thead>
             <tbody id="usersBody">
-              <tr><td colspan="6">Loading users...</td></tr>
+              <tr><td colspan="7">Loading users...</td></tr>
             </tbody>
           </table>
         </div>
@@ -836,6 +845,17 @@
     if (localStorage.getItem("churchQuizSidebarCollapsed") === "1") {
       document.body.classList.add("sidebar-collapsed");
     }
+    (function () {
+      const btn = document.getElementById("theme-toggle");
+      const get = () => (localStorage.getItem("kokTheme") === "dark" ? "dark" : "light");
+      const apply = (t) => {
+        document.documentElement.setAttribute("data-theme", t);
+        localStorage.setItem("kokTheme", t);
+        if (btn) { btn.textContent = t === "dark" ? "☀️" : "🌙"; btn.title = t === "dark" ? "Light mode" : "Dark mode"; }
+      };
+      apply(get());
+      btn?.addEventListener("click", () => apply(get() === "dark" ? "light" : "dark"));
+    })();
     document.getElementById("rolesLangToggle")?.addEventListener("click", () => {
       if (window.KokI18n) KokI18n.toggleLang();
     });
