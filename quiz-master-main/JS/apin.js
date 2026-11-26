@@ -58,7 +58,7 @@
 
   const toArray = (r) => (Array.isArray(r) ? r : r?.items || r?.data || r?.$values || []);
 
-  /* رقم المستخدم الحالي من الـ JWT (عشان نربط الجلسات/النتايج بصاحبها) */
+  /* رقم المستخدم الحالي من الـ JWT */
   function currentUserId() {
     try {
       const t = localStorage.getItem(CONFIG.TOKEN_KEY) || localStorage.getItem("churchQuizToken");
@@ -613,7 +613,6 @@
         const cur = readJSON(KEYS.game, null);
         const sid = cur && (cur.sessionId || cur.id);
         if (!sid) return [];
-        // النتايج بتاعة صاحب الجلسة بس (مش أي حساب تاني فتح من نفس المتصفح)
         if (String(cur.ownerId ?? "") !== String(currentUserId() ?? "")) return [];
         const rows = toArray(await http("GET", `/Games/sessions/${sid}/leaderboard`));
         return rows.map((r) => ({
@@ -703,19 +702,19 @@
         const p = pin ?? cur.roomCode;
         const paths = [
           sid ? `/Games/sessions/${sid}/players` : null,
-          p ? `/Games/${p}/players` : null
+          sid ? `/Games/sessions/${sid}` : null,
+          p ? `/Games/${p}/players` : null,
+          p ? `/Games/sessions/by-pin/${p}` : null
         ].filter(Boolean);
 
         for (const path of paths) {
           try {
             const res = await http("GET", path);
-            const arr = toArray(res);
-            if (Array.isArray(arr) && arr.length) {
-              const normalized = arr.map((x) => ({
-                id: x.id ?? x.playerId ?? uuid(),
-                nickname: x.nickname ?? x.name ?? x.userName ?? "",
-                avatar: x.avatar ?? x.avatarKey ?? null
-              })).filter((x) => x.nickname);
+            const rawList = Array.isArray(res)
+              ? res
+              : toArray(res?.players ?? res?.participants ?? res?.connectedPlayers ?? res?.session?.players ?? res);
+            if (Array.isArray(rawList) && rawList.length) {
+              const normalized = rawList.map(mapPlayer).filter(Boolean);
               if (normalized.length) {
                 writeJSON(KEYS.players, normalized);
                 return normalized;
@@ -733,6 +732,29 @@
      ========================================================================= */
   const cleanHubError = (err) =>
     String((err && err.message) || err).replace(/^.*HubException:\s*/s, "").trim();
+
+  function extractPlayersFromPayload(payload) {
+    if (!payload) return [];
+    const raw = Array.isArray(payload)
+      ? payload
+      : toArray(
+          payload.players ??
+          payload.participants ??
+          payload.connectedPlayers ??
+          payload.session?.players ??
+          payload.data?.players ??
+          payload
+        );
+    return raw.map(mapPlayer).filter(Boolean);
+  }
+
+  function syncPlayersCacheFromPayload(payload) {
+    const arr = extractPlayersFromPayload(payload);
+    if (arr.length) {
+      writeJSON(KEYS.players, arr);
+    }
+    return arr;
+  }
 
   const realtime = {
     _handlers: {},
@@ -784,8 +806,8 @@
         try {
           if (this._role === "host") {
             const res = await this._conn.invoke("HostJoin", this._pin);
-            const arr = toArray(res?.players ?? res).map(mapPlayer).filter(Boolean);
-            if (arr.length) writeJSON(KEYS.players, arr);
+            syncPlayersCacheFromPayload(res);
+            this._dispatch("UpdatePlayerList", res);
           } else {
             const saved = readJSON(KEYS.reconnect, null);
             if (saved) await this._conn.invoke("RejoinGame", saved.pin, saved.reconnectToken);
@@ -802,8 +824,7 @@
 
       if (role === "host") {
         const res = await this.invoke("HostJoin", pin);
-        const arr = toArray(res?.players ?? res).map(mapPlayer).filter(Boolean);
-        if (arr.length) writeJSON(KEYS.players, arr);
+        syncPlayersCacheFromPayload(res);
       }
     },
 
@@ -855,7 +876,7 @@
   };
 
   const mapPlayer = (p) => {
-    const nick = typeof p === "string" ? p : p?.name ?? p?.nickname ?? p?.userName;
+    const nick = typeof p === "string" ? p : p?.name ?? p?.nickname ?? p?.userName ?? p?.playerName;
     if (!nick) return null;
     return { id: p?.id ?? p?.playerId ?? uuid(), nickname: nick, avatar: p?.avatar ?? p?.avatarKey ?? null };
   };
@@ -871,12 +892,15 @@
   });
 
   realtime.on("UpdatePlayerList", (payload) => {
-    const arr = toArray(payload).map(mapPlayer).filter(Boolean);
-    if (arr.length) writeJSON(KEYS.players, arr);
+    syncPlayersCacheFromPayload(payload);
+  });
+
+  realtime.on("StateChanged", (payload) => {
+    syncPlayersCacheFromPayload(payload);
   });
 
   realtime.on("PlayerLeft", (payload) => {
-    const nick = typeof payload === "string" ? payload : payload?.name ?? payload?.nickname;
+    const nick = typeof payload === "string" ? payload : payload?.name ?? payload?.nickname ?? payload?.playerName;
     if (!nick) return;
     const list = readJSON(KEYS.players, []).filter((p) => p.nickname !== nick);
     writeJSON(KEYS.players, list);

@@ -9,63 +9,103 @@
   <link rel="stylesheet" href="../CSS/countdown.css">
   <link rel="stylesheet" href="../CSS/host-mobile.css">
   <style>
-    /* تظبيط اللوجو وصورة السؤال في النص على الموبايل بدون قص */
+    /* فصل صندوق اللوجو/الصورة عن الاختيارات تماماً على الموبايل والكمبيوتر */
+    #screen-active-question .q-middle {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: 10px !important;
+      margin-bottom: 14px !important;
+      position: relative !important;
+      z-index: 1 !important;
+    }
+
     #q-media-container {
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      position: relative !important;
+      overflow: hidden !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      margin: 0 auto !important;
+      box-sizing: border-box !important;
     }
+
     #q-media-container #q-image {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
+      max-width: 100% !important;
+      max-height: 100% !important;
+      object-fit: contain !important;
+      position: static !important;
     }
+
     #q-placeholder {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      padding: 8px 12px;
-      width: 100%;
-      height: 100%;
-      box-sizing: border-box;
-      text-align: center;
+      position: static !important;
+      transform: none !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 4px !important;
+      padding: 8px 12px !important;
+      width: 100% !important;
+      height: auto !important;
+      box-sizing: border-box !important;
+      text-align: center !important;
     }
+
     #q-placeholder .kq-ph-logo {
-      max-width: 160px;
-      max-height: 56px;
-      width: auto;
-      height: auto;
-      object-fit: contain;
+      max-width: 155px !important;
+      max-height: 52px !important;
+      width: auto !important;
+      height: auto !important;
+      object-fit: contain !important;
     }
+
+    #host-answers-grid {
+      position: relative !important;
+      z-index: 2 !important;
+      margin-top: 8px !important;
+      clear: both !important;
+    }
+
     @media (max-width: 600px) {
+      #screen-active-question .q-middle {
+        flex-wrap: wrap !important;
+        margin-bottom: 12px !important;
+      }
       #q-media-container {
-        min-height: 92px !important;
-        max-height: 118px !important;
+        order: 3 !important;
+        flex: 1 1 100% !important;
+        width: 100% !important;
+        min-height: 86px !important;
+        max-height: none !important;
         height: auto !important;
-        padding: 6px 10px !important;
+        padding: 10px 12px !important;
+        margin-top: 6px !important;
       }
       #q-media-container #q-image {
-        max-height: 104px !important;
+        max-height: 130px !important;
       }
       #q-placeholder {
-        gap: 2px;
-        padding: 4px 8px;
+        gap: 3px !important;
+        padding: 4px 6px !important;
       }
       #q-placeholder .kq-ph-cross {
-        font-size: 15px !important;
+        font-size: 16px !important;
         line-height: 1 !important;
       }
       #q-placeholder .kq-ph-logo {
-        max-width: 120px !important;
-        max-height: 36px !important;
+        max-width: 125px !important;
+        max-height: 38px !important;
       }
       #q-placeholder .kq-ph-sub {
-        font-size: 9px !important;
+        display: block !important;
+        font-size: 9.5px !important;
         letter-spacing: 1.5px !important;
-        line-height: 1.1 !important;
+        line-height: 1.2 !important;
+        margin-top: 2px !important;
+      }
+      #host-answers-grid {
+        margin-top: 4px !important;
       }
     }
   </style>
