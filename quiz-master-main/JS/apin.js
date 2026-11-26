@@ -450,6 +450,9 @@
 
   const ROLE_VALUES = { player: 0, creator: 1, teacher: 1, host: 1 };
 
+  /* مسارات اتأكدنا إنها 404 في الباك، فمش هنكرر طلبها كل ثانية ونص */
+  const _deadPaths = new Set();
+
   const remote = {
     auth: {
       async register(dto) {
@@ -529,7 +532,7 @@
         const isServerId = (q) => /^\d+$/.test(String(q.id ?? ""));
         const questions = quiz.questions || [];
         let quizId = quiz.id;
-         
+
         const addQuestion = async (q) => {
           try {
             await http("POST", `/Quizzes/${quizId}/questions`, toQuestionDto(q));
@@ -711,12 +714,14 @@
         const cur = readJSON(KEYS.game, {});
         const sid = cur.sessionId ?? cur.id;
         const p = pin ?? cur.roomCode;
+        // leaderboard هو الـ endpoint الوحيد الموجود فعلاً في الباك، فبنجربه الأول
         const paths = [
+          sid ? `/Games/sessions/${sid}/leaderboard` : null,
           sid ? `/Games/sessions/${sid}/players` : null,
           sid ? `/Games/sessions/${sid}` : null,
           p ? `/Games/${p}/players` : null,
           p ? `/Games/sessions/by-pin/${p}` : null
-        ].filter(Boolean);
+        ].filter((path) => path && !_deadPaths.has(path));
 
         for (const path of paths) {
           try {
@@ -731,7 +736,9 @@
                 return normalized;
               }
             }
-          } catch { /* نجرب المسار اللي بعده أو نرجع للكاش */ }
+          } catch (e) {
+            if (e.code === "HTTP_404" || e.code === "HTTP_405") _deadPaths.add(path);
+          }
         }
         return readJSON(KEYS.players, []);
       }
@@ -887,16 +894,19 @@
   };
 
   const mapPlayer = (p) => {
-    const nick = typeof p === "string" ? p : p?.name ?? p?.nickname ?? p?.userName ?? p?.playerName;
+    if (!p) return null;
+    if (typeof p === "string") return { id: uuid(), nickname: p, avatar: null };
+    const obj = p.player ?? p.data ?? p;
+    const nick = obj?.nickname ?? obj?.name ?? obj?.userName ?? obj?.playerName;
     if (!nick) return null;
-    return { id: p?.id ?? p?.playerId ?? uuid(), nickname: nick, avatar: p?.avatar ?? p?.avatarKey ?? null };
+    return { id: obj?.id ?? obj?.playerId ?? uuid(), nickname: nick, avatar: obj?.avatar ?? obj?.avatarKey ?? null };
   };
 
   realtime.on("PlayerJoined", (payload) => {
     const item = mapPlayer(payload);
     if (!item) return;
     const list = readJSON(KEYS.players, []);
-    if (!list.some((p) => p.nickname === item.nickname)) {
+    if (!list.some((p) => p.nickname.toLowerCase() === item.nickname.toLowerCase())) {
       list.push(item);
       writeJSON(KEYS.players, list);
     }
@@ -911,9 +921,11 @@
   });
 
   realtime.on("PlayerLeft", (payload) => {
-    const nick = typeof payload === "string" ? payload : payload?.name ?? payload?.nickname ?? payload?.playerName;
+    const nick = typeof payload === "string"
+      ? payload
+      : payload?.player?.nickname ?? payload?.name ?? payload?.nickname ?? payload?.playerName;
     if (!nick) return;
-    const list = readJSON(KEYS.players, []).filter((p) => p.nickname !== nick);
+    const list = readJSON(KEYS.players, []).filter((p) => p.nickname.toLowerCase() !== String(nick).toLowerCase());
     writeJSON(KEYS.players, list);
   });
 

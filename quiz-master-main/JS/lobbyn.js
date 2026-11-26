@@ -57,6 +57,15 @@ function hideLoadingOverlay() {
   setTimeout(() => { overlay.style.display = "none"; }, 500);
 }
 
+function readCachedPlayers() {
+  try {
+    const list = JSON.parse(localStorage.getItem("churchQuizPlayers") || "[]");
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   if (!Api.auth.requireLogin(LOGIN_PAGE)) return;
 
@@ -87,10 +96,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   qrModal?.addEventListener("click", (e) => { if (e.target === qrModal) qrModal.style.display = "none"; });
 
   // عرض اللاعبين المحفوظين فوراً أثناء الاتصال بالسيرفر
-  try {
-    const cached = JSON.parse(localStorage.getItem("churchQuizPlayers") || "[]");
-    if (Array.isArray(cached) && cached.length) updatePlayersUI(cached);
-  } catch { /* ignore */ }
+  const initialCached = readCachedPlayers();
+  if (initialCached.length) updatePlayersUI(initialCached);
 
   const refreshPlayers = async () => {
     try {
@@ -107,15 +114,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.location.href = HOST_GAME_PAGE;
   });
 
-  // تحديث فوري عند وصول أي حدث من SignalR
-  Api.realtime.on("PlayerJoined", () => setTimeout(refreshPlayers, 50));
-  Api.realtime.on("UpdatePlayerList", () => setTimeout(refreshPlayers, 50));
-  Api.realtime.on("PlayerLeft", () => setTimeout(refreshPlayers, 50));
-  Api.realtime.on("StateChanged", () => setTimeout(refreshPlayers, 50));
+  // تحديث فوري من الكاش ومن السيرفر عند وصول أي حدث من SignalR
+  const onRealtimePlayersUpdate = () => {
+    updatePlayersUI(readCachedPlayers());
+    setTimeout(refreshPlayers, 100);
+  };
+
+  Api.realtime.on("PlayerJoined", onRealtimePlayersUpdate);
+  Api.realtime.on("UpdatePlayerList", onRealtimePlayersUpdate);
+  Api.realtime.on("PlayerLeft", onRealtimePlayersUpdate);
+  Api.realtime.on("StateChanged", onRealtimePlayersUpdate);
 
   // الاتصال بالـ Hub كمدرّس واسترجاع اللاعبين الموجودين بالفعل في الغرفة
   try {
     await Api.realtime.connect({ pin, role: "host" });
+    updatePlayersUI(readCachedPlayers());
     await refreshPlayers();
   } catch (err) {
     console.error("Hub connection failed:", err);
