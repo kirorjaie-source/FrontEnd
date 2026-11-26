@@ -403,7 +403,87 @@ const LANG_KEY = "kokLang";   // نفس المفتاح في كل الصفحات 
 let currentLang = localStorage.getItem(LANG_KEY) === "ar" ? "ar" : "en";
 let currentPage = "home";      // الرئيسية هي أول صفحة بتفتح
 
+/* ============================================================
+   آية اليوم (الرسالة اللي في الصفحة الرئيسية) — بتتغير تلقائي كل يوم
+   عشان تزود آية: ضيف عنصر جديد { en: "...", ar: "..." } في القايمة
+   ============================================================ */
+const DAILY_VERSES = [
+  { en: "The Lord is my shepherd; I shall not want. — Psalm 23:1",
+    ar: "الرَّبُّ رَاعِيَّ فَلاَ يُعْوِزُنِي شَيْءٌ. — مزمور ٢٣: ١" },
+  { en: "I can do all things through Christ who strengthens me. — Philippians 4:13",
+    ar: "أَسْتَطِيعُ كُلَّ شَيْءٍ فِي الْمَسِيحِ الَّذِي يُقَوِّينِي. — فيلبي ٤: ١٣" },
+  { en: "Be strong and of good courage; the Lord your God is with you wherever you go. — Joshua 1:9",
+    ar: "تَشَدَّدْ وَتَشَجَّعْ، لأَنَّ الرَّبَّ إِلهَكَ مَعَكَ حَيْثُمَا تَذْهَبُ. — يشوع ١: ٩" },
+  { en: "Trust in the Lord with all your heart, and lean not on your own understanding. — Proverbs 3:5",
+    ar: "تَوَكَّلْ عَلَى الرَّبِّ بِكُلِّ قَلْبِكَ، وَعَلَى فَهْمِكَ لاَ تَعْتَمِدْ. — أمثال ٣: ٥" },
+  { en: "Your word is a lamp to my feet and a light to my path. — Psalm 119:105",
+    ar: "سِرَاجٌ لِرِجْلِي كَلاَمُكَ وَنُورٌ لِسَبِيلِي. — مزمور ١١٩: ١٠٥" },
+  { en: "Fear not, for I am with you; I will strengthen you, yes, I will help you. — Isaiah 41:10",
+    ar: "لاَ تَخَفْ لأَنِّي مَعَكَ. قَدْ أَيَّدْتُكَ وَأَعَنْتُكَ. — إشعياء ٤١: ١٠" },
+  { en: "Come to me, all you who labor and are heavy laden, and I will give you rest. — Matthew 11:28",
+    ar: "تَعَالَوْا إِلَيَّ يَا جَمِيعَ الْمُتْعَبِينَ وَالثَّقِيلِي الأَحْمَالِ وَأَنَا أُرِيحُكُمْ. — متى ١١: ٢٨" },
+  { en: "Grow in grace and in the knowledge of our Lord and Savior Jesus Christ. — 2 Peter 3:18",
+    ar: "وَانْمُوا فِي النِّعْمَةِ وَفِي مَعْرِفَةِ رَبِّنَا وَمُخَلِّصِنَا يَسُوعَ الْمَسِيحِ. — ٢ بطرس ٣: ١٨" },
+  { en: "Faith, hope, love abide, these three; but the greatest of these is love. — 1 Corinthians 13:13",
+    ar: "يَثْبُتُ: الإِيمَانُ وَالرَّجَاءُ وَالْمَحَبَّةُ، وَلكِنَّ أَعْظَمَهُنَّ الْمَحَبَّةُ. — ١ كورنثوس ١٣: ١٣" },
+  { en: "A wise man will hear and increase in learning. — Proverbs 1:5",
+    ar: "يَسْمَعُ الْحَكِيمُ فَيَزْدَادُ عِلْمًا. — أمثال ١: ٥" },
+  { en: "All things work together for good to those who love God. — Romans 8:28",
+    ar: "كُلُّ الأَشْيَاءِ تَعْمَلُ مَعًا لِلْخَيْرِ لِلَّذِينَ يُحِبُّونَ اللهَ. — رومية ٨: ٢٨" },
+  { en: "God is our refuge and strength, a very present help in trouble. — Psalm 46:1",
+    ar: "اللهُ لَنَا مَلْجَأٌ وَقُوَّةٌ، عَوْنًا فِي الضِّيقَاتِ وُجِدَ شَدِيدًا. — مزمور ٤٦: ١" },
+  { en: "For God so loved the world that He gave His only begotten Son, that whoever believes in Him should not perish but have everlasting life. — John 3:16",
+    ar: "لأَنَّهُ هكَذَا أَحَبَّ اللهُ الْعَالَمَ حَتَّى بَذَلَ ابْنَهُ الْوَحِيدَ، لِكَيْ لاَ يَهْلِكَ كُلُّ مَنْ يُؤْمِنُ بِهِ، بَلْ تَكُونُ لَهُ الْحَيَاةُ الأَبَدِيَّةُ. — يوحنا ٣: ١٦" },
+  { en: "I am the way, the truth, and the life. No one comes to the Father except through Me. — John 14:6",
+    ar: "أَنَا هُوَ الطَّرِيقُ وَالْحَقُّ وَالْحَيَاةُ. لَيْسَ أَحَدٌ يَأْتِي إِلَى الآبِ إِلاَّ بِي. — يوحنا ١٤: ٦" },
+  { en: "Let your light so shine before men, that they may see your good works and glorify your Father in heaven. — Matthew 5:16",
+    ar: "فَلْيُضِئْ نُورُكُمْ هكَذَا قُدَّامَ النَّاسِ، لِكَيْ يَرَوْا أَعْمَالَكُمُ الْحَسَنَةَ وَيُمَجِّدُوا أَبَاكُمُ الَّذِي فِي السَّمَاوَاتِ. — متى ٥: ١٦" },
+  { en: "The Lord is my light and my salvation; whom shall I fear? — Psalm 27:1",
+    ar: "الرَّبُّ نُورِي وَخَلاَصِي، مِمَّنْ أَخَافُ؟ — مزمور ٢٧: ١" },
+  { en: "The fear of the Lord is the beginning of wisdom, and the knowledge of the Holy One is understanding. — Proverbs 9:10",
+    ar: "بَدْءُ الْحِكْمَةِ مَخَافَةُ الرَّبِّ، وَمَعْرِفَةُ الْقُدُّوسِ فَهْمٌ. — أمثال ٩: ١٠" },
+  { en: "Taste and see that the Lord is good; blessed is the one who trusts in Him. — Psalm 34:8",
+    ar: "ذُوقُوا وَانْظُرُوا مَا أَطْيَبَ الرَّبَّ! طُوبَى لِلرَّجُلِ الْمُتَوَكِّلِ عَلَيْهِ. — مزمور ٣٤: ٨" },
+  { en: "I know the thoughts that I think toward you, thoughts of peace andnot of evil, to give you a future and a hope. — Jeremiah 29:11",
+    ar: "لأَنِّي عَرَفْتُ الأَفْكَارَ الَّتِي أَنَا مُفْتَكِرٌ بِهَا عَنْكُمْ، أَفْكَارَ سَلاَمٍ لاَ شَرٍّ، لأُعْطِيَكُمْ آخِرَةً وَرَجَاءً. — إرميا ٢٩: ١١" },
+       ar: "لأَنِّي عَرَفْتُ الأَفْكَارَ الَّتِي أَنَا مُفْتَكِرٌ بِهَا عَنْكُمْ، أَفْكَارَ سَلاَمٍ لاَ شَرٍّ، لأُعْطِيَكُمْ آخِرَةً وَرَجَاءً. — إرميا ٢٩: ١١" },
+  { en: "My help comes from the Lord, who made heaven and earth. — Psalm 121:2",
+    ar: "مَعُونَتِي مِنْ عِنْدِ الرَّبِّ، صَانِعِ السَّمَاوَاتِ وَالأَرْضِ. — مزمور ١٢١: ٢" },
+  { en: "Rejoice always, pray without ceasing, in everything give thanks. — 1 Thessalonians 5:16-18",
+    ar: "افْرَحُوا كُلَّ حِينٍ. صَلُّوا بِلاَ انْقِطَاعٍ. اشْكُرُوا فِي كُلِّ شَيْءٍ. — ١ تسالونيكي ٥: ١٦-١٨" },
+  { en: "If any of you lacks wisdom, let him ask of God, who gives to all generously, and it will be given to him. — James 1:5",
+    ar: "إِنْ كَانَ أَحَدُكُمْ تُعْوِزُهُ حِكْمَةٌ، فَلْيَطْلُبْ مِنَ اللهِ الَّذِي يُعْطِي الْجَمِيعَ بِسَخَاءٍ، فَسَيُعْطَى لَهُ. — يعقوب ١: ٥" },
+  { en: "Commit your way to the Lord, trust also in Him, and He shall bring it to pass. — Psalm 37:5",
+    ar: "سَلِّمْ لِلرَّبِّ طَرِيقَكَ وَاتَّكِلْ عَلَيْهِ وَهُوَ يُجْرِي. — مزمور ٣٧: ٥" },
+  { en: "Faith is the substance of things hoped for, the evidence of things not seen. — Hebrews 11:1",
+    ar: "وَأَمَّا الإِيمَانُ فَهُوَ الثِّقَةُ بِمَا يُرْجَى وَالإِيقَانُ بِأُمُورٍ لاَ تُرَى. — عبرانيين ١١: ١" },
+  { en: "Seek first the kingdom of God and His righteousness, and all these things shall be added to you. — Matthew 6:33",
+    ar: "اطْلُبُوا أَوَّلاً مَلَكُوتَ اللهِ وَبِرَّهُ، وَهذِهِ كُلُّهَا تُزَادُ لَكُمْ. — متى ٦: ٣٣" },
+  { en: "No one knows the things of God except the Spirit of God. — 1 Corinthians 2:11",
+    ar: "أُمُورُ اللهِ لاَ يَعْرِفُهَا أَحَدٌ إِلاَّ رُوحُ اللهِ. — ١ كورنثوس ٢: ١١" },
+  { en: "As for me and my house, we will serve the Lord. — Joshua 24:15",
+    ar: "أَمَّا أَنَا وَبَيْتِي فَنَعْبُدُ الرَّبَّ. — يشوع ٢٤: ١٥" },
+  { en: "Let us not grow weary while doing good, for in due season we shall reap if we do not lose heart. — Galatians 6:9",
+    ar: "فَلاَ نَفْشَلْ فِي عَمَلِ الْخَيْرِ، لأَنَّنَا سَنَحْصُدُ فِي وَقْتِهِ إِنْ كُنَّا لاَ نَكِلُّ. — غلاطية ٦: ٩" },
+  { en: "The name of the Lord is a strong tower; the righteous run to it and are safe. — Proverbs 18:10",
+    ar: "اسْمُ الرَّبِّ بُرْجٌ حَصِينٌ، يَرْكُضُ إِلَيْهِ الصِّدِّيقُ وَيَتَمَنَّعُ. — أمثال ١٨: ١٠" },
+  { en: "Behold, how good and how pleasant it is for brethren to dwell together in unity! — Psalm 133:1",
+    ar: "هُوَذَا مَا أَحْسَنَ وَمَا أَجْمَلَ أَنْ يَسْكُنَ الإِخْوَةُ مَعًا! — مزمور ١٣٣: ١" },
+  { en: "Whatever you do, do it heartily, as to the Lord and not to men. — Colossians 3:23",
+    ar: "وَكُلُّ مَا فَعَلْتُمْ، فَاعْمَلُوا مِنَ الْقَلْبِ، كَمَا لِلرَّبِّ لَيْسَ لِلنَّاسِ. — كولوسي ٣: ٢٣" },
+  { en: "No one knows God's purposes except God.",
+    ar: "مقاصد الله لا يعلمها إلا الله." }
+];
+
+function dailyVerse() {
+  const d = new Date();
+  const dayNumber = Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
+  const v = DAILY_VERSES[dayNumber % DAILY_VERSES.length];
+  return v[currentLang] || v.en;
+}
+
 function t(key, vars) {
+  if (key === "home.sub") return dailyVerse();   // آية اليوم
   let text = (I18N[currentLang] && I18N[currentLang][key]) ?? I18N.en[key] ?? key;
   if (vars) Object.keys(vars).forEach((k) => { text = text.split(`{${k}}`).join(vars[k]); });
   return text;
@@ -766,8 +846,7 @@ function renderSlidesList() {
       <div class="slide-title">${escapeHTML(q.text || t("slide.question"))}</div>
     </div>
   `).join("");
-}
-
+                      }
 function ensureTimeOption(seconds) {
   const select = $("prop-time-limit");
   if (!select) return;
@@ -1279,7 +1358,7 @@ function init() {
   renderQuizzes().catch(showError);
   renderSupport();
   renderUserBadge();
-  renderParticipants().catch(showError);
+   renderParticipants().catch(showError);
   renderResults().catch(showError);
   renderLeaderboard().catch(showError);
 
