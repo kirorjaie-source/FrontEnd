@@ -793,19 +793,18 @@ function isQuizActive(quiz) {
 function activeSessionButtonsHTML(session) {
   if (!session) return "";
   return `
-    <div class="quiz-session-controls" style="display:flex;gap:6px;width:100%;margin-top:8px;">
+    <div class="quiz-session-controls" style="display:flex;flex-wrap:wrap;gap:6px;width:100%;margin-top:8px;">
       <button type="button" class="button" data-action="resume-session"
-        style="flex:1;justify-content:center;background:#16a34a;color:#fff;font-weight:800;padding:8px 10px;border-radius:10px;font-size:13px;">
+        style="flex:1 1 130px;min-width:0;justify-content:center;background:#16a34a;color:#fff;font-weight:800;padding:8px 10px;border-radius:10px;font-size:12.5px;white-space:nowrap;">
         ${escapeHTML(t("session.resumeShort", { pin: session.roomCode }))}
       </button>
       <button type="button" class="button" data-action="end-session"
-        style="justify-content:center;background:#dc2626;color:#fff;font-weight:700;padding:8px 12px;border-radius:10px;font-size:13px;">
+        style="flex:1 1 70px;min-width:0;justify-content:center;background:#dc2626;color:#fff;font-weight:700;padding:8px 10px;border-radius:10px;font-size:12.5px;white-space:nowrap;">
         ${escapeHTML(t("session.endShort"))}
       </button>
     </div>
   `;
 }
-
 function resumeActiveSession() {
   const s = getActiveSession();
   if (!s) return;
