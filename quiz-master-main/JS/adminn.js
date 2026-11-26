@@ -227,7 +227,17 @@ const I18N = {
   "email.codePh": "Code sent to the new email",
   "email.confirm": "Confirm change",
   "email.codeSent": "We sent a code to the new email. Enter it below.",
-  "email.needCode": "Enter the verification code."
+  "email.needCode": "Enter the verification code.",
+  "session.activeTitle": "Active live session in progress",
+  "session.waiting": "Waiting in Lobby",
+  "session.playing": "Game in progress",
+  "session.resume": "↩ Resume Game",
+  "session.end": "End Game",
+  "session.endedMsg": "Active session ended.",
+  "session.choiceTitle": "You already have an active game",
+  "session.choiceDesc": "Session \"{title}\" (PIN: {pin}) is still open. Would you like to resume it or end it and start a new one?",
+  "session.endAndNew": "End Old & Start New",
+  "session.confirmEnd": "End active session (PIN: {pin})?"
  },
  "ar": {
   "brand.name": "كوك كويز",
@@ -441,7 +451,17 @@ const I18N = {
   "email.codePh": "الكود اللي وصل للإيميل الجديد",
   "email.confirm": "تأكيد التغيير",
   "email.codeSent": "بعتنا كود للإيميل الجديد. اكتبه تحت.",
-  "email.needCode": "اكتب كود التأكيد."
+  "email.needCode": "اكتب كود التأكيد.",
+  "session.activeTitle": "يوجد جيم شغال حالياً",
+  "session.waiting": "في انتظار اللاعبين (اللوبي)",
+  "session.playing": "اللعبة شغالة حالياً",
+  "session.resume": "↩ استكمال الجيم",
+  "session.end": "✖ إنهاء الجيم",
+  "session.endedMsg": "تم إنهاء الجيم بنجاح.",
+  "session.choiceTitle": "يوجد جيم مفتوح بالفعل",
+  "session.choiceDesc": "مسابقة \"{title}\" بكود (PIN: {pin}) ما زالت مفتوحة. تحب تستكملها ولا تنهيها وتبدأ جيم جديد؟",
+  "session.endAndNew": "إنهاء القديم وبدء جديد",
+  "session.confirmEnd": "هل تريد إنهاء الجيم الحالي (PIN: {pin})؟"
  }
 };
 
@@ -671,6 +691,7 @@ function applyStaticTranslations() {
 }
 
 function renderAllPages() {
+  renderActiveSessionBanner();
   renderUserBadge();
   renderSupport();
   renderSlidesList();
@@ -687,6 +708,126 @@ function setLanguage(lang, { rerender = true } = {}) {
   applyStaticTranslations();
   applyTheme(getTheme());
   if (rerender) renderAllPages();
+}
+
+/* ============================================================
+   إدارة الجلسة النشطة (استكمال أو إنهاء الجيم)
+   ============================================================ */
+function getActiveSession() {
+  const s = window.Api?.game?.current ? Api.game.current() : null;
+  if (!s || !s.roomCode || s.status === "finished") return null;
+  return s;
+}
+
+function resumeActiveSession() {
+  const s = getActiveSession();
+  if (!s) return;
+  window.location.href = s.status === "playing" ? "host-gamen.html" : "lobbyn.html";
+}
+
+async function finishSessionCompletely(session, { askConfirm = true } = {}) {
+  if (!session) return true;
+  if (askConfirm && !confirm(t("session.confirmEnd", { pin: session.roomCode }))) return false;
+
+  try {
+    if (window.Api?.realtime && window.Api?.game?.end) {
+      await Api.realtime.connect({ pin: session.roomCode, role: "host" });
+      await Api.game.end();
+    }
+  } catch { /* لو الجلسة مقفولة أصلاً على السيرفر نكمل تنضيفها محلياً */ }
+
+  try {
+    Api.game.saveCurrent({ ...session, status: "finished" });
+    localStorage.removeItem("churchQuizPlayers");
+  } catch { /* ignore */ }
+
+  renderActiveSessionBanner();
+  return true;
+}
+
+async function endActiveSession() {
+  const s = getActiveSession();
+  const done = await finishSessionCompletely(s, { askConfirm: true });
+  if (done) toast(t("session.endedMsg"));
+}
+
+function openSessionChoiceModal(existingSession, onStartNew) {
+  let modal = $("session-choice-modal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "session-choice-modal";
+    modal.style.cssText = "position:fixed;inset:0;background:rgba(11,30,54,.65);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9999;";
+    document.body.appendChild(modal);
+  }
+
+  modal.innerHTML = `
+    <div style="background:#fff;color:#0B1E36;border-radius:18px;max-width:440px;width:100%;padding:24px;box-shadow:0 20px 50px rgba(0,0,0,.3);border:2px solid #F4B41A;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <h3 style="margin:0;font-size:18px;font-weight:800;">${escapeHTML(t("session.choiceTitle"))}</h3>
+        <button type="button" id="choice-close-btn" style="background:none;border:none;font-size:20px;cursor:pointer;color:#64748b;">✕</button>
+      </div>
+      <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#334155;">
+        ${escapeHTML(t("session.choiceDesc", { title: existingSession.quizTitle || "Kokquiz", pin: existingSession.roomCode }))}
+      </p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button type="button" id="choice-resume-btn" class="button gold-button" style="width:100%;justify-content:center;font-weight:800;padding:12px;">
+          ${escapeHTML(t("session.resume"))} (PIN: ${escapeHTML(existingSession.roomCode)})
+        </button>
+        <button type="button" id="choice-new-btn" class="button" style="width:100%;justify-content:center;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;font-weight:700;padding:11px;">
+          ${escapeHTML(t("session.endAndNew"))}
+        </button>
+      </div>
+    </div>
+  `;
+  modal.style.display = "flex";
+
+  const close = () => { modal.style.display = "none"; };
+  $("choice-close-btn").onclick = close;
+  modal.onclick = (e) => { if (e.target === modal) close(); };
+  $("choice-resume-btn").onclick = () => { close(); resumeActiveSession(); };
+  $("choice-new-btn").onclick = async () => {
+    $("choice-new-btn").disabled = true;
+    await finishSessionCompletely(existingSession, { askConfirm: false });
+    close();
+    await onStartNew();
+  };
+}
+
+function renderActiveSessionBanner() {
+  const host = document.querySelector(".main-content") || document.querySelector(".content") || document.querySelector("main");
+  if (!host) return;
+  let banner = $("active-session-banner");
+  const s = getActiveSession();
+
+  if (!s) {
+    if (banner) banner.remove();
+    return;
+  }
+
+  if (!banner) {
+    banner = document.createElement("div");
+    banner.id = "active-session-banner";
+    host.insertBefore(banner, host.firstChild);
+  }
+
+  const stateLabel = s.status === "playing" ? t("session.playing") : t("session.waiting");
+  banner.style.cssText = "display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;background:linear-gradient(135deg,#0B1E36,#1d3557);color:#fff;border:2px solid #F4B41A;border-radius:16px;padding:14px 18px;margin-bottom:18px;box-shadow:0 8px 20px rgba(11,30,54,.18);";
+  banner.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:4px;">
+      <div style="font-size:12px;font-weight:700;color:#F4B41A;letter-spacing:.4px;">● ${escapeHTML(t("session.activeTitle"))}</div>
+      <div style="font-size:16px;font-weight:800;">
+        ${escapeHTML(s.quizTitle || "Kokquiz")} — <span dir="ltr" style="background:rgba(255,255,255,.14);padding:2px 8px;border-radius:8px;color:#F4B41A;">PIN: ${escapeHTML(s.roomCode)}</span>
+        <span style="font-size:13px;font-weight:600;opacity:.85;margin-inline-start:8px;">(${escapeHTML(stateLabel)})</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <button type="button" id="btn-resume-session" class="button gold-button" style="font-weight:800;">${escapeHTML(t("session.resume"))}</button>
+      <button type="button" id="btn-end-session" class="button" style="background:#ef4444;color:#fff;border:none;font-weight:700;">${escapeHTML(t("session.end"))}</button>
+    </div>
+  `;
+
+  $("btn-resume-session")?.addEventListener("click", resumeActiveSession);
+  $("btn-end-session")?.addEventListener("click", endActiveSession);
 }
 
 /* ============================================================
@@ -916,19 +1057,28 @@ function closeHostModal() {
   hostingQuizId = null;
 }
 
-async function startHosting() {
-  if (!hostingQuizId) return;
-  const quizId = hostingQuizId;
-
+async function createAndOpenLobby(quizId) {
   try {
     await Api.game.create(quizId);
-    closeHostModal();
     toast(t("msg.sessionCreated"));
     window.location.href = "lobbyn.html";
   } catch (err) {
-    closeHostModal();
     showError(err);
   }
+}
+
+async function startHosting() {
+  if (!hostingQuizId) return;
+  const quizId = hostingQuizId;
+  closeHostModal();
+
+  const existing = getActiveSession();
+  if (existing) {
+    openSessionChoiceModal(existing, () => createAndOpenLobby(quizId));
+    return;
+  }
+
+  await createAndOpenLobby(quizId);
 }
 
 /* ============================================================
@@ -1653,6 +1803,7 @@ function init() {
   applyStaticTranslations();
   applyTheme(getTheme());
   bindStudio();
+  renderActiveSessionBanner();
 
   document.addEventListener("click", (event) => {
     const el = event.target.closest("[data-action]");
