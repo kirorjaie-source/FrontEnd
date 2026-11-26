@@ -153,10 +153,11 @@
     }
 
     /* ============================================================
-       Studio Right Panel — Modern Select Styling
+       Studio Right Panel — Custom Modern Dropdown
        ============================================================ */
     #studio-right-panel .prop-group {
-      margin-bottom: 18px;
+      margin-bottom: 16px;
+      position: relative;
     }
 
     #studio-right-panel .prop-group label {
@@ -170,72 +171,151 @@
     }
 
     #studio-right-panel .prop-group select {
-      appearance: none;
-      -webkit-appearance: none;
+      display: none !important;
+    }
+
+    .kq-select {
+      position: relative;
+      width: 100%;
+    }
+
+    .kq-select-trigger {
       width: 100%;
       height: 44px;
-      padding: 0 38px 0 14px;
+      padding: 0 14px;
       border-radius: 12px;
       border: 1.5px solid #e2e8f0;
-      background-color: #f8fafc;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230B1E36' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 13px center;
-      background-size: 15px;
+      background: #f8fafc;
       color: #0b1e36;
       font-family: inherit;
       font-size: 13.5px;
       font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
       cursor: pointer;
+      text-align: start;
       box-shadow: 0 2px 6px rgba(11, 30, 54, 0.04);
-      transition: border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+      transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
     }
 
-    [dir="rtl"] #studio-right-panel .prop-group select {
-      padding: 0 14px 0 38px;
-      background-position: left 13px center;
+    .kq-select-trigger span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    #studio-right-panel .prop-group select:hover {
-      background-color: #ffffff;
+    .kq-select-trigger svg {
+      flex-shrink: 0;
+      color: #0b1e36;
+      transition: transform 0.2s ease;
+    }
+
+    .kq-select-trigger:hover {
+      background: #ffffff;
       border-color: #cbd5e1;
       box-shadow: 0 4px 12px rgba(11, 30, 54, 0.08);
     }
 
-    #studio-right-panel .prop-group select:focus {
-      outline: none;
-      background-color: #ffffff;
+    .kq-select.open .kq-select-trigger {
+      background: #ffffff;
       border-color: #e4b93c;
       box-shadow: 0 0 0 3.5px rgba(228, 185, 60, 0.22);
     }
 
-    #studio-right-panel .prop-group select option {
-      background-color: #ffffff;
-      color: #0b1e36;
+    .kq-select.open .kq-select-trigger svg {
+      transform: rotate(180deg);
+    }
+
+    .kq-select-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      inset-inline: 0;
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 14px;
+      box-shadow: 0 16px 36px rgba(11, 30, 54, 0.18);
+      padding: 6px;
+      max-height: 230px;
+      overflow-y: auto;
+      z-index: 9999;
+      display: none;
+      animation: dropFade 0.14s ease-out;
+    }
+
+    .kq-select.open .kq-select-menu {
+      display: block;
+    }
+
+    .kq-select-option {
+      width: 100%;
+      padding: 9px 12px;
+      border: none;
+      border-radius: 9px;
+      background: transparent;
+      color: #0f233c;
+      font-family: inherit;
+      font-size: 13.5px;
       font-weight: 600;
-      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      cursor: pointer;
+      text-align: start;
+      transition: background 0.14s ease, color 0.14s ease;
+    }
+
+    .kq-select-option:hover {
+      background: #f1f5f9;
+      color: #0b1e36;
+    }
+
+    .kq-select-option.selected {
+      background: linear-gradient(135deg, #0b1e36 0%, #173d70 100%);
+      color: #f3c66f;
+      font-weight: 800;
+    }
+
+    .kq-select-option.selected::after {
+      content: "✓";
+      font-size: 13px;
+      font-weight: 900;
     }
 
     [data-theme="dark"] #studio-right-panel .prop-group label {
       color: #94a3b8;
     }
 
-    [data-theme="dark"] #studio-right-panel .prop-group select {
-      background-color: #0f233c;
+    [data-theme="dark"] .kq-select-trigger {
+      background: #0f233c;
       border-color: #1e3a5f;
       color: #f8fafc;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23f3c66f' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
     }
 
-    [data-theme="dark"] #studio-right-panel .prop-group select:hover,
-    [data-theme="dark"] #studio-right-panel .prop-group select:focus {
-      background-color: #142d4c;
+    [data-theme="dark"] .kq-select-trigger svg {
+      color: #f3c66f;
+    }
+
+    [data-theme="dark"] .kq-select-trigger:hover,
+    [data-theme="dark"] .kq-select.open .kq-select-trigger {
+      background: #142d4c;
       border-color: #e4b93c;
     }
 
-    [data-theme="dark"] #studio-right-panel .prop-group select option {
-      background-color: #0b1e36;
-      color: #f8fafc;
+    [data-theme="dark"] .kq-select-menu {
+      background: #0b1e36;
+      border-color: #1e3a5f;
+    }
+
+    [data-theme="dark"] .kq-select-option {
+      color: #e2e8f0;
+    }
+
+    [data-theme="dark"] .kq-select-option:hover {
+      background: #163356;
+      color: #ffffff;
     }
 
     /* ============================================================
@@ -821,13 +901,13 @@
               <div class="prop-group">
                 <label for="prop-quiz-public" data-i18n="modal.visibility">Visibility</label>
                 <select id="prop-quiz-public">
-                  <option value="true" data-i18n="modal.public">Public (Visible to everyone)</option>
-                  <option value="false" data-i18n="modal.private">Private (Only me)</option>
+                  <option value="true" data-i18n="modal.public">Public</option>
+                  <option value="false" data-i18n="modal.private">Private</option>
                 </select>
               </div>
 
               <div class="prop-group" id="prop-category-group">
-                <label for="modal-quiz-category" data-i18n="modal.category">Category (Fetched from API)</label>
+                <label for="modal-quiz-category" data-i18n="modal.category">Category</label>
                 <select id="modal-quiz-category">
                   <option value="">جاري تحميل الأقسام...</option>
                 </select>

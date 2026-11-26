@@ -78,10 +78,10 @@ const I18N = {
   "common.delete": "Delete",
   "modal.title": "Quiz Settings",
   "modal.sub": "Add the final details before saving.",
-  "modal.category": "Category (Fetched from API)",
+  "modal.category": "Category",
   "modal.visibility": "Visibility",
-  "modal.public": "Public (Visible to everyone)",
-  "modal.private": "Private (Only me)",
+  "modal.public": "Public",
+  "modal.private": "Private",
   "modal.cancel": "Cancel",
   "modal.name": "Quiz name",
   "modal.done": "Done",
@@ -292,10 +292,10 @@ const I18N = {
   "common.delete": "حذف",
   "modal.title": "إعدادات المسابقة",
   "modal.sub": "أضف التفاصيل الأخيرة قبل الحفظ.",
-  "modal.category": "التصنيف (من السيرفر)",
+  "modal.category": "التصنيف",
   "modal.visibility": "حالة الظهور",
-  "modal.public": "عامة (تظهر للجميع)",
-  "modal.private": "خاصة (لي أنا فقط)",
+  "modal.public": "عامة",
+  "modal.private": "خاصة",
   "modal.cancel": "إلغاء",
   "modal.name": "اسم المسابقة",
   "modal.done": "تم",
@@ -448,6 +448,59 @@ const I18N = {
 const LANG_KEY = "kokLang";   // نفس المفتاح في كل الصفحات (اللاعب، المدرّس، اللوبي، التسجيل)
 let currentLang = localStorage.getItem(LANG_KEY) === "ar" ? "ar" : "en";
 let currentPage = "home";      // الرئيسية هي أول صفحة بتفتح
+
+/* ============================================================
+   Custom Dropdown للقائمة اليمين في الاستوديو
+   ============================================================ */
+function syncCustomSelect(selectEl) {
+  if (!selectEl) return;
+  let wrapper = selectEl.nextElementSibling;
+  if (!wrapper || !wrapper.classList.contains("kq-select")) {
+    wrapper = document.createElement("div");
+    wrapper.className = "kq-select";
+    wrapper.innerHTML = `
+      <button type="button" class="kq-select-trigger">
+        <span></span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <div class="kq-select-menu"></div>`;
+    selectEl.insertAdjacentElement("afterend", wrapper);
+
+    const trigger = wrapper.querySelector(".kq-select-trigger");
+    trigger.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = wrapper.classList.contains("open");
+      document.querySelectorAll(".kq-select.open").forEach((s) => s.classList.remove("open"));
+      if (!isOpen) wrapper.classList.add("open");
+    });
+  }
+
+  const labelSpan = wrapper.querySelector(".kq-select-trigger span");
+  const menu = wrapper.querySelector(".kq-select-menu");
+  const opts = [...selectEl.options];
+  const selectedOpt = opts.find((o) => o.selected) || opts[0];
+  labelSpan.textContent = selectedOpt ? selectedOpt.textContent : "";
+
+  menu.innerHTML = opts.map((o) => `
+    <button type="button" class="kq-select-option ${o.value === selectEl.value ? "selected" : ""}" data-val="${escapeHTML(o.value)}">
+      ${escapeHTML(o.textContent)}
+    </button>
+  `).join("");
+
+  menu.querySelectorAll(".kq-select-option").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      selectEl.value = btn.dataset.val;
+      selectEl.dispatchEvent(new Event("change", { bubbles: true }));
+      wrapper.classList.remove("open");
+      syncCustomSelect(selectEl);
+    });
+  });
+}
+
+function syncAllStudioSelects() {
+  document.querySelectorAll("#studio-right-panel select").forEach(syncCustomSelect);
+}
 
 /* ===== آية اليوم: بتتغير تلقائي كل يوم (بتفضل ثابتة طول اليوم) ===== */
 const DAILY_VERSES = [
@@ -613,6 +666,8 @@ function applyStaticTranslations() {
 
   const langLabel = $("lang-label");
   if (langLabel) langLabel.textContent = currentLang === "ar" ? "English" : "العربية";
+
+  syncAllStudioSelects();
 }
 
 function renderAllPages() {
@@ -978,6 +1033,8 @@ function loadQuestionToCanvas(index) {
     if (categorySelect.selectedIndex < 0) categorySelect.selectedIndex = 0;
   }
 
+  syncAllStudioSelects();
+
   if ($("media-placeholder")) $("media-placeholder").style.display = q.image ? "none" : "flex";
   if ($("media-preview-container")) $("media-preview-container").style.display = q.image ? "flex" : "none";
   if ($("question-image-preview")) $("question-image-preview").src = q.image || "";
@@ -1191,6 +1248,12 @@ function bindStudio() {
       e.returnValue = "";
     }
   });
+
+  document.addEventListener("click", () => {
+    document.querySelectorAll(".kq-select.open").forEach((s) => s.classList.remove("open"));
+  });
+
+  syncAllStudioSelects();
 }
 
 /* ---------------- Quizzes (مسابقات متاحة من مستخدمين تانيين) ---------------- */
@@ -1418,6 +1481,7 @@ async function loadCategories() {
   } catch {
     select.innerHTML = `<option value="General">${t("common.general")}</option>`;
   }
+  syncCustomSelect(select);
 }
 
 /* ============================================================

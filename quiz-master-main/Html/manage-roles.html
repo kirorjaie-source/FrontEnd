@@ -26,21 +26,29 @@
       text-decoration: none;
     }
 
-    /* توحيد عرض السايدبار والمسافة بدقة 100% على الكمبيوتر */
+    /* تثبيت السايدبار مفتوح بعرضه الكامل على الكمبيوتر والصفحة تاخد باقي المساحة */
     @media (min-width: 901px) {
-      html body aside#sidebar.sidebar {
+      html body aside#sidebar.sidebar,
+      html body.sidebar-collapsed aside#sidebar.sidebar {
         width: 260px !important;
         min-width: 260px !important;
         max-width: 260px !important;
+        transform: none !important;
       }
 
-      html body.sidebar-collapsed aside#sidebar.sidebar {
-        width: 82px !important;
-        min-width: 82px !important;
-        max-width: 82px !important;
+      html body aside#sidebar.sidebar .nav-label,
+      html body.sidebar-collapsed aside#sidebar.sidebar .nav-label,
+      html body aside#sidebar.sidebar .brand span:last-child,
+      html body.sidebar-collapsed aside#sidebar.sidebar .brand span:last-child,
+      html body aside#sidebar.sidebar .menu-caption,
+      html body.sidebar-collapsed aside#sidebar.sidebar .menu-caption {
+        display: inline-block !important;
+        opacity: 1 !important;
+        visibility: visible !important;
       }
 
-      html body .main.main-area {
+      html body .main.main-area,
+      html body.sidebar-collapsed .main.main-area {
         position: relative !important;
         left: 0 !important;
         right: 0 !important;
@@ -53,13 +61,10 @@
         display: flex;
         flex-direction: column;
         box-sizing: border-box;
-        transition: margin-inline-start 0.25s ease, width 0.25s ease, max-width 0.25s ease;
       }
 
-      html body.sidebar-collapsed .main.main-area {
-        margin-inline-start: 82px !important;
-        width: calc(100% - 82px) !important;
-        max-width: calc(100% - 82px) !important;
+      #rolesMenuToggle {
+        display: none !important;
       }
     }
 
@@ -881,9 +886,6 @@
   <script src="../JS/apin.js"></script>
   <script src="../JS/manage-roles.js"></script>
   <script>
-    if (localStorage.getItem("churchQuizSidebarCollapsed") === "1") {
-      document.body.classList.add("sidebar-collapsed");
-    }
     (function () {
       const btn = document.getElementById("theme-toggle");
       const get = () => (localStorage.getItem("kokTheme") === "dark" ? "dark" : "light");
@@ -901,9 +903,6 @@
     document.getElementById("rolesMenuToggle")?.addEventListener("click", () => {
       if (window.matchMedia("(max-width: 900px)").matches) {
         document.getElementById("sidebar")?.classList.toggle("open");
-      } else {
-        const collapsed = document.body.classList.toggle("sidebar-collapsed");
-        localStorage.setItem("churchQuizSidebarCollapsed", collapsed ? "1" : "0");
       }
     });
   </script>
