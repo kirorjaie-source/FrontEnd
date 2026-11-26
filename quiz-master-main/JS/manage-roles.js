@@ -104,6 +104,20 @@
     }
   }
 
+  async function apiDeleteUser(userId) {
+    const res = await fetch(`${API_BASE}/Auth/users/${userId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: "Bearer " + getToken()
+      }
+    });
+    if (!res.ok) {
+      let msg = `Server error (${res.status})`;
+      try { const data = await res.json(); if (data?.message) msg = data.message; } catch {}
+      throw new Error(msg);
+    }
+  }
+
   async function apiSuperResetPassword(adminKey, email, newPassword) {
     const res = await fetch(`${API_BASE}/Auth/admin/reset-password`, {
       method: "POST",
@@ -216,7 +230,7 @@
 
   function render(list) {
     if (!list.length) {
-      tbody.innerHTML = '<tr><td colspan="6">No matching users found.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7">No matching users found.</td></tr>';
       return;
     }
 
@@ -229,6 +243,10 @@
       const pwdCell = isTargetAdmin
         ? '<span class="pwd-protected" title="Use Super Reset with X-Admin Key">🔒 Protected</span>'
         : `<button type="button" class="pwd-btn" data-user-id="${u.id}">🔑 Reset</button>`;
+
+      const deleteCell = isTargetAdmin
+        ? '<span class="pwd-protected">—</span>'
+        : `<button type="button" class="mini-btn danger delete-user-btn" data-user-id="${u.id}">🗑 ${isAr() ? "حذف" : "Delete"}</button>`;
 
       return `
         <tr>
@@ -259,6 +277,7 @@
             </select>
           </td>
           <td>${pwdCell}</td>
+          <td>${deleteCell}</td>
         </tr>
       `;
     }).join("");
@@ -454,6 +473,35 @@
       return;
     }
 
+    const delBtn = e.target.closest(".delete-user-btn");
+    if (delBtn) {
+      const userId = Number(delBtn.dataset.userId);
+      const user = allUsers.find((u) => u.id === userId);
+      if (!user || Number(user.role) === 0) return;
+
+      const ok = confirm(
+        isAr()
+          ? `هل أنت متأكد من حذف الحساب "${user.userName}" نهائياً؟`
+          : `Are you sure you want to permanently delete "${user.userName}"?`
+      );
+      if (!ok) return;
+
+      delBtn.disabled = true;
+      setStatus(isAr() ? "جاري حذف الحساب..." : "Deleting user...", "info");
+
+      try {
+        await apiDeleteUser(userId);
+        allUsers = allUsers.filter((u) => u.id !== userId);
+        updateStats();
+        render(getFilteredUsers());
+        setStatus(isAr() ? `تم حذف الحساب ${user.userName} بنجاح ✓` : `User ${user.userName} deleted ✓`, "ok");
+      } catch (err) {
+        setStatus(friendlyMsg(err.message), "err");
+        delBtn.disabled = false;
+      }
+      return;
+    }
+
     const btn = e.target.closest(".verify-btn");
     if (!btn) return;
 
@@ -489,7 +537,7 @@
       updateStats();
       render(getFilteredUsers());
     } catch (err) {
-      tbody.innerHTML = `<tr><td colspan="6" style="color:#b91c1c; font-weight:700;">${esc(friendlyMsg(err.message))}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" style="color:#b91c1c; font-weight:700;">${esc(friendlyMsg(err.message))}</td></tr>`;
     }
   }
 
