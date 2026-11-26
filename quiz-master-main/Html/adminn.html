@@ -153,6 +153,92 @@
     }
 
     /* ============================================================
+       Studio Right Panel — Modern Select Styling
+       ============================================================ */
+    #studio-right-panel .prop-group {
+      margin-bottom: 18px;
+    }
+
+    #studio-right-panel .prop-group label {
+      display: block;
+      font-size: 11.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #475569;
+      margin-bottom: 7px;
+    }
+
+    #studio-right-panel .prop-group select {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 100%;
+      height: 44px;
+      padding: 0 38px 0 14px;
+      border-radius: 12px;
+      border: 1.5px solid #e2e8f0;
+      background-color: #f8fafc;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230B1E36' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 13px center;
+      background-size: 15px;
+      color: #0b1e36;
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(11, 30, 54, 0.04);
+      transition: border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    [dir="rtl"] #studio-right-panel .prop-group select {
+      padding: 0 14px 0 38px;
+      background-position: left 13px center;
+    }
+
+    #studio-right-panel .prop-group select:hover {
+      background-color: #ffffff;
+      border-color: #cbd5e1;
+      box-shadow: 0 4px 12px rgba(11, 30, 54, 0.08);
+    }
+
+    #studio-right-panel .prop-group select:focus {
+      outline: none;
+      background-color: #ffffff;
+      border-color: #e4b93c;
+      box-shadow: 0 0 0 3.5px rgba(228, 185, 60, 0.22);
+    }
+
+    #studio-right-panel .prop-group select option {
+      background-color: #ffffff;
+      color: #0b1e36;
+      font-weight: 600;
+      padding: 10px;
+    }
+
+    [data-theme="dark"] #studio-right-panel .prop-group label {
+      color: #94a3b8;
+    }
+
+    [data-theme="dark"] #studio-right-panel .prop-group select {
+      background-color: #0f233c;
+      border-color: #1e3a5f;
+      color: #f8fafc;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23f3c66f' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    }
+
+    [data-theme="dark"] #studio-right-panel .prop-group select:hover,
+    [data-theme="dark"] #studio-right-panel .prop-group select:focus {
+      background-color: #142d4c;
+      border-color: #e4b93c;
+    }
+
+    [data-theme="dark"] #studio-right-panel .prop-group select option {
+      background-color: #0b1e36;
+      color: #f8fafc;
+    }
+
+    /* ============================================================
        Settings Page — Royal Navy & Gold Upgrade
        ============================================================ */
     #page-settings {
@@ -740,6 +826,13 @@
                 </select>
               </div>
 
+              <div class="prop-group" id="prop-category-group">
+                <label for="modal-quiz-category" data-i18n="modal.category">Category (Fetched from API)</label>
+                <select id="modal-quiz-category">
+                  <option value="">جاري تحميل الأقسام...</option>
+                </select>
+              </div>
+
               <div class="prop-bottom-actions">
                 <button type="button" id="btn-duplicate-question" class="btn-duplicate" data-i18n="studio.duplicate">Duplicate</button>
                 <button type="button" id="btn-delete-question" class="btn-delete" data-i18n="common.delete">Delete</button>
@@ -756,13 +849,6 @@
             <div class="field" style="margin-bottom: 16px;">
               <label style="color:#A9BCCD;" data-i18n="modal.name">Quiz name</label>
               <input type="text" id="modal-quiz-name" maxlength="80" autocomplete="off" placeholder="Enter quiz title..." data-i18n-ph="studio.titlePh" style="width: 100%; padding: 10px; background: #0B1E36; color: white; border: 1px solid #1f3a59; border-radius: 6px; box-sizing: border-box;">
-            </div>
-
-            <div class="field" id="modal-category-field" style="margin-bottom: 25px;">
-              <label style="color:#A9BCCD;" data-i18n="modal.category">Category (Fetched from API)</label>
-              <select id="modal-quiz-category" style="width: 100%; padding: 10px; background: #0B1E36; color: white; border: 1px solid #1f3a59; border-radius: 6px;">
-                <option value="">جاري تحميل الأقسام...</option>
-              </select>
             </div>
 
             <div class="modal-buttons" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">

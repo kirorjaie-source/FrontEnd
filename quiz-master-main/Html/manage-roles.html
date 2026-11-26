@@ -19,31 +19,50 @@
       margin: 0;
       min-height: 100vh;
       background-color: #f4f7fb;
+      overflow-x: hidden;
     }
 
     .sidebar .nav-link {
       text-decoration: none;
     }
 
-    .main-area {
-      margin-inline-start: 260px;
-      width: calc(100% - 260px);
+    /* ضبط المسافات بدقة مع القائمة الجانبية في الكمبيوتر والموبايل والعربي والإنجليزي */
+    .main.main-area {
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      margin-inline-start: var(--sidebar-width, 260px) !important;
+      width: calc(100% - var(--sidebar-width, 260px)) !important;
+      max-width: calc(100% - var(--sidebar-width, 260px)) !important;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      transition: margin-inline-start 0.25s ease, width 0.25s ease;
+      box-sizing: border-box;
+      transition: margin-inline-start 0.25s ease, width 0.25s ease, max-width 0.25s ease;
     }
 
-    body.sidebar-collapsed .main-area {
-      margin-inline-start: 82px;
-      width: calc(100% - 82px);
+    body.sidebar-collapsed .main.main-area {
+      margin-inline-start: var(--sidebar-collapsed, 82px) !important;
+      width: calc(100% - var(--sidebar-collapsed, 82px)) !important;
+      max-width: calc(100% - var(--sidebar-collapsed, 82px)) !important;
+    }
+
+    .main.main-area > .topbar,
+    .main.main-area > .content {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .main.main-area > .content {
+      padding: 24px 28px 36px;
     }
 
     @media (max-width: 900px) {
-      .main-area,
-      body.sidebar-collapsed .main-area {
-        margin-inline-start: 0;
-        width: 100%;
+      .main.main-area,
+      body.sidebar-collapsed .main.main-area {
+        margin-inline-start: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
       }
     }
 
@@ -331,7 +350,7 @@
       display: inline-flex;
       gap: 4px;
       padding: 4px;
-      margin-bottom: 16px;
+      margin-bottom: 18px;
       background: #e8eef7;
       border-radius: 999px;
     }
@@ -421,7 +440,6 @@
     select.s-input { padding-right: 14px; }
 
     /* ===== Spacing polish (desktop + mobile) ===== */
-    .page-tabs { margin-bottom: 18px; }
     .hero-banner { margin-bottom: 18px; }
 
     @media (max-width: 720px) {
@@ -429,7 +447,7 @@
       .topbar h1 { font-size: 20px !important; line-height: 1.25; }
       .topbar-actions { flex-wrap: nowrap; gap: 8px; margin-inline-start: auto; }
       .super-btn { padding: 8px 12px; font-size: 12.5px; }
-      .content { padding: 14px 12px 24px !important; }
+      .main.main-area > .content { padding: 14px 12px 24px !important; }
       .page-tabs { display: flex; width: 100%; box-sizing: border-box; margin-bottom: 14px; }
       .page-tab { flex: 1; padding: 10px 6px; font-size: 13px; }
       .hero-banner { padding: 18px 16px !important; gap: 12px !important; margin-bottom: 14px; }

@@ -470,7 +470,7 @@ const DAILY_VERSES = [
   { en: "Faith, hope, love abide, these three; but the greatest of these is love. — 1 Corinthians 13:13",
     ar: "يَثْبُتُ: الإِيمَانُ وَالرَّجَاءُ وَالْمَحَبَّةُ، وَلكِنَّ أَعْظَمَهُنَّ الْمَحَبَّةُ. — ١ كورنثوس ١٣: ١٣" },
   { en: "A wise man will hear and increase in learning. — Proverbs 1:5",
-    ar: "يَسْمَعُ الْحَكِيمُ فَيَزْدَادُ عِلْمًا. — أمثال ١: ٥" },
+    ar: "يَسْمَعُ الْحَكِيمُ فَيَزْدْدُ عِلْمًا. — أمثال ١: ٥" },
   { en: "All things work together for good to those who love God. — Romans 8:28",
     ar: "كُلُّ الأَشْيَاءِ تَعْمَلُ مَعًا لِلْخَيْرِ لِلَّذِينَ يُحِبُّونَ اللهَ. — رومية ٨: ٢٨" },
   { en: "God is our refuge and strength, a very present help in trouble. — Psalm 46:1",
@@ -970,6 +970,14 @@ function loadQuestionToCanvas(index) {
   if ($("prop-points-multiplier")) $("prop-points-multiplier").value = q.points === "zero" ? "none" : q.points || "standard";
   if ($("prop-quiz-public")) $("prop-quiz-public").value = studioQuiz.isPublic === false ? "false" : "true";
 
+  const isEdit = studioQuiz.id != null;
+  if ($("prop-category-group")) $("prop-category-group").style.display = isEdit ? "none" : "";
+  const categorySelect = $("modal-quiz-category");
+  if (categorySelect && !isEdit) {
+    categorySelect.value = studioQuiz.category || "";
+    if (categorySelect.selectedIndex < 0) categorySelect.selectedIndex = 0;
+  }
+
   if ($("media-placeholder")) $("media-placeholder").style.display = q.image ? "none" : "flex";
   if ($("media-preview-container")) $("media-preview-container").style.display = q.image ? "flex" : "none";
   if ($("question-image-preview")) $("question-image-preview").src = q.image || "";
@@ -1103,6 +1111,11 @@ function bindStudio() {
     markDirty();
   });
 
+  $("modal-quiz-category")?.addEventListener("change", (e) => {
+    studioQuiz.category = e.target.value;
+    markDirty();
+  });
+
   $("btn-duplicate-question")?.addEventListener("click", () => {
     syncCurrentQuestionFromInputs();
     const cloned = JSON.parse(JSON.stringify(studioQuiz.questions[activeQuestionIndex]));
@@ -1138,14 +1151,7 @@ function bindStudio() {
       else if (!studioQuiz.questions[problem.index].text) $("canvas-question-text")?.focus();
       return;
     }
-    const isEdit = studioQuiz.id != null;
     if ($("modal-quiz-name")) $("modal-quiz-name").value = ($("studio-quiz-title")?.value || studioQuiz.title || "").trim();
-    if ($("modal-category-field")) $("modal-category-field").style.display = isEdit ? "none" : "";
-    const categorySelect = $("modal-quiz-category");
-    if (categorySelect && !isEdit) {
-      categorySelect.value = studioQuiz.category || "";
-      if (categorySelect.selectedIndex < 0) categorySelect.selectedIndex = 0;
-    }
     if ($("studio-save-modal")) $("studio-save-modal").style.display = "flex";
     if ($("modal-quiz-name") && !$("modal-quiz-name").value) $("modal-quiz-name").focus();
   });
