@@ -58,6 +58,17 @@
 
   const toArray = (r) => (Array.isArray(r) ? r : r?.items || r?.data || r?.$values || []);
 
+  /* رقم المستخدم الحالي من الـ JWT (عشان نربط الجلسات/النتايج بصاحبها) */
+  function currentUserId() {
+    try {
+      const t = localStorage.getItem(CONFIG.TOKEN_KEY) || localStorage.getItem("churchQuizToken");
+      if (!t) return null;
+      const p = JSON.parse(atob(t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+      const id = p["http://schemas.xmlsoap.org/ws/2005/06/identity/claims/nameidentifier"] ?? p.nameid ?? p.sub;
+      return id == null ? null : String(id);
+    } catch { return null; }
+  }
+
   function extractErrorMessage(err, status) {
     const describe = (e) => (typeof e === "string" ? e : e?.description || e?.message || JSON.stringify(e));
     if (typeof err === "string") return err.trim() || `خطأ من السيرفر (${status})`;
@@ -517,7 +528,7 @@
         const isServerId = (q) => /^\d+$/.test(String(q.id ?? ""));
         const questions = quiz.questions || [];
         let quizId = quiz.id;
-
+         
         const addQuestion = async (q) => {
           try {
             await http("POST", `/Quizzes/${quizId}/questions`, toQuestionDto(q));
@@ -601,6 +612,8 @@
         const cur = readJSON(KEYS.game, null);
         const sid = cur && (cur.sessionId || cur.id);
         if (!sid) return [];
+        // النتايج بتاعة صاحب الجلسة بس (مش أي حساب تاني فتح من نفس المتصفح)
+        if (String(cur.ownerId ?? "") !== String(currentUserId() ?? "")) return [];
         const rows = toArray(await http("GET", `/Games/sessions/${sid}/leaderboard`));
         return rows.map((r) => ({
           ...r,
@@ -630,6 +643,8 @@
         }
         const session = {
           ...s,
+          ownerId: currentUserId(),
+          createdAt: s.createdAt ?? new Date().toISOString(),
           quizId,
           sessionId: s.sessionId ?? s.id,
           roomCode: String(pin),
@@ -834,6 +849,9 @@
         localStorage.removeItem(KEYS.session);
         localStorage.removeItem(CONFIG.TOKEN_KEY);
         localStorage.removeItem("churchQuizToken");
+        localStorage.removeItem(KEYS.game);
+        localStorage.removeItem(KEYS.players);
+        localStorage.removeItem(KEYS.reconnect);
       },
       requireLogin(redirect = "loginn.html") {
         if (Api.auth.getSession()) return true;
