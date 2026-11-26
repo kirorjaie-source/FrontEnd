@@ -428,12 +428,14 @@
 
     const rows = S.members.map((m, i) => {
       const st = statusKey(m.status);
+      const isTargetAmeen = roleKey(m.role).includes("ameen");
       let acts = "";
       if (!manage) { /* عرض فقط */ }
       else if (st === "pending") acts += `<button class="kc-mini ok" data-act="decide" data-do="approve" data-m="${m.id}">✓ ${tr("قبول", "Approve")}</button><button class="kc-mini danger" data-act="decide" data-do="reject" data-m="${m.id}">✕ ${tr("رفض", "Reject")}</button>`;
       else if (st === "approved") acts += `<button class="kc-mini danger" data-act="decide" data-do="revoke" data-m="${m.id}">⛔ ${tr("إلغاء العضوية", "Revoke")}</button>`;
       else acts += `<button class="kc-mini ok" data-act="decide" data-do="approve" data-m="${m.id}">✓ ${tr("قبول", "Approve")}</button>`;
       if (manage && m.userId == null) acts += `<button class="kc-mini" data-act="edit-member" data-m="${m.id}">✎ ${tr("تعديل", "Edit")}</button>`;
+      if (manage && (!isTargetAmeen || isAdmin())) acts += `<button class="kc-mini danger" data-act="del-member" data-m="${m.id}">🗑 ${tr("حذف", "Delete")}</button>`;
       return `<tr>
         <td>${i + 1}</td>
         <td><b>${esc(m.fullName)}</b></td>
@@ -796,6 +798,22 @@
           reload();
         }
       });
+    },
+
+    "del-member": async (b) => {
+      const c = current();
+      const m = S.members.find((x) => String(x.id) === String(b.dataset.m));
+      if (!m) return;
+      if (!confirm(tr(`حذف العضو «${m.fullName}» من الكنيسة نهائياً؟`, `Permanently remove "${m.fullName}" from this church?`))) return;
+      b.disabled = true;
+      try {
+        await api(`/Churches/${c.id}/members/${m.id}`, { method: "DELETE" });
+        say(tr("تم حذف العضو ✓", "Member deleted ✓"));
+        reload();
+      } catch (err) {
+        b.disabled = false;
+        throw err;
+      }
     },
 
     "toggle-att": async (b) => {
