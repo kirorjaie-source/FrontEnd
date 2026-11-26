@@ -230,12 +230,13 @@ const I18N = {
   "email.needCode": "Enter the verification code.",
   "session.resumeShort": "↩ Resume ({pin})",
   "session.endShort": "✖ End",
+  "session.endTitle": "End active game",
   "session.endedMsg": "Active session ended.",
   "session.choiceTitle": "You already have an active game",
   "session.choiceDesc": "Session \"{title}\" (PIN: {pin}) is still open. Would you like to resume it or end it and start a new one?",
   "session.resume": "↩ Resume Game",
   "session.endAndNew": "End Old & Start New",
-  "session.confirmEnd": "End active session (PIN: {pin})?"
+  "session.confirmEnd": "End active session (PIN: {pin})? Players will be disconnected."
  },
  "ar": {
   "brand.name": "كوك كويز",
@@ -452,12 +453,13 @@ const I18N = {
   "email.needCode": "اكتب كود التأكيد.",
   "session.resumeShort": "↩ استكمال ({pin})",
   "session.endShort": "✖ إنهاء",
+  "session.endTitle": "إنهاء الجيم الحالي",
   "session.endedMsg": "تم إنهاء الجيم بنجاح.",
   "session.choiceTitle": "يوجد جيم مفتوح بالفعل",
   "session.choiceDesc": "مسابقة \"{title}\" بكود (PIN: {pin}) ما زالت مفتوحة. تحب تستكملها ولا تنهيها وتبدأ جيم جديد؟",
   "session.resume": "↩ استكمال الجيم",
   "session.endAndNew": "إنهاء القديم وبدء جديد",
-  "session.confirmEnd": "هل تريد إنهاء الجيم الحالي (PIN: {pin})؟"
+  "session.confirmEnd": "هل تريد إنهاء الجيم الحالي (PIN: {pin})؟ سيتم فصل اللاعبين."
  }
 };
 
@@ -706,6 +708,72 @@ function setLanguage(lang, { rerender = true } = {}) {
 }
 
 /* ============================================================
+   نافذة التأكيد المخصصة (بدل confirm الافتراضي بتاع المتصفح)
+   ============================================================ */
+function openConfirmModal({ title, message, confirmText, cancelText, danger = true }) {
+  return new Promise((resolve) => {
+    let modal = $("kq-confirm-modal");
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "kq-confirm-modal";
+      modal.style.cssText = "position:fixed;inset:0;background:rgba(10,22,38,.65);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10000;";
+      document.body.appendChild(modal);
+    }
+
+    const isDark = getTheme() === "dark";
+    const bg = isDark ? "#0F223D" : "#FFFFFF";
+    const fg = isDark ? "#F8FAFC" : "#0B1E36";
+    const subFg = isDark ? "#CBD5E1" : "#475569";
+    const cancelBg = isDark ? "#1E293B" : "#F1F5F9";
+    const cancelFg = isDark ? "#E2E8F0" : "#334155";
+    const confirmBg = danger ? "#DC2626" : "#F4B41A";
+    const confirmFg = danger ? "#FFFFFF" : "#0B1E36";
+
+    modal.innerHTML = `
+      <div role="dialog" aria-modal="true" style="background:${bg};color:${fg};border-radius:20px;max-width:410px;width:100%;padding:24px;box-shadow:0 24px 60px rgba(0,0,0,.35);border:2px solid #F4B41A;text-align:start;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="width:38px;height:38px;border-radius:12px;background:${danger ? "rgba(220,38,38,.15)" : "rgba(244,180,26,.18)"};color:${danger ? "#EF4444" : "#F4B41A"};display:inline-flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;">
+              ${danger ? "!" : "?"}
+            </span>
+            <h3 style="margin:0;font-size:18px;font-weight:800;">${escapeHTML(title)}</h3>
+          </div>
+          <button type="button" id="kq-confirm-x" style="background:none;border:none;font-size:20px;cursor:pointer;color:${subFg};line-height:1;">✕</button>
+        </div>
+
+        <p style="margin:0 0 22px;font-size:14.5px;line-height:1.65;color:${subFg};">
+          ${escapeHTML(message)}
+        </p>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+          <button type="button" id="kq-confirm-cancel" class="button" style="flex:1;justify-content:center;background:${cancelBg};color:${cancelFg};border:none;font-weight:700;padding:11px 16px;border-radius:12px;cursor:pointer;">
+            ${escapeHTML(cancelText || t("modal.cancel"))}
+          </button>
+          <button type="button" id="kq-confirm-ok" class="button" style="flex:1;justify-content:center;background:${confirmBg};color:${confirmFg};border:none;font-weight:800;padding:11px 16px;border-radius:12px;cursor:pointer;">
+            ${escapeHTML(confirmText || t("session.endShort"))}
+          </button>
+        </div>
+      </div>
+    `;
+    modal.style.display = "flex";
+
+    const cleanup = (result) => {
+      modal.style.display = "none";
+      document.removeEventListener("keydown", onKey);
+      resolve(result);
+    };
+    const onKey = (e) => { if (e.key === "Escape") cleanup(false); };
+
+    $("kq-confirm-x").onclick = () => cleanup(false);
+    $("kq-confirm-cancel").onclick = () => cleanup(false);
+    $("kq-confirm-ok").onclick = () => cleanup(true);
+    modal.onclick = (e) => { if (e.target === modal) cleanup(false); };
+    document.addEventListener("keydown", onKey);
+    $("kq-confirm-ok").focus();
+  });
+}
+
+/* ============================================================
    إدارة الجلسة النشطة (استكمال أو إنهاء الجيم داخل كارت المسابقة)
    ============================================================ */
 function getActiveSession() {
@@ -746,7 +814,16 @@ function resumeActiveSession() {
 
 async function finishSessionCompletely(session, { askConfirm = true } = {}) {
   if (!session) return true;
-  if (askConfirm && !confirm(t("session.confirmEnd", { pin: session.roomCode }))) return false;
+  if (askConfirm) {
+    const ok = await openConfirmModal({
+      title: t("session.endTitle"),
+      message: t("session.confirmEnd", { pin: session.roomCode }),
+      confirmText: t("session.endShort"),
+      cancelText: t("modal.cancel"),
+      danger: true
+    });
+    if (!ok) return false;
+  }
 
   try {
     if (window.Api?.realtime && window.Api?.game?.end) {
@@ -778,24 +855,29 @@ function openSessionChoiceModal(existingSession, onStartNew) {
   if (!modal) {
     modal = document.createElement("div");
     modal.id = "session-choice-modal";
-    modal.style.cssText = "position:fixed;inset:0;background:rgba(11,30,54,.65);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9999;";
+    modal.style.cssText = "position:fixed;inset:0;background:rgba(11,30,54,.65);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9999;";
     document.body.appendChild(modal);
   }
 
+  const isDark = getTheme() === "dark";
+  const bg = isDark ? "#0F223D" : "#FFFFFF";
+  const fg = isDark ? "#F8FAFC" : "#0B1E36";
+  const subFg = isDark ? "#CBD5E1" : "#334155";
+
   modal.innerHTML = `
-    <div style="background:#fff;color:#0B1E36;border-radius:18px;max-width:440px;width:100%;padding:24px;box-shadow:0 20px 50px rgba(0,0,0,.3);border:2px solid #F4B41A;">
+    <div style="background:${bg};color:${fg};border-radius:20px;max-width:440px;width:100%;padding:24px;box-shadow:0 24px 60px rgba(0,0,0,.35);border:2px solid #F4B41A;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
         <h3 style="margin:0;font-size:18px;font-weight:800;">${escapeHTML(t("session.choiceTitle"))}</h3>
         <button type="button" id="choice-close-btn" style="background:none;border:none;font-size:20px;cursor:pointer;color:#64748b;">✕</button>
       </div>
-      <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#334155;">
+      <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:${subFg};">
         ${escapeHTML(t("session.choiceDesc", { title: existingSession.quizTitle || "Kokquiz", pin: existingSession.roomCode }))}
       </p>
       <div style="display:flex;flex-direction:column;gap:10px;">
-        <button type="button" id="choice-resume-btn" class="button gold-button" style="width:100%;justify-content:center;font-weight:800;padding:12px;">
+        <button type="button" id="choice-resume-btn" class="button gold-button" style="width:100%;justify-content:center;font-weight:800;padding:12px;border-radius:12px;">
           ${escapeHTML(t("session.resume"))} (PIN: ${escapeHTML(existingSession.roomCode)})
         </button>
-        <button type="button" id="choice-new-btn" class="button" style="width:100%;justify-content:center;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;font-weight:700;padding:11px;">
+        <button type="button" id="choice-new-btn" class="button" style="width:100%;justify-content:center;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;font-weight:700;padding:11px;border-radius:12px;">
           ${escapeHTML(t("session.endAndNew"))}
         </button>
       </div>
@@ -1019,7 +1101,15 @@ function closeAllDropdowns() {
 
 async function deleteQuiz(id) {
   const quiz = await Api.quizzes.get(id);
-  if (!quiz || !confirm(t("msg.confirmDelete", { title: quiz.title }))) return;
+  if (!quiz) return;
+  const ok = await openConfirmModal({
+    title: t("menu.delete"),
+    message: t("msg.confirmDelete", { title: quiz.title }),
+    confirmText: t("menu.delete"),
+    cancelText: t("modal.cancel"),
+    danger: true
+  });
+  if (!ok) return;
   try {
     await Api.quizzes.remove(id);
     toast(t("msg.deleted"));
@@ -1235,8 +1325,17 @@ function findQuizProblem(quiz) {
 function bindStudio() {
   $("toggle-properties-btn")?.addEventListener("click", () => $("studio-right-panel")?.classList.toggle("collapsed"));
 
-  $("studio-exit-btn")?.addEventListener("click", () => {
-    if (studioDirty && !confirm(t("msg.unsaved"))) return;
+  $("studio-exit-btn")?.addEventListener("click", async () => {
+    if (studioDirty) {
+      const ok = await openConfirmModal({
+        title: t("studio.exit"),
+        message: t("msg.unsaved"),
+        confirmText: t("studio.exit"),
+        cancelText: t("modal.cancel"),
+        danger: true
+      });
+      if (!ok) return;
+    }
     studioDirty = false;
     showPage("dashboard");
   });
@@ -1769,7 +1868,6 @@ async function changeLoginEmail(event) {
 }
 
 /* ---------------- Init ---------------- */
-
 
 const ACTIONS = {
   "toggle-menu": (el) => {
