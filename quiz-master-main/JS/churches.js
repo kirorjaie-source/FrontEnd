@@ -17,6 +17,7 @@
   const say = (m) => { if (typeof toast === "function") toast(m); };
   const showErr = (err) => say((err && err.message) || tr("حدث خطأ ما.", "Something went wrong."));
   const PHONE_RE = /^(010|011|012|015)\d{8}$/;
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const MAX_LOGO = 2 * 1024 * 1024; // 2MB
   const ORIGIN = API_BASE.replace(/\/api\/?$/, "");
   const logoSrc = (u) => (u ? (/^https?:/i.test(u) ? u : ORIGIN + u) : "");
@@ -120,7 +121,6 @@
   };
   const dayLabel = (v) => (isAr() ? DAYS_AR : DAY_NAMES)[dayIdx(v)] || "—";
   const timeHM = (v) => String(v || "").slice(0, 5);
-  // عرض الميعاد بنظام 12 ساعة (7:00 م / 7:00 PM)
   const fmtTime = (v) => {
     const [h, m] = String(v || "").split(":");
     if (!h) return "—";
@@ -140,7 +140,6 @@
     if (g && s.n) return isAr() ? `${ORD_AR[g - 1] || g} ${s.ar}` : `${s.en} ${g}`;
     return isAr() ? s.ar : s.en;
   };
-  // فلاتر: المرحلة الأساسية بس
   const stageOptions = (withAll) =>
     (withAll ? [{ value: "", label: tr("كل المراحل", "All stages") }] : [])
       .concat(MAIN.map((s) => ({ value: s.v, label: isAr() ? s.ar : s.en })));
@@ -188,7 +187,6 @@
     return `<select ${attrs}>${html}</select>`;
   };
   const phoneHTML = (p) => (p ? `<a class="kc-link" dir="ltr" href="tel:${esc(p)}">${esc(p)}</a>` : "—");
-  // رقم واتساب دولي: 01012345678 → 201012345678
   const waDigits = (p) => {
     let d = String(p || "").replace(/\D/g, "");
     if (/^0\d{10}$/.test(d)) d = "2" + d;
@@ -230,7 +228,6 @@
 
   const selectable = () => (isAdmin() ? S.all : S.mine);
   const current = () => selectable().find((c) => String(c.id) === String(S.churchId)) || selectable()[0] || null;
-  // الإضافة والتعديل والحذف والقبول للأدمن أو لأمين الكنيسة (عضو مقبول بدور Ameen) بس
   const canManage = (c) => isAdmin() || !!(c && c.myStatus != null && statusKey(c.myStatus) === "approved" && roleKey(c.myRole).includes("ameen"));
 
   async function loadChurches() {
@@ -249,7 +246,6 @@
     if (f.type === "select") {
       input = selHTML(`id="${id}" name="${f.name}"`, f.options, v);
     } else if (f.type === "stage") {
-      // مرحلة أساسية + (لو ليها صفوف) قايمة الصفوف بتظهر تحتها
       const st = findStage(f.value);
       const sv = st ? st.v : "";
       const first = { value: "", label: f.allowEmpty ? tr("— بدون تغيير —", "— no change —") : tr("اختر المرحلة", "Select stage") };
@@ -261,12 +257,12 @@
     } else if (f.type === "textarea") {
       input = `<textarea id="${id}" name="${f.name}" ${f.maxlength ? `maxlength="${f.maxlength}"` : ""}>${esc(v)}</textarea>`;
     } else {
-      input = `<input id="${id}" name="${f.name}" type="${f.type || "text"}" value="${esc(v)}" ${f.maxlength ? `maxlength="${f.maxlength}"` : ""} ${f.ltr ? 'dir="ltr"' : ""} ${f.placeholder ? `placeholder="${esc(f.placeholder)}"` : ""}>`;
+      input = `<input id="${id}" name="${f.name}" type="${f.type || "text"}" value="${esc(v)}" ${f.maxlength ? `maxlength="${f.maxlength}"` : ""} ${f.ltr ? 'dir="ltr"' : ""} ${f.placeholder ? `placeholder="${esc(f.placeholder)}"` : ""} ${f.readonly ? "readonly" : ""}>`;
     }
     return `<div class="kc-field"><label for="${id}">${esc(f.label)}${f.required ? " *" : ""}</label>${input}</div>`;
   }
 
-  function openModal({ title, sub, fields, submitLabel, onSubmit }) {
+  function openModal({ title, sub, fields, submitLabel, onSubmit, onOpen }) {
     closeModal();
     const wrap = document.createElement("div");
     wrap.className = "kc-modal";
@@ -291,10 +287,9 @@
     wrap.addEventListener("click", (e) => { if (e.target === wrap || e.target.closest("[data-close]")) closeModal(); });
     const form = wrap.querySelector("form");
     const errBox = wrap.querySelector("#kc-modal-err");
-    const first = form.querySelector("input,select,textarea");
+    const first = form.querySelector("input:not([readonly]),select,textarea");
     if (first) first.focus();
 
-    // لما المرحلة الأساسية تتغير نحدّث قايمة الصفوف
     const mainSel = form.querySelector("[data-stage-main]");
     if (mainSel) {
       mainSel.addEventListener("change", () => {
@@ -303,6 +298,8 @@
         g.style.display = gradesOf(mainSel.value) ? "" : "none";
       });
     }
+
+    if (typeof onOpen === "function") onOpen(form, errBox);
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -434,8 +431,10 @@
       else if (st === "pending") acts += `<button class="kc-mini ok" data-act="decide" data-do="approve" data-m="${m.id}">✓ ${tr("قبول", "Approve")}</button><button class="kc-mini danger" data-act="decide" data-do="reject" data-m="${m.id}">✕ ${tr("رفض", "Reject")}</button>`;
       else if (st === "approved") acts += `<button class="kc-mini danger" data-act="decide" data-do="revoke" data-m="${m.id}">⛔ ${tr("إلغاء العضوية", "Revoke")}</button>`;
       else acts += `<button class="kc-mini ok" data-act="decide" data-do="approve" data-m="${m.id}">✓ ${tr("قبول", "Approve")}</button>`;
-      if (manage && m.userId == null) acts += `<button class="kc-mini" data-act="edit-member" data-m="${m.id}">✎ ${tr("تعديل", "Edit")}</button>`;
-      if (manage && (!isTargetAmeen || isAdmin())) acts += `<button class="kc-mini danger" data-act="del-member" data-m="${m.id}">🗑 ${tr("حذف", "Delete")}</button>`;
+      if (manage && (!isTargetAmeen || isAdmin())) {
+        acts += `<button class="kc-mini" data-act="edit-member" data-m="${m.id}">✎ ${tr("تعديل", "Edit")}</button>`;
+        acts += `<button class="kc-mini danger" data-act="del-member" data-m="${m.id}">🗑 ${tr("حذف", "Delete")}</button>`;
+      }
       return `<tr>
         <td>${i + 1}</td>
         <td><b>${esc(m.fullName)}</b></td>
@@ -575,7 +574,6 @@
     }
     const days = DAY_NAMES.map((_, i) => ({ value: i, label: (isAr() ? DAYS_AR : DAY_NAMES)[i] }));
 
-    // الميعاد بنظام 12 ساعة: ساعة + دقيقة + ص/م
     const parts = timeHM(c.meetingTime).split(":").map(Number);
     const h24 = parts[0] || 0;
     const mm = parts[1] || 0;
@@ -663,6 +661,25 @@
   const churchBody = (v) => JSON.stringify({ name: v.name, city: v.city || null, description: v.description || null });
   const gradeVal = (v) => (v.grade ? Number(v.grade) : null);
 
+  // ربط خانة الإيميل والاسم في مودال العضو: لو أدمن وكتب إيميل مسجل يجلب اسمه تلقائي
+  async function bindMemberEmailAutoFill(form) {
+    const emailInp = form.elements.email;
+    const nameInp = form.elements.fullName;
+    if (!emailInp || !nameInp || !isAdmin()) return;
+    let usersCache = null;
+    emailInp.addEventListener("blur", async () => {
+      const em = emailInp.value.trim().toLowerCase();
+      if (!em || !EMAIL_RE.test(em)) return;
+      try {
+        if (!usersCache) usersCache = (await api("/Auth/users")) || [];
+        const matched = usersCache.find((u) => String(u.email || "").toLowerCase() === em);
+        if (matched && !nameInp.value.trim()) {
+          nameInp.value = matched.userName || "";
+        }
+      } catch {}
+    });
+  }
+
   const ACTIONS = {
     contact: async (b) => {
       const c = churchById(b.dataset.id);
@@ -688,7 +705,6 @@
       onSubmit: async (v) => {
         if (v.logo && v.logo.size > MAX_LOGO) throw new Error(tr("الصورة أكبر من 2MB.", "Image is larger than 2MB."));
         const created = await api("/Churches", { method: "POST", body: churchBody(v) });
-        // الباك بيرجّع الـ id كرقم أو كـ { id }
         const newId = created && typeof created === "object" ? (created.id ?? created.Id) : created;
         if (v.logo && newId) await uploadLogo(newId, v.logo);
         say(tr("تمت إضافة الكنيسة ✓", "Church added ✓"));
@@ -719,7 +735,6 @@
       render();
     },
 
-    // الاسم بيتاخد تلقائي من الحساب في الباك (user.UserName)
     join: async (b) => {
       const c = churchById(b.dataset.id);
       if (!c) return;
@@ -767,14 +782,41 @@
     "add-member": async () => {
       const c = current();
       openModal({
-        title: tr("إضافة عضو يدويًا", "Add member manually"), sub: c.name,
+        title: tr("إضافة عضو", "Add member"), sub: c.name,
         fields: [
-          { name: "fullName", label: tr("الاسم", "Full name"), required: true, maxlength: 100 },
+          {
+            name: "email",
+            label: tr("الإيميل (اختياري — لو مسجل هيجيب اسمه تلقائي)", "Email (optional — auto-fills name if registered)"),
+            type: "email",
+            ltr: true,
+            placeholder: "example@gmail.com",
+            pattern: EMAIL_RE,
+            patternMsg: tr("صيغة الإيميل غير صحيحة.", "Invalid email format.")
+          },
+          {
+            name: "fullName",
+            label: tr("الاسم (مطلوب فقط لو بدون إيميل)", "Full name (required only if no email)"),
+            maxlength: 100,
+            placeholder: tr("يتملأ تلقائياً لو الإيميل مسجل", "Auto-filled if email is registered")
+          },
           phoneField(),
           { name: "stage", label: tr("المرحلة", "Stage"), type: "stage", required: true }
         ],
+        onOpen: bindMemberEmailAutoFill,
         onSubmit: async (v) => {
-          await api(`/Churches/${c.id}/members`, { method: "POST", body: JSON.stringify({ fullName: v.fullName, phone: v.phone, stage: Number(v.stage), grade: gradeVal(v) }) });
+          if (!v.email && !v.fullName) {
+            throw new Error(tr("اكتب الاسم أو الإيميل المسجل.", "Enter full name or registered email."));
+          }
+          await api(`/Churches/${c.id}/members`, {
+            method: "POST",
+            body: JSON.stringify({
+              fullName: v.fullName || null,
+              email: v.email || null,
+              phone: v.phone,
+              stage: Number(v.stage),
+              grade: gradeVal(v)
+            })
+          });
           say(tr("تمت إضافة العضو ✓", "Member added ✓"));
           reload();
         }
@@ -788,12 +830,33 @@
       openModal({
         title: tr("تعديل عضو", "Edit member"), sub: c.name,
         fields: [
+          {
+            name: "email",
+            label: tr("الإيميل (اختياري)", "Email (optional)"),
+            type: "email",
+            value: m.email || "",
+            ltr: true,
+            readonly: m.userId != null && !!m.email,
+            placeholder: "example@gmail.com",
+            pattern: EMAIL_RE,
+            patternMsg: tr("صيغة الإيميل غير صحيحة.", "Invalid email format.")
+          },
           { name: "fullName", label: tr("الاسم", "Full name"), value: m.fullName, required: true, maxlength: 100 },
           phoneField(m.phone),
           { name: "stage", label: tr("المرحلة", "Stage"), type: "stage", value: m.stage, grade: m.grade, required: true }
         ],
+        onOpen: bindMemberEmailAutoFill,
         onSubmit: async (v) => {
-          await api(`/Churches/${c.id}/members/${m.id}`, { method: "PUT", body: JSON.stringify({ fullName: v.fullName, phone: v.phone, stage: Number(v.stage), grade: gradeVal(v) }) });
+          await api(`/Churches/${c.id}/members/${m.id}`, {
+            method: "PUT",
+            body: JSON.stringify({
+              fullName: v.fullName,
+              email: v.email || null,
+              phone: v.phone,
+              stage: Number(v.stage),
+              grade: gradeVal(v)
+            })
+          });
           say(tr("تم الحفظ ✓", "Saved ✓"));
           reload();
         }
@@ -821,7 +884,6 @@
       b.disabled = true;
       try {
         await api(`/Churches/${c.id}/attendance/${b.dataset.m}?date=${encodeURIComponent(S.att.date)}`, { method: "PUT" });
-        // نعيد تحميل الكشف علشان يظهر كمان حضور الأمين اللي اتسجل تلقائي
         const q = new URLSearchParams({ date: S.att.date });
         if (S.att.stage !== "") q.set("stage", S.att.stage);
         S.sheet = await api(`/Churches/${c.id}/attendance?${q}`);
@@ -861,7 +923,7 @@
       openModal({
         title: tr("تعيين أمين", "Assign Ameen"), sub: c.name,
         fields: [
-          { name: "email", label: tr("الإيميل", "Email"), type: "email", required: true, ltr: true, pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, patternMsg: tr("إيميل غير صحيح.", "Invalid email.") },
+          { name: "email", label: tr("الإيميل", "Email"), type: "email", required: true, ltr: true, pattern: EMAIL_RE, patternMsg: tr("إيميل غير صحيح.", "Invalid email.") },
           phoneField()
         ],
         onSubmit: async (v) => {
@@ -941,7 +1003,6 @@
       const err = $("kc-settings-err");
       const days = Number(f.elements.followUpAfterDays.value);
       if (!(days >= 1 && days <= 365)) { err.textContent = tr("عدد الأيام لازم يكون بين 1 و 365.", "Days must be between 1 and 365."); return; }
-      // تحويل 12 ساعة → 24 ساعة للسيرفر
       const h = (Number(f.elements.mHour.value) % 12) + (f.elements.mAmPm.value === "pm" ? 12 : 0);
       const time = `${pad(h)}:${pad(Number(f.elements.mMin.value))}:00`;
       err.textContent = "";
