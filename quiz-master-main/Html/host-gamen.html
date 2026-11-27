@@ -383,6 +383,34 @@
         padding: 10px 14px !important;
       }
     }
+
+    /* ============================================================
+       سؤال بصورة: الصورة تكبر (لازم يجي بعد القواعد اللي فوق عشان يكسب)
+       ============================================================ */
+    #screen-active-question.has-image #q-media-container {
+      max-width: 100% !important;
+      min-height: 300px !important;
+      padding: 10px !important;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+    #screen-active-question.has-image #q-media-container #q-image {
+      max-height: 42vh !important;
+      width: auto !important;
+      max-width: 100% !important;
+    }
+
+    @media (max-width: 680px) {
+      #screen-active-question.has-image #q-media-container {
+        min-height: 30vh !important;
+      }
+
+      #screen-active-question.has-image #q-media-container #q-image {
+        max-height: 32vh !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -399,7 +427,7 @@
   </header>
 
   <main class="game-container">
-    
+
     <section id="screen-get-ready" class="screen-center active">
       <h1 class="huge-title">Get Ready!</h1>
       <div class="loader-spinner"></div>
