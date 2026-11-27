@@ -124,33 +124,43 @@ function onQuestion(d) {
   currentChoices = asArray(d.choices ?? d.answers ?? d.options)
     .map(parseHostChoice)
     .sort((a, b) => a.index - b.index);
-  currentText = d.text ?? "";
 
-  $("active-q-text").textContent = currentText;
+  currentText = String(d.text ?? d.questionText ?? d.title ?? "").trim();
 
-  // سؤال بصورة: الصورة بتظهر كبيرة وعنوان السؤال بيختفي (الستايل في host-gamen.html)
+  const qTextEl = $("active-q-text");
+  if (qTextEl) {
+    qTextEl.textContent = currentText;
+    qTextEl.style.setProperty("display", "inline-block", "important");
+    qTextEl.style.setProperty("visibility", "visible", "important");
+    qTextEl.style.setProperty("opacity", "1", "important");
+  }
+
+  // سؤال بصورة أو بدون صورة: نص السؤال يفضل ظاهر دايماً
   currentHasImage = !!d.imageUrl;
-  $("screen-active-question").classList.toggle("has-image", currentHasImage);
-  // نص السؤال يفضل ظاهر دايماً حتى لو فيه صورة (override لقاعدة has-image اللي كانت بتخفيه)
-  const qHeader = $("active-q-text").closest(".q-header");
-  if (qHeader) qHeader.style.setProperty("display", "block", "important");
+  $("screen-active-question")?.classList.toggle("has-image", currentHasImage);
+
+  const qHeader = qTextEl ? qTextEl.closest(".q-header") : document.querySelector("#screen-active-question .q-header");
+  if (qHeader) {
+    qHeader.style.setProperty("display", "block", "important");
+    qHeader.style.setProperty("visibility", "visible", "important");
+    qHeader.style.setProperty("opacity", "1", "important");
+  }
 
   const img = $("q-image");
   const placeholder = $("q-placeholder");
-  // ⚠️ host-gamen.html فيه `#q-placeholder { display:flex !important }` فالـ inline العادي مش بيكسب.
-  // لازم setProperty مع "important" عشان لوجو Kokquiz يختفي لما فيه صورة.
-  if (d.imageUrl) {
+  if (d.imageUrl && img) {
     img.src = d.imageUrl;
     img.style.setProperty("display", "block", "important");
-    placeholder.style.setProperty("display", "none", "important");
+    if (placeholder) placeholder.style.setProperty("display", "none", "important");
   } else {
-    img.style.setProperty("display", "none", "important");
-    placeholder.style.removeProperty("display");
+    if (img) img.style.setProperty("display", "none", "important");
+    if (placeholder) placeholder.style.removeProperty("display");
   }
 
   for (let i = 0; i < 4; i++) {
     const c = currentChoices[i];
     const label = $(`ans-${i}`);
+    if (!label) continue;
     const box = label.closest(".ans-box");
     if (box) box.style.display = c ? "" : "none";
     label.textContent = c ? c.text : "";
@@ -158,7 +168,7 @@ function onQuestion(d) {
     if (stat) stat.textContent = "";
   }
 
-  $("q-answers-count").textContent = "0";
+  if ($("q-answers-count")) $("q-answers-count").textContent = "0";
   showScreen("screen-active-question");
   startTimer(Number(d.secondsLeft ?? d.timeLimit) || 20);
 }
@@ -168,7 +178,7 @@ function onAnswerCount(d) {
   console.log("[host] AnswerCount", d);
   const answered = d.answered ?? d.count ?? 0;
   const total = d.total ?? d.players;
-  $("q-answers-count").textContent = answered;
+  if ($("q-answers-count")) $("q-answers-count").textContent = answered;
   if (total != null) updateHeaderPlayers(total);
 }
 
@@ -203,10 +213,14 @@ function onReveal(d) {
   const perSlot = [0, 1, 2, 3].map((i) => Number(counts[currentChoices[i]?.id] ?? 0));
   const max = Math.max(1, ...perSlot);
 
-  $("result-q-text").textContent = currentText;
-  $("result-q-text").style.display = "";   // نص السؤال ظاهر دايماً
+  if ($("result-q-text")) {
+    $("result-q-text").textContent = currentText;
+    $("result-q-text").style.display = "";
+  }
+
   for (let i = 0; i < 4; i++) {
     const bar = $(`bar-${i}`);
+    if (!bar) continue;
     const wrap = bar.closest(".bar-wrapper");
     const choice = currentChoices[i];
     if (wrap) {
@@ -216,7 +230,7 @@ function onReveal(d) {
       if (base) base.textContent = SHAPES[i] + (choice && choice.id === correctId ? " ✓" : "");
     }
     bar.style.height = `${Math.max(8, Math.round((perSlot[i] / max) * 220))}px`;
-    $(`count-${i}`).textContent = perSlot[i];
+    if ($(`count-${i}`)) $(`count-${i}`).textContent = perSlot[i];
   }
   showScreen("screen-results");
 
@@ -244,7 +258,6 @@ function rowHTML(s, i, max, delayIndex = i) {
     : change < 0 ? `<span class="lb2-chg down">▼ ${Math.abs(change)}</span>` : "";
   const fire = streak > 1 ? `<span class="lb2-streak">🔥 ${streak}</span>` : "";
   const crown = rank === 1 ? `<span class="lb2-crown">👑</span>` : "";
-  // الشخصية اللي اللاعب اختارها (key → إيموجي)، ولو مفيش نعرض أول حرف من اسمه
   const initial = escapeHTML(avatarOf(s) || ([...rawName.trim()][0] ?? "?"));
 
   return `
@@ -315,7 +328,7 @@ function closeAllOverlay() {
 // GameFinished: List<StandingDto>
 function onFinished(board) {
   console.log("[host] GameFinished", board);
-  if (leavingToAdmin) return;   // المدرّس هو اللي أنهى الجلسة وهيرجع للوحة التحكم
+  if (leavingToAdmin) return;
   Countdown.stop();
   closeAllOverlay();
   stopTimer();
@@ -324,8 +337,6 @@ function onFinished(board) {
   const top = asArray(board);
   finalBoard = top;
 
-  // نحفظ الترتيب النهائي عشان صفحة المنصة (podium.html) تعرض النتيجة الحقيقية
-  // الـ avatar بيتحفظ إيموجي جاهز (محوَّل من الـ key)
   try {
     localStorage.setItem("churchQuizFinalStandings", JSON.stringify(top.map((s, i) => ({
       name: pick(s, "name", "playerName", "nickname") ?? "Player",
@@ -335,7 +346,6 @@ function onFinished(board) {
     }))));
   } catch { /* ignore */ }
 
-  // نروح لصفحة المنصة
   window.location.replace(PODIUM_PAGE);
 }
 
@@ -356,32 +366,29 @@ document.addEventListener("DOMContentLoaded", async () => {
   updateHeaderPlayers((await Api.game.players()).length);
   showScreen("screen-get-ready");
 
-  // إنهاء الجلسة: بيقفل الجيم فعلاً في السيرفر (EndGame) وبعدين يرجّع للوحة التحكم
   $("btn-return-admin")?.addEventListener("click", async () => {
     if (!confirm("إنهاء الجلسة للجميع؟\nEnd this session for everyone?")) return;
     const btn = $("btn-return-admin");
     if (btn) btn.disabled = true;
     leavingToAdmin = true;
     try {
-      await Api.game.end();               // GameHub.EndGame → الجلسة تبقى Finished
+      await Api.game.end();
     } catch (err) {
       leavingToAdmin = false;
       if (btn) btn.disabled = false;
       alert("Could not end the session: " + (err.message || err.code));
-      return;                             // منسيبش المدرّس يخرج والجلسة لسه شغالة
+      return;
     }
     try { await Api.realtime.disconnect(); } catch { /* ignore */ }
     window.location.href = ADMIN_PAGE;
   });
 
-  // كل المراكز: من شاشة الترتيب ومن المنصة النهائية
   $("btn-show-all")?.addEventListener("click", () => openAllOverlay(lastStandings));
   $("btn-show-all-final")?.addEventListener("click", () => openAllOverlay(finalBoard));
   $("all-close")?.addEventListener("click", closeAllOverlay);
   $("all-overlay")?.addEventListener("click", (e) => { if (e.target === $("all-overlay")) closeAllOverlay(); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeAllOverlay(); });
 
-  // زرار Next: بيطلب من السيرفر ينقل للمرحلة التالية (NextPhase في GameHub)
   $("btn-next")?.addEventListener("click", async () => {
     const btn = $("btn-next");
     btn.disabled = true;
@@ -394,7 +401,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // نسجّل الأحداث قبل الاتصال والبدء، عشان أول سؤال ما يفوتناش
   Api.realtime.on("GetReady", onGetReady);
   Api.realtime.on("Question", onQuestion);
   Api.realtime.on("AnswerCount", onAnswerCount);
@@ -408,14 +414,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     return leave("Could not connect to the live server: " + (err.message || err.code), LOBBY_PAGE);
   }
 
-  // لو الجيم اتبدأ قبل كده (ريفريش للصفحة) منبدأش تاني، ونستنى الحدث الجاي
   if (session.status === "playing") {
     console.warn("اللعبة بدأت قبل كده — بنستنى السؤال أو النتيجة الجاية.");
     return;
   }
 
   try {
-    await Api.game.start(pin); // HostJoin تم في connect، وده بينادي StartGame
+    await Api.game.start(pin);
   } catch (err) {
     leave("Could not start the game: " + (err.message || err.code), LOBBY_PAGE);
   }
