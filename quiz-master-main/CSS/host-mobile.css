@@ -3,7 +3,9 @@
    مبني على host-gamen.css الفعلي. يتربط بعد host-gamen.css و countdown.css
    ============================================================ */
 
-html, body { overflow-x: hidden; }
+html, body {
+  overflow-x: hidden;
+}
 
 /* اسم Kokquiz المتحرك في الهيدر */
 .game-header {
@@ -67,94 +69,344 @@ html, body { overflow-x: hidden; }
 
 @media (max-width: 720px) {
   /* الهيدر */
-  .game-header { height: 52px; padding: 0 14px; }
-  .kq-brand-animated { font-size: 1.3rem; }
-  .player-count { font-size: 1.1rem; }
+  .game-header {
+    height: 52px;
+    padding: 0 12px;
+    gap: 8px;
+  }
+
+  .kq-brand-animated {
+    font-size: 1.25rem;
+  }
+
+  .player-count {
+    font-size: 1.05rem;
+  }
 
   /* الحاوية: 100dvh عشان شريط المتصفح ميقصش حاجة */
-  .game-container { height: calc(100dvh - 52px); }
-  .screen-center { padding: 16px 14px; }
+  .game-container {
+    height: calc(100dvh - 52px);
+    overflow-y: auto;
+  }
+
+  .screen-center {
+    padding: 16px 14px;
+  }
 
   /* شاشات الانتظار والعنوان */
-  .huge-title { font-size: clamp(2.2rem, 11vw, 3.4rem); margin-bottom: 22px; text-align: center; }
-  .loader-spinner { width: 70px; height: 70px; border-width: 10px; }
-  .diamond-shape { width: 130px; height: 130px; border-width: 6px; }
-  .diamond-shape span { font-size: 4.4rem; }
+  .huge-title {
+    font-size: clamp(2.2rem, 11vw, 3.4rem);
+    margin-bottom: 22px;
+    text-align: center;
+  }
+
+  .loader-spinner {
+    width: 70px;
+    height: 70px;
+    border-width: 10px;
+  }
+
+  .diamond-shape {
+    width: 130px;
+    height: 130px;
+    border-width: 6px;
+  }
+
+  .diamond-shape span {
+    font-size: 4.4rem;
+  }
 
   /* شاشة معلومات السؤال */
-  .question-type-badge { padding: 12px 22px; margin-bottom: 24px; }
-  .shapes-mini { font-size: 1.4rem; letter-spacing: 8px; }
-  .info-title { font-size: 1.5rem; padding: 14px 18px; margin-bottom: 28px; line-height: 1.4; width: 100%; }
-  .info-loader { width: min(80vw, 400px); }
+  .question-type-badge {
+    padding: 12px 22px;
+    margin-bottom: 24px;
+  }
+
+  .shapes-mini {
+    font-size: 1.4rem;
+    letter-spacing: 8px;
+  }
+
+  .info-title {
+    font-size: 1.5rem;
+    padding: 14px 18px;
+    margin-bottom: 28px;
+    line-height: 1.4;
+    width: 100%;
+  }
+
+  .info-loader {
+    width: min(80vw, 400px);
+  }
 
   /* ---------- شاشة السؤال ---------- */
-  .screen-layout { min-height: 0; padding: 10px 12px 14px; }
-  .q-header { padding: 14px 16px; border-radius: 18px; margin-bottom: 12px; font-size: clamp(1.15rem, 5vw, 1.6rem); }
-  .q-header::before, .q-header::after { display: none; }
+  .screen-layout,
+  .screen-layout.has-image {
+    min-height: 100%;
+    height: auto;
+    padding: 10px 12px 84px;
+    overflow-y: visible;
+  }
 
-  /* مايتضغطش الـ q-middle: كده لوجو Kokquiz كان بيطلع برّاه وتغطيه الاختيارات */
-  .screen-layout { overflow-y: auto; }
-  .q-middle { flex: 0 0 auto; flex-wrap: wrap; justify-content: space-between; gap: 10px; padding: 0; }
-  .timer-wrapper, .answers-counter-wrapper { width: auto; }
-  .timer-circle { width: 64px; height: 64px; border-width: 5px; font-size: 1.8rem; box-shadow: 0 6px 14px rgba(0,0,0,.4); }
-  #q-answers-count { font-size: 2.6rem; }
-  .answers-counter-wrapper small { font-size: .85rem; }
-  .q-media { order: 3; flex: 1 1 100%; width: 100%; height: auto; min-height: 0; max-height: 165px; min-height: 120px; padding: 6px 0; }
-  .q-media img { max-height: 28vh; }
-  .media-placeholder .kq-ph-logo { max-width: 170px; max-height: 75px; }
-  .media-placeholder .kq-ph-cross { font-size: 1.25rem; }
-  .media-placeholder .kq-ph-sub { font-size: 0.75rem; }
-  .media-placeholder .kq-ph-word { font-size: 2.4rem; }
+  .q-header,
+  .screen-layout.has-image .q-header {
+    display: block !important;
+    padding: 12px 14px;
+    border-radius: 16px;
+    margin-bottom: 10px;
+    font-size: clamp(1.1rem, 4.6vw, 1.5rem);
+  }
 
-  /* سؤال بصورة: الصورة تاخد المساحة والتايمر فوق ركنها */
-  .screen-layout.has-image { padding: 6px 10px 10px; }
+  .q-header::before,
+  .q-header::after,
+  .screen-layout.has-image .q-header::before,
+  .screen-layout.has-image .q-header::after {
+    display: none;
+  }
+
+  .q-middle,
+  .screen-layout.has-image .q-middle {
+    position: static;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 0;
+  }
+
+  .timer-wrapper,
+  .answers-counter-wrapper,
   .screen-layout.has-image .timer-wrapper,
-  .screen-layout.has-image .answers-counter-wrapper { top: 12px; }
-  .screen-layout.has-image .timer-wrapper { left: 16px; }
-  .screen-layout.has-image .answers-counter-wrapper { right: 16px; }
-  .screen-layout.has-image .q-media { flex: 1 1 auto; max-height: none; min-height: 34vh; order: 0; }
-  .screen-layout.has-image .q-media img { max-height: none; }
+  .screen-layout.has-image .answers-counter-wrapper {
+    position: static;
+    width: auto;
+    flex-direction: row;
+    gap: 8px;
+  }
 
-  /* الاختيارات: عمود واحد، وفي السؤال بالصورة 2×2 */
-  .q-answers-grid { flex: 0 0 auto; min-height: 0; grid-template-columns: 1fr; gap: 10px; margin-top: 12px; padding-bottom: 80px; }
-  .screen-layout.has-image .q-answers-grid { flex: 0 0 auto; min-height: 0; margin-top: 8px; gap: 8px; grid-template-columns: 1fr 1fr; padding-bottom: 80px; }
-  .q-answers-grid.mode-tf { grid-template-columns: 1fr; }
-  .screen-layout.has-image .q-answers-grid.mode-tf { grid-template-columns: 1fr 1fr; }
-  .ans-box { min-height: 58px; padding: 8px 12px; border-radius: 16px; border-width: 2px; box-shadow: 0 5px 0 rgba(0,0,0,.3), 0 8px 16px rgba(0,0,0,.25); }
-  .ans-box .text { font-size: 1.05rem; padding-right: 26px; }
-  .shape { width: 38px; height: 38px; margin-right: 10px; font-size: 1.3rem; }
-  .status-icon { right: 12px; font-size: 1.8rem; }
+  .timer-circle {
+    width: 56px;
+    height: 56px;
+    border-width: 4px;
+    font-size: 1.6rem;
+    box-shadow: 0 6px 14px rgba(0,0,0,.4);
+  }
+
+  #q-answers-count {
+    font-size: 2.1rem;
+  }
+
+  .answers-counter-wrapper small {
+    font-size: .8rem;
+  }
+
+  .q-media,
+  .screen-layout.has-image .q-media {
+    order: 3;
+    flex: 0 0 auto;
+    width: 100%;
+    height: auto;
+    min-height: 110px;
+    max-height: none;
+    padding: 10px;
+    border-radius: 18px;
+    background: radial-gradient(circle at 50% 35%, rgba(255,255,255,.14), rgba(255,255,255,.04));
+    border: 2px solid rgba(255,255,255,.22);
+  }
+
+  .q-media img,
+  .screen-layout.has-image .q-media img {
+    position: static;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 190px;
+    object-fit: contain;
+    border-radius: 12px;
+  }
+
+  .media-placeholder .kq-ph-logo {
+    max-width: 150px;
+    max-height: 60px;
+  }
+
+  .media-placeholder .kq-ph-cross {
+    font-size: 1.2rem;
+  }
+
+  .media-placeholder .kq-ph-sub {
+    font-size: 0.72rem;
+  }
+
+  .media-placeholder .kq-ph-word {
+    font-size: 2.2rem;
+  }
+
+  /* الاختيارات: عمود واحد واضح من غير تداخل */
+  .q-answers-grid,
+  .screen-layout.has-image .q-answers-grid {
+    flex: 0 0 auto;
+    min-height: 0;
+    grid-template-columns: 1fr;
+    gap: 9px;
+    margin-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  .q-answers-grid.mode-tf,
+  .screen-layout.has-image .q-answers-grid.mode-tf {
+    grid-template-columns: 1fr;
+  }
+
+  .ans-box {
+    min-height: 54px;
+    padding: 8px 12px;
+    border-radius: 14px;
+    border-width: 2px;
+    box-shadow: 0 5px 0 rgba(0,0,0,.3), 0 8px 16px rgba(0,0,0,.25);
+  }
+
+  .ans-box .text {
+    font-size: 1rem;
+    padding-right: 26px;
+  }
+
+  .shape {
+    width: 36px;
+    height: 36px;
+    margin-right: 10px;
+    font-size: 1.2rem;
+  }
+
+  .status-icon {
+    right: 12px;
+    font-size: 1.6rem;
+  }
 
   /* ---------- النتائج (الرسم البياني) ---------- */
-  #screen-results { padding-bottom: 80px !important; }
-  #result-q-text { margin-bottom: 26px !important; font-size: 1.3rem !important; padding: 0 8px; }
-  .chart-container { gap: 8px; height: 240px; padding: 0 6px; }
-  .bar-wrapper { width: auto; flex: 1 1 0; max-width: 84px; }
-  .bar-count { font-size: 1.4rem; top: -30px; }
-  .bar-base { height: 32px; font-size: 1.3rem; }
+  #screen-results {
+    padding-bottom: 80px !important;
+  }
+
+  #result-q-text {
+    margin-bottom: 26px !important;
+    font-size: 1.3rem !important;
+    padding: 0 8px;
+  }
+
+  .chart-container {
+    gap: 8px;
+    height: 240px;
+    padding: 0 6px;
+  }
+
+  .bar-wrapper {
+    width: auto;
+    flex: 1 1 0;
+    max-width: 84px;
+  }
+
+  .bar-count {
+    font-size: 1.4rem;
+    top: -30px;
+  }
+
+  .bar-base {
+    height: 32px;
+    font-size: 1.3rem;
+  }
 
   /* ---------- لوحة الصدارة ---------- */
-  #screen-leaderboard { padding: 14px 10px 0 !important; justify-content: flex-start; }
-  #screen-leaderboard .huge-title { margin: 0 0 14px; font-size: clamp(2rem, 10vw, 3rem); }
-  .leaderboard-list { width: 100%; gap: 8px; }
-  .lb2-row { min-height: 54px; padding: 0 12px; gap: 10px; border-radius: 16px; }
-  .lb2-name { font-size: 1.05rem; }
-  .lb2-score { font-size: 1.3rem; }
-  .lb2-chg, .lb2-streak { font-size: .8rem; padding: 2px 6px; }
+  #screen-leaderboard {
+    padding: 14px 10px 76px !important;
+    justify-content: flex-start;
+  }
+
+  #screen-leaderboard .huge-title {
+    margin: 0 0 14px;
+    font-size: clamp(2rem, 10vw, 3rem);
+  }
+
+  .leaderboard-list {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .lb2-row {
+    min-height: 54px;
+    padding: 0 12px;
+    gap: 10px;
+    border-radius: 16px;
+  }
+
+  .lb2-name {
+    font-size: 1.05rem;
+  }
+
+  .lb2-score {
+    font-size: 1.3rem;
+  }
+
+  .lb2-chg,
+  .lb2-streak {
+    font-size: .8rem;
+    padding: 2px 6px;
+  }
 
   /* ---------- المنصة ---------- */
-  .podium-main-title { font-size: 2.2rem; margin-bottom: 8px; }
-  .podium-container { gap: 6px; height: 52vh; padding: 0 6px; }
-  .podium-place { width: 32%; min-width: 0; }
-  .w-name { font-size: 1rem; }
-  .w-score { font-size: .95rem; }
-  .winner-first .w-name { font-size: 1.25rem; }
+  .podium-main-title {
+    font-size: 2.2rem;
+    margin-bottom: 8px;
+  }
+
+  .podium-container {
+    gap: 6px;
+    height: 52vh;
+    padding: 0 6px;
+  }
+
+  .podium-place {
+    width: 32%;
+    min-width: 0;
+  }
+
+  .w-name {
+    font-size: 1rem;
+  }
+
+  .w-score {
+    font-size: .95rem;
+  }
+
+  .winner-first .w-name {
+    font-size: 1.25rem;
+  }
+
   .block-1 { height: 200px; }
   .block-2 { height: 150px; }
   .block-3 { height: 110px; }
-  .medal { width: 44px; height: 44px; font-size: 1.5rem; top: 12px; }
-  .btn-return-admin { width: calc(100% - 28px); margin: 14px; }
+
+  .medal {
+    width: 44px;
+    height: 44px;
+    font-size: 1.5rem;
+    top: 12px;
+  }
+
+  .btn-return-admin {
+    width: calc(100% - 28px);
+    margin: 14px;
+    right: 0;
+    bottom: 10px;
+  }
 
   /* زرار Next */
-  #btn-next { right: 14px !important; bottom: 14px !important; padding: 12px 26px !important; font-size: 1.05rem !important; }
-             }
+  #btn-next {
+    right: 14px !important;
+    bottom: 14px !important;
+    padding: 10px 20px !important;
+    font-size: 0.95rem !important;
+    z-index: 30;
+  }
+}
