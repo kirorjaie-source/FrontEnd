@@ -866,3 +866,6 @@ tbody tr:hover { background: #FBFCFE; }
   }
   .sidebar-backdrop.show { opacity: 1; pointer-events: auto; }
 }
+/* كارت المسابقة اللي عليه جلسة مفتوحة: يطول عشان زراير Resume/End ما يتقصوش */
+.quiz-card:has(.quiz-session-controls) { aspect-ratio: auto; }
+.quiz-card:has(.quiz-session-controls) .quiz-card-body { flex: 0 0 auto; }
