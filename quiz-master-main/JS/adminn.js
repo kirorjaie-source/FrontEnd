@@ -237,7 +237,10 @@ const I18N = {
   "session.choiceDesc": "Session \"{title}\" (PIN: {pin}) is still open. Would you like to resume it or end it and start a new one?",
   "session.resume": "↩ Resume Game",
   "session.endAndNew": "End Old & Start New",
-  "session.confirmEnd": "End active session (PIN: {pin})? Players will be disconnected."
+  "session.confirmEnd": "End active session (PIN: {pin})? Players will be disconnected.",
+  "session.moreOpen": "{n} other open session(s) of this quiz will be ended too.",
+  "session.statusWaiting": "Lobby",
+  "session.statusPlaying": "Live"
  },
  "ar": {
   "brand.name": "كوك كويز",
@@ -461,7 +464,10 @@ const I18N = {
   "session.choiceDesc": "مسابقة \"{title}\" بكود (PIN: {pin}) ما زالت مفتوحة. تحب تستكملها ولا تنهيها وتبدأ جيم جديد؟",
   "session.resume": "↩ استكمال الجيم",
   "session.endAndNew": "إنهاء القديم وبدء جديد",
-  "session.confirmEnd": "هل تريد إنهاء الجيم الحالي (PIN: {pin})؟ سيتم فصل اللاعبين."
+  "session.confirmEnd": "هل تريد إنهاء الجيم الحالي (PIN: {pin})؟ سيتم فصل اللاعبين.",
+  "session.moreOpen": "وفيه {n} جلسة مفتوحة تانية لنفس المسابقة هتتقفل كمان.",
+  "session.statusWaiting": "اللوبي",
+  "session.statusPlaying": "مباشر"
  }
 };
 
@@ -774,43 +780,74 @@ function openConfirmModal({ title, message, confirmText, cancelText, danger = tr
 }
 
 /* ============================================================
-   إدارة الجلسة النشطة (استكمال أو إنهاء الجيم داخل كارت المسابقة)
+   إدارة الجلسات المفتوحة (Resume / End) — كل جلسات المدرّس من السيرفر
+   بتظهر على أي جهاز (موبايل / تاب / لابتوب)، وكل مسابقة بتعرض كل جلساتها المفتوحة.
+   لو السيرفر مش متاح بنرجع للجلسة المحفوظة على الجهاز ده.
    ============================================================ */
-function getActiveSession() {
+let openSessions = null;   // array من السيرفر | null = غير متاح
+let refreshSeq = 0;
+
+const isFinishedStatus = (st) => /^(finished|ended|completed)$/i.test(String(st || ""));
+
+function localActiveSession() {
   const s = window.Api?.game?.current ? Api.game.current() : null;
-  if (!s || !s.roomCode) return null;
-  const st = String(s.status || "").toLowerCase();
-  if (st === "finished" || st === "ended" || st === "completed") return null;
+  if (!s || !s.roomCode || isFinishedStatus(s.status)) return null;
   return s;
 }
 
-function isQuizActive(quiz) {
-  const s = getActiveSession();
-  if (!s) return null;
-  const sameId = s.quizId != null && quiz.id != null && String(s.quizId) === String(quiz.id);
-  const sameTitle = !s.quizId && s.quizTitle && quiz.title && s.quizTitle.trim() === quiz.title.trim();
-  return sameId || sameTitle ? s : null;
+function allOpenSessions() {
+  if (Array.isArray(openSessions)) return openSessions;
+  const local = localActiveSession();
+  return local ? [local] : [];
 }
 
-function activeSessionButtonsHTML(session) {
-  if (!session) return "";
-  return `
-    <div class="quiz-session-controls" style="display:flex;flex-wrap:wrap;gap:6px;width:100%;margin-top:6px;">
-      <button type="button" class="button" data-action="resume-session"
-        style="flex:1 1 130px;min-width:0;justify-content:center;background:#16a34a;color:#fff;font-weight:800;padding:8px 10px;border-radius:10px;font-size:12.5px;white-space:nowrap;">
-        ${escapeHTML(t("session.resumeShort", { pin: session.roomCode }))}
-      </button>
-      <button type="button" class="button" data-action="end-session"
-        style="flex:1 1 70px;min-width:0;justify-content:center;background:#dc2626;color:#fff;font-weight:700;padding:8px 10px;border-radius:10px;font-size:12.5px;white-space:nowrap;">
-        ${escapeHTML(t("session.endShort"))}
-      </button>
-    </div>
-  `;
+function sessionsForQuiz(quiz) {
+  return allOpenSessions().filter((s) => {
+    const sameId = s.quizId != null && quiz.id != null && String(s.quizId) === String(quiz.id);
+    const sameTitle = s.quizId == null && s.quizTitle && quiz.title && String(s.quizTitle).trim() === String(quiz.title).trim();
+    return sameId || sameTitle;
+  });
 }
 
-function resumeActiveSession() {
-  const s = getActiveSession();
+async function refreshOpenSessions() {
+  if (!window.Api?.game?.openSessions) return;
+  const seq = ++refreshSeq;
+  try {
+    const list = await Api.game.openSessions();
+    if (seq !== refreshSeq) return;           // رد قديم وصل متأخر
+    openSessions = list;
+    // الجلسة المحفوظة محلياً لو السيرفر مش شايفها مفتوحة يبقى خلصت
+    const cur = localActiveSession();
+    if (cur && !list.some((x) => String(x.roomCode) === String(cur.roomCode))) {
+      Api.game.saveCurrent({ ...cur, status: "finished" });
+    }
+  } catch {
+    if (seq === refreshSeq) openSessions = null;
+  }
+}
+
+function activeSessionButtonsHTML(sessions) {
+  const list = Array.isArray(sessions) ? sessions : (sessions ? [sessions] : []);
+  if (!list.length) return "";
+  return `<div class="qs-list">${list.map((s) => {
+    const pin = escapeHTML(s.roomCode);
+    const status = t(s.status === "playing" ? "session.statusPlaying" : "session.statusWaiting");
+    return `
+      <div class="qs-row">
+        <button type="button" class="qs-btn qs-resume" data-action="resume-session" data-pin="${pin}" title="${escapeHTML(status)}">
+          ${escapeHTML(t("session.resumeShort", { pin: s.roomCode }))}
+        </button>
+        <button type="button" class="qs-btn qs-end" data-action="end-session" data-pin="${pin}">
+          ${escapeHTML(t("session.endShort"))}
+        </button>
+      </div>`;
+  }).join("")}</div>`;
+}
+
+function resumeSession(pin) {
+  const s = allOpenSessions().find((x) => String(x.roomCode) === String(pin));
   if (!s) return;
+  if (Array.isArray(openSessions) && window.Api?.game?.useSession) Api.game.useSession(s);
   window.location.href = s.status === "playing" ? "host-gamen.html" : "lobbyn.html";
 }
 
@@ -827,13 +864,11 @@ async function finishSessionCompletely(session, { askConfirm = true } = {}) {
     if (!ok) return false;
   }
 
-  let serverEnded = false;
   let serverErr = null;
   try {
     if (window.Api?.realtime && window.Api?.game?.end) {
       await Api.realtime.connect({ pin: session.roomCode, role: "host" });
       await Api.game.end();
-      serverEnded = true;
     }
   } catch (err) { serverErr = err; console.error("End session failed:", err); }
 
@@ -847,26 +882,36 @@ async function finishSessionCompletely(session, { askConfirm = true } = {}) {
   }
 
   try {
-    Api.game.saveCurrent({ ...session, status: "finished" });
-    localStorage.removeItem("churchQuizPlayers");
-    localStorage.removeItem("churchQuizReconnect");
+    // بنلمس الجلسة "الحالية" المحفوظة بس لو هي نفسها اللي اتقفلت (ممكن يكون عندك جلسات تانية مفتوحة)
+    const cur = Api.game.current();
+    if (cur && String(cur.roomCode) === String(session.roomCode)) {
+      Api.game.saveCurrent({ ...cur, status: "finished" });
+      localStorage.removeItem("churchQuizPlayers");
+    }
+    const rc = JSON.parse(localStorage.getItem("churchQuizReconnect") || "null");
+    if (rc && String(rc.pin) === String(session.roomCode)) localStorage.removeItem("churchQuizReconnect");
   } catch { /* ignore */ }
   try { await Api.realtime.disconnect(); } catch { /* ignore */ }
 
-  await Promise.all([
-    renderQuizzes(),
-    renderExplore({ refetch: false })
-  ]).catch(() => {});
+  if (Array.isArray(openSessions)) {
+    openSessions = openSessions.filter((x) => String(x.roomCode) !== String(session.roomCode));
+  }
+  await refreshOpenSessions();
+  await Promise.all([renderQuizzes(), renderExplore({ refetch: false })]).catch(() => {});
   return true;
 }
 
-async function endActiveSession() {
-  const s = getActiveSession();
+async function endSessionByPin(pin) {
+  const s = allOpenSessions().find((x) => String(x.roomCode) === String(pin));
+  if (!s) return;
   const done = await finishSessionCompletely(s, { askConfirm: true });
   if (done) toast(t("session.endedMsg"));
 }
 
-function openSessionChoiceModal(existingSession, onStartNew) {
+function openSessionChoiceModal(sessions, onStartNew) {
+  const existingSession = sessions[0];
+  const extra = sessions.length - 1;
+
   let modal = $("session-choice-modal");
   if (!modal) {
     modal = document.createElement("div");
@@ -886,9 +931,10 @@ function openSessionChoiceModal(existingSession, onStartNew) {
         <h3 style="margin:0;font-size:18px;font-weight:800;">${escapeHTML(t("session.choiceTitle"))}</h3>
         <button type="button" id="choice-close-btn" style="background:none;border:none;font-size:20px;cursor:pointer;color:#64748b;">✕</button>
       </div>
-      <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:${subFg};">
+      <p style="margin:0 0 ${extra > 0 ? 8 : 20}px;font-size:14px;line-height:1.6;color:${subFg};">
         ${escapeHTML(t("session.choiceDesc", { title: existingSession.quizTitle || "Kokquiz", pin: existingSession.roomCode }))}
       </p>
+      ${extra > 0 ? `<p style="margin:0 0 20px;font-size:13px;line-height:1.6;color:${subFg};opacity:.85;">${escapeHTML(t("session.moreOpen", { n: extra }))}</p>` : ""}
       <div style="display:flex;flex-direction:column;gap:10px;">
         <button type="button" id="choice-resume-btn" class="button gold-button" style="width:100%;justify-content:center;font-weight:800;padding:12px;border-radius:12px;">
           ${escapeHTML(t("session.resume"))} (PIN: ${escapeHTML(existingSession.roomCode)})
@@ -904,10 +950,14 @@ function openSessionChoiceModal(existingSession, onStartNew) {
   const close = () => { modal.style.display = "none"; };
   $("choice-close-btn").onclick = close;
   modal.onclick = (e) => { if (e.target === modal) close(); };
-  $("choice-resume-btn").onclick = () => { close(); resumeActiveSession(); };
+  $("choice-resume-btn").onclick = () => { close(); resumeSession(existingSession.roomCode); };
   $("choice-new-btn").onclick = async () => {
-    $("choice-new-btn").disabled = true;
-    await finishSessionCompletely(existingSession, { askConfirm: false });
+    const btn = $("choice-new-btn");
+    btn.disabled = true;
+    for (const s of sessions) {
+      const ok = await finishSessionCompletely(s, { askConfirm: false });
+      if (!ok) { btn.disabled = false; return; }   // فشل القفل: منبدأش جلسة جديدة
+    }
     close();
     await onStartNew();
   };
@@ -1087,7 +1137,7 @@ async function renderQuizzes() {
       const id = escapeHTML(quiz.id);
       const count = Number(quiz.questionCount ?? (quiz.questions ? quiz.questions.length : 0)) || 0;
       const cover = quiz.imageUrl || quiz.coverImage || quiz.image || "";
-      const activeSess = isQuizActive(quiz);
+      const activeSess = sessionsForQuiz(quiz);
       return `
       <article class="quiz-card my-quiz-card">
         <div class="quiz-cover tone-${coverTone(quiz.title || quiz.id)}">
@@ -1170,8 +1220,9 @@ async function startHosting() {
   const quizId = hostingQuizId;
   closeHostModal();
 
-  const existing = getActiveSession();
-  if (existing) {
+  await refreshOpenSessions();
+  const existing = sessionsForQuiz({ id: quizId });
+  if (existing.length) {
     openSessionChoiceModal(existing, () => createAndOpenLobby(quizId));
     return;
   }
@@ -1544,7 +1595,7 @@ function quizCardHTML(q) {
   const count = Number(q.questionCount ?? (q.questions ? q.questions.length : 0)) || 0;
   const creator = q.creatorName || q.ownerName || q.createdBy || q.author || q.userName || "";
   const cover = q.imageUrl || q.coverImage || q.image || "";
-  const activeSess = isQuizActive(q);
+  const activeSess = sessionsForQuiz(q);
   return `
     <article class="quiz-card">
       <div class="quiz-cover tone-${coverTone(q.title || q.id)}">
@@ -1905,17 +1956,50 @@ const ACTIONS = {
   host: (el) => openHostModal(el.dataset.id),
   edit: (el) => openStudio(el.dataset.id),
   "delete-quiz": (el) => deleteQuiz(el.dataset.id),
-  "resume-session": () => resumeActiveSession(),
-  "end-session": () => endActiveSession()
+  "resume-session": (el) => resumeSession(el.dataset.pin),
+  "end-session": (el) => endSessionByPin(el.dataset.pin)
 };
 
-function syncSessionCardsWithoutReload() {
+let lastSessionSync = 0;
+async function syncSessionCardsWithoutReload(force = false) {
+  if (force !== true && Date.now() - lastSessionSync < 2000) return;   // pageshow + visibilitychange بيجوا مع بعض
+  lastSessionSync = Date.now();
+  await refreshOpenSessions();
   renderQuizzes().catch(() => {});
   renderExplore({ refetch: false }).catch(() => {});
 }
 
+/* مسافات كروت المسابقة اللي عليها جلسات مفتوحة — بتشتغل على كل المقاسات (موبايل / تاب / لابتوب / كمبيوتر):
+   الكارت المربع بيطول لوحده، والزراير بتنزل تحت بعض لو العرض ضيق من غير media queries. */
+function injectSessionStyles() {
+  if (document.getElementById("kq-session-ui")) return;
+  const st = document.createElement("style");
+  st.id = "kq-session-ui";
+  st.textContent = `
+.quiz-card:has(.qs-list){aspect-ratio:auto}
+.quiz-card:has(.qs-list) .quiz-card-body{flex:0 0 auto;justify-content:flex-start;gap:10px}
+.my-quiz-actions .qs-list{flex:1 1 100%}
+.qs-list{display:flex;flex-direction:column;gap:8px;width:100%;min-width:0;margin-top:4px}
+.qs-row{display:flex;flex-wrap:wrap;gap:8px;width:100%;min-width:0}
+.qs-btn{appearance:none;-webkit-appearance:none;border:0;display:inline-flex;align-items:center;justify-content:center;
+  min-height:40px;padding:8px 12px;border-radius:10px;font:inherit;font-size:13px;font-weight:800;line-height:1.2;color:#fff;
+  cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
+  transition:filter .15s ease,transform .1s ease}
+.qs-btn:hover{filter:brightness(1.08)}
+.qs-btn:active{transform:scale(.98)}
+.qs-btn:focus-visible{outline:2px solid #F4B41A;outline-offset:2px}
+.qs-resume{flex:2 1 120px;background:#16a34a}
+.qs-end{flex:1 1 72px;background:#dc2626}
+@media (max-width:600px){.qs-btn{min-height:42px;font-size:13.5px}}
+@media (min-width:1200px){.qs-btn{min-height:38px}}
+`;
+  document.head.appendChild(st);
+}
+
 function init() {
   if (!AUTH_OK) return;
+
+  injectSessionStyles();
 
   if (localStorage.getItem(SIDEBAR_KEY) === "1") document.body.classList.add("sidebar-collapsed");
   mountEmailCard();
@@ -1925,7 +2009,8 @@ function init() {
   bindStudio();
 
   // تحديث تلقائي عند الرجوع من اللوبي أو اللعبة بدون Refresh
-  window.addEventListener("pageshow", syncSessionCardsWithoutReload);
+  window.addEventListener("pageshow", () => syncSessionCardsWithoutReload());
+  window.addEventListener("focus", () => syncSessionCardsWithoutReload());
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") syncSessionCardsWithoutReload();
   });
@@ -1965,6 +2050,7 @@ function init() {
   loadSettings().catch(showError);
   renderDashboard().catch(showError);
   renderQuizzes().catch(showError);
+  syncSessionCardsWithoutReload(true);
   renderSupport();
   renderUserBadge();
   renderParticipants().catch(showError);

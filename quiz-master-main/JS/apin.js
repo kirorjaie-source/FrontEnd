@@ -673,6 +673,34 @@
         writeJSON(KEYS.game, { ...readJSON(KEYS.game, {}), status: "finished" });
       },
 
+      /* كل جلسات المدرّس المفتوحة (Waiting / Running) من السيرفر — بترجع array.
+         لو الـ endpoint مش موجود أو السيرفر مش متاح بترمي خطأ، والصفحة بترجع للجلسة المحفوظة محلياً. */
+      async openSessions() {
+        const rows = toArray(await http("GET", "/Games/my-active"));
+        return rows
+          .map((r) => ({
+            sessionId: r.sessionId ?? r.id,
+            roomCode: String(r.pinCode ?? r.pin ?? ""),
+            status: /^running$/i.test(String(r.status || "")) ? "playing" : "waiting",
+            quizId: r.quizId,
+            quizTitle: r.quizTitle ?? r.title ?? "",
+            playersCount: Number(r.playersCount) || 0,
+            totalQuestions: Number(r.totalQuestions) || 0,
+            createdAt: r.date ?? null
+          }))
+          .filter((r) => r.roomCode)
+          .sort((a, b) => Number(b.sessionId || 0) - Number(a.sessionId || 0));
+      },
+
+      /* بيخلّي الجلسة دي هي "الحالية" على الجهاز ده (اللوبي وصفحة اللعب بيقروا منها) */
+      useSession(s) {
+        const cur = readJSON(KEYS.game, null);
+        if (!cur || String(cur.roomCode) !== String(s.roomCode)) writeJSON(KEYS.players, []);
+        const session = { ...(cur && String(cur.roomCode) === String(s.roomCode) ? cur : {}), ...s, ownerId: currentUserId() };
+        writeJSON(KEYS.game, session);
+        return session;
+      },
+
       async join(pin, nickname, avatar = "fox") {
         const p = String(pin).trim();
         const name = String(nickname).trim();
