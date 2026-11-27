@@ -285,40 +285,6 @@
       font-weight: 900;
     }
 
-    [data-theme="dark"] #studio-right-panel .prop-group label {
-      color: #94a3b8;
-    }
-
-    [data-theme="dark"] .kq-select-trigger {
-      background: #0f233c;
-      border-color: #1e3a5f;
-      color: #f8fafc;
-    }
-
-    [data-theme="dark"] .kq-select-trigger svg {
-      color: #f3c66f;
-    }
-
-    [data-theme="dark"] .kq-select-trigger:hover,
-    [data-theme="dark"] .kq-select.open .kq-select-trigger {
-      background: #142d4c;
-      border-color: #e4b93c;
-    }
-
-    [data-theme="dark"] .kq-select-menu {
-      background: #0b1e36;
-      border-color: #1e3a5f;
-    }
-
-    [data-theme="dark"] .kq-select-option {
-      color: #e2e8f0;
-    }
-
-    [data-theme="dark"] .kq-select-option:hover {
-      background: #163356;
-      color: #ffffff;
-    }
-
     /* ============================================================
        Settings Page — Royal Navy & Gold Upgrade
        ============================================================ */
@@ -578,6 +544,353 @@
     .slide-move-btn:hover:not(:disabled) { background: #E4B93C; border-color: #E4B93C; }
     .slide-move-btn:disabled { opacity: .35; cursor: not-allowed; }
     [data-theme="dark"] .slide-move-btn { background: #163356; border-color: #1e3a5f; color: #f3c66f; }
+
+    /* ============================================================
+       FIX: Topbar & Mobile Layout (إصلاح تداخل البار العلوي على الموبايل)
+       ============================================================ */
+    .topbar {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: 10px !important;
+      min-height: 64px !important;
+      padding: 10px 20px !important;
+      box-sizing: border-box !important;
+      flex-wrap: nowrap !important;
+    }
+
+    .topbar-title-wrap {
+      min-width: 0 !important;
+      flex: 1 1 auto !important;
+    }
+
+    .topbar-title-wrap .breadcrumb {
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+
+    .topbar-title-wrap #page-heading {
+      margin: 0 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+
+    .top-actions {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      flex-shrink: 0 !important;
+    }
+
+    #theme-toggle {
+      width: 38px !important;
+      height: 38px !important;
+      min-width: 38px !important;
+      padding: 0 !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border-radius: 999px !important;
+      flex-shrink: 0 !important;
+    }
+
+    #lang-toggle {
+      height: 38px !important;
+      padding: 0 12px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      border-radius: 999px !important;
+      white-space: nowrap !important;
+      flex-shrink: 0 !important;
+    }
+
+    @media (max-width: 768px) {
+      .topbar {
+        padding: 8px 12px !important;
+        gap: 8px !important;
+        min-height: 58px !important;
+      }
+
+      .mobile-menu {
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex-shrink: 0 !important;
+      }
+
+      .topbar-title-wrap .breadcrumb {
+        display: none !important;
+      }
+
+      .topbar-title-wrap #page-heading {
+        font-size: 17px !important;
+        line-height: 1.2 !important;
+      }
+
+      .top-actions {
+        gap: 6px !important;
+      }
+
+      #theme-toggle {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        font-size: 15px !important;
+      }
+
+      #lang-toggle {
+        height: 34px !important;
+        padding: 0 10px !important;
+        font-size: 12.5px !important;
+      }
+
+      #lang-toggle svg {
+        width: 15px !important;
+        height: 15px !important;
+      }
+
+      .user-trigger {
+        padding: 3px 6px !important;
+        gap: 5px !important;
+      }
+
+      .user-trigger .admin-label,
+      .user-trigger .status-dot {
+        display: none !important;
+      }
+
+      .user-trigger .avatar {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 13px !important;
+      }
+    }
+
+    /* ============================================================
+       FIX: Full Dark Mode Override (إصلاح الوضع الليلي بالكامل)
+       ============================================================ */
+    html[data-theme="dark"],
+    html[data-theme="dark"] body {
+      background-color: #081322 !important;
+      color: #f1f5f9 !important;
+      color-scheme: dark;
+    }
+
+    html[data-theme="dark"] .main,
+    html[data-theme="dark"] .content {
+      background-color: #081322 !important;
+      color: #f1f5f9 !important;
+    }
+
+    html[data-theme="dark"] .topbar {
+      background: #0b1e36 !important;
+      border-bottom: 1px solid #1e3a5f !important;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35) !important;
+    }
+
+    html[data-theme="dark"] .topbar #page-heading {
+      color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] .topbar .breadcrumb,
+    html[data-theme="dark"] .topbar .crumb-text {
+      color: #94a3b8 !important;
+    }
+
+    html[data-theme="dark"] .mobile-menu {
+      background: #102847 !important;
+      color: #f3c66f !important;
+      border: 1px solid #1e3a5f !important;
+    }
+
+    html[data-theme="dark"] .lang-btn,
+    html[data-theme="dark"] #theme-toggle {
+      background: #102847 !important;
+      color: #f8fafc !important;
+      border: 1px solid #1e3a5f !important;
+    }
+
+    html[data-theme="dark"] .lang-btn:hover,
+    html[data-theme="dark"] #theme-toggle:hover {
+      border-color: #e4b93c !important;
+      background: #163356 !important;
+    }
+
+    html[data-theme="dark"] .user-trigger:hover,
+    html[data-theme="dark"] .user-menu-wrap.open .user-trigger {
+      background: #102847 !important;
+      border-color: #1e3a5f !important;
+    }
+
+    html[data-theme="dark"] .user-trigger .admin-label {
+      color: #f1f5f9 !important;
+    }
+
+    html[data-theme="dark"] .user-dropdown {
+      background: #0b1e36 !important;
+      border-color: #1e3a5f !important;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5) !important;
+    }
+
+    html[data-theme="dark"] .user-dropdown-head {
+      border-bottom-color: #1e3a5f !important;
+    }
+
+    html[data-theme="dark"] .user-dropdown-head strong {
+      color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] .user-dropdown-head small {
+      color: #94a3b8 !important;
+    }
+
+    html[data-theme="dark"] .user-drop-item {
+      color: #e2e8f0 !important;
+    }
+
+    html[data-theme="dark"] .user-drop-item:hover {
+      background: #163356 !important;
+      color: #f3c66f !important;
+    }
+
+    html[data-theme="dark"] .user-drop-divider {
+      background: #1e3a5f !important;
+    }
+
+    html[data-theme="dark"] .card,
+    html[data-theme="dark"] .stat-card,
+    html[data-theme="dark"] .quiz-card,
+    html[data-theme="dark"] .table-card,
+    html[data-theme="dark"] .empty-state,
+    html[data-theme="dark"] .admin-top-card {
+      background: #0f223d !important;
+      border-color: #1e3a5f !important;
+      color: #f1f5f9 !important;
+    }
+
+    html[data-theme="dark"] .stat-card strong,
+    html[data-theme="dark"] .quiz-card-title,
+    html[data-theme="dark"] .table-title,
+    html[data-theme="dark"] .section-heading h2 {
+      color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] .stat-card small,
+    html[data-theme="dark"] .quiz-card-meta,
+    html[data-theme="dark"] .section-heading p,
+    html[data-theme="dark"] .empty-state p {
+      color: #94a3b8 !important;
+    }
+
+    html[data-theme="dark"] table th {
+      background: #0b1e36 !important;
+      color: #f3c66f !important;
+      border-bottom-color: #1e3a5f !important;
+    }
+
+    html[data-theme="dark"] table td {
+      color: #e2e8f0 !important;
+      border-bottom-color: #162e4d !important;
+    }
+
+    html[data-theme="dark"] .toolbar input,
+    html[data-theme="dark"] #quiz-search,
+    html[data-theme="dark"] #explore-search {
+      background: #0f223d !important;
+      color: #f8fafc !important;
+      border-color: #1e3a5f !important;
+    }
+
+    html[data-theme="dark"] #studio-right-panel .prop-group label {
+      color: #94a3b8;
+    }
+
+    html[data-theme="dark"] .kq-select-trigger {
+      background: #0f233c;
+      border-color: #1e3a5f;
+      color: #f8fafc;
+    }
+
+    html[data-theme="dark"] .kq-select-trigger svg {
+      color: #f3c66f;
+    }
+
+    html[data-theme="dark"] .kq-select-trigger:hover,
+    html[data-theme="dark"] .kq-select.open .kq-select-trigger {
+      background: #142d4c;
+      border-color: #e4b93c;
+    }
+
+    html[data-theme="dark"] .kq-select-menu {
+      background: #0b1e36;
+      border-color: #1e3a5f;
+    }
+
+    html[data-theme="dark"] .kq-select-option {
+      color: #e2e8f0;
+    }
+
+    html[data-theme="dark"] .kq-select-option:hover {
+      background: #163356;
+      color: #ffffff;
+    }
+
+    html[data-theme="dark"] #page-settings .form-card {
+      background: #0f223d !important;
+      border-color: #1e3a5f !important;
+    }
+
+    html[data-theme="dark"] #page-settings .form-section-title {
+      border-bottom-color: #1e3a5f !important;
+    }
+
+    html[data-theme="dark"] #page-settings .form-section-title h3,
+    html[data-theme="dark"] #settings-form .field label {
+      color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] #page-settings .form-section-title p {
+      color: #94a3b8 !important;
+    }
+
+    html[data-theme="dark"] #settings-form .field input,
+    html[data-theme="dark"] #settings-form .field select {
+      background: #0b1e36 !important;
+      border-color: #1e3a5f !important;
+      color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] #settings-form .form-footer {
+      border-top-color: #1e3a5f !important;
+    }
+
+    html[data-theme="dark"] #settings-form .form-hint {
+      background: #0b1e36 !important;
+      border-color: #1e3a5f !important;
+      color: #94a3b8 !important;
+    }
+
+    html[data-theme="dark"] #page-settings .support-person {
+      background: #0b1e36 !important;
+      border-color: #1e3a5f !important;
+    }
+
+    html[data-theme="dark"] #page-settings .support-name {
+      color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] .main-footer {
+      background: #081322 !important;
+      color: #94a3b8 !important;
+      border-top-color: #1e3a5f !important;
+    }
   </style>
 </head>
 
@@ -645,7 +958,7 @@
     <header class="topbar">
       <button class="mobile-menu" id="menu-toggle" aria-label="Toggle menu" data-i18n-title="studio.menu" title="Show/Hide menu">☰</button>
 
-      <div>
+      <div class="topbar-title-wrap">
         <div class="breadcrumb">
           <em class="crumb-text" data-i18n="brand.name">Kok_Quiz</em> <span>/</span> <em class="crumb-text" data-i18n="crumb.admin">Admin</em>
         </div>

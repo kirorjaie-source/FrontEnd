@@ -131,16 +131,21 @@ function onQuestion(d) {
   // سؤال بصورة: الصورة بتظهر كبيرة وعنوان السؤال بيختفي (الستايل في host-gamen.html)
   currentHasImage = !!d.imageUrl;
   $("screen-active-question").classList.toggle("has-image", currentHasImage);
+  // نص السؤال يفضل ظاهر دايماً حتى لو فيه صورة (override لقاعدة has-image اللي كانت بتخفيه)
+  const qHeader = $("active-q-text").closest(".q-header");
+  if (qHeader) qHeader.style.setProperty("display", "block", "important");
 
   const img = $("q-image");
   const placeholder = $("q-placeholder");
+  // ⚠️ host-gamen.html فيه `#q-placeholder { display:flex !important }` فالـ inline العادي مش بيكسب.
+  // لازم setProperty مع "important" عشان لوجو Kokquiz يختفي لما فيه صورة.
   if (d.imageUrl) {
     img.src = d.imageUrl;
-    img.style.display = "block";
-    placeholder.style.display = "none";
+    img.style.setProperty("display", "block", "important");
+    placeholder.style.setProperty("display", "none", "important");
   } else {
-    img.style.display = "none";
-    placeholder.style.display = "";
+    img.style.setProperty("display", "none", "important");
+    placeholder.style.removeProperty("display");
   }
 
   for (let i = 0; i < 4; i++) {
@@ -199,7 +204,7 @@ function onReveal(d) {
   const max = Math.max(1, ...perSlot);
 
   $("result-q-text").textContent = currentText;
-  $("result-q-text").style.display = currentHasImage ? "none" : "";   // سؤال الصورة: مفيش عنوان
+  $("result-q-text").style.display = "";   // نص السؤال ظاهر دايماً
   for (let i = 0; i < 4; i++) {
     const bar = $(`bar-${i}`);
     const wrap = bar.closest(".bar-wrapper");
