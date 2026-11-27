@@ -780,6 +780,54 @@ function openConfirmModal({ title, message, confirmText, cancelText, danger = tr
 }
 
 /* ============================================================
+   نافذة تنبيه بزر OK (تظهر عند حفظ التعديلات قبل الخروج من الاستوديو)
+   ============================================================ */
+function openAlertModal({ title, message, okText = "OK" }) {
+  return new Promise((resolve) => {
+    let modal = $("kq-alert-modal");
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "kq-alert-modal";
+      modal.style.cssText = "position:fixed;inset:0;background:rgba(10,22,38,.65);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10001;";
+      document.body.appendChild(modal);
+    }
+
+    const isDark = getTheme() === "dark";
+    const bg = isDark ? "#0F223D" : "#FFFFFF";
+    const fg = isDark ? "#F8FAFC" : "#0B1E36";
+    const subFg = isDark ? "#CBD5E1" : "#475569";
+
+    modal.innerHTML = `
+      <div role="dialog" aria-modal="true" style="background:${bg};color:${fg};border-radius:20px;max-width:380px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35);border:2px solid #22c55e;text-align:center;">
+        <div style="width:54px;height:54px;border-radius:50%;background:rgba(34,197,94,.16);color:#22c55e;display:inline-flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;margin-bottom:12px;">
+          ✔
+        </div>
+        <h3 style="margin:0 0 8px;font-size:19px;font-weight:800;">${escapeHTML(title)}</h3>
+        <p style="margin:0 0 22px;font-size:14.5px;line-height:1.6;color:${subFg};">
+          ${escapeHTML(message)}
+        </p>
+        <button type="button" id="kq-alert-ok" class="button gold-button" style="width:100%;justify-content:center;font-weight:800;padding:12px 16px;border-radius:12px;cursor:pointer;">
+          ${escapeHTML(okText)}
+        </button>
+      </div>
+    `;
+    modal.style.display = "flex";
+
+    const cleanup = () => {
+      modal.style.display = "none";
+      document.removeEventListener("keydown", onKey);
+      resolve();
+    };
+    const onKey = (e) => { if (e.key === "Escape" || e.key === "Enter") cleanup(); };
+
+    $("kq-alert-ok").onclick = cleanup;
+    modal.onclick = (e) => { if (e.target === modal) cleanup(); };
+    document.addEventListener("keydown", onKey);
+    $("kq-alert-ok").focus();
+  });
+}
+
+/* ============================================================
    إدارة الجلسات المفتوحة (Resume / End) — كل جلسات المدرّس من السيرفر
    بتظهر على أي جهاز (موبايل / تاب / لابتوب)، وكل مسابقة بتعرض كل جلساتها المفتوحة.
    لو السيرفر مش متاح بنرجع للجلسة المحفوظة على الجهاز ده.
@@ -1411,6 +1459,46 @@ function findQuizProblem(quiz) {
   return null;
 }
 
+async function performStudioSave(quizName) {
+  if (!quizName) {
+    toast(t("msg.nameRequired"));
+    $("modal-quiz-name")?.focus();
+    return;
+  }
+  studioQuiz.title = quizName;
+  if ($("studio-quiz-title")) $("studio-quiz-title").value = quizName;
+  if (studioQuiz.id == null) studioQuiz.category = $("modal-quiz-category")?.value || "General";
+  if ($("prop-quiz-public")) {
+    studioQuiz.isPublic = $("prop-quiz-public").value === "true";
+  }
+  studioQuiz.status = "Ready";
+
+  const saveBtn = $("studio-save-btn");
+  const confirmBtn = $("modal-confirm-save-btn");
+  if (saveBtn) saveBtn.disabled = true;
+  if (confirmBtn) confirmBtn.disabled = true;
+
+  try {
+    const saved = await Api.quizzes.save(studioQuiz);
+    if (saved && saved.id) studioQuiz.id = saved.id;
+    studioDirty = false;
+    if ($("studio-save-modal")) $("studio-save-modal").style.display = "none";
+
+    await openAlertModal({
+      title: currentLang === "ar" ? "تم الحفظ" : "Saved",
+      message: t("msg.saved"),
+      okText: "OK"
+    });
+
+    showPage("quizzes");
+  } catch (err) {
+    showError(err);
+  } finally {
+    if (saveBtn) saveBtn.disabled = false;
+    if (confirmBtn) confirmBtn.disabled = false;
+  }
+}
+
 function bindStudio() {
   $("toggle-properties-btn")?.addEventListener("click", () => $("studio-right-panel")?.classList.toggle("collapsed"));
 
@@ -1559,7 +1647,7 @@ function bindStudio() {
     loadQuestionToCanvas(Math.max(0, activeQuestionIndex - 1));
   });
 
-  $("studio-save-btn")?.addEventListener("click", () => {
+  $("studio-save-btn")?.addEventListener("click", async () => {
     syncCurrentQuestionFromInputs();
     const problem = findQuizProblem(studioQuiz);
     if (problem) {
@@ -1579,7 +1667,16 @@ function bindStudio() {
       else if (!studioQuiz.questions[problem.index].text) $("canvas-question-text")?.focus();
       return;
     }
-    if ($("modal-quiz-name")) $("modal-quiz-name").value = ($("studio-quiz-title")?.value || studioQuiz.title || "").trim();
+
+    const currentTitle = ($("studio-quiz-title")?.value || studioQuiz.title || "").trim();
+
+    // في حالة Edit لمسابقة موجودة وعندها اسم: احفظ فوراً وطلع رسالة OK واخرج بره
+    if (studioQuiz.id != null && currentTitle) {
+      await performStudioSave(currentTitle);
+      return;
+    }
+
+    if ($("modal-quiz-name")) $("modal-quiz-name").value = currentTitle;
     if ($("studio-save-modal")) $("studio-save-modal").style.display = "flex";
     if ($("modal-quiz-name") && !$("modal-quiz-name").value) $("modal-quiz-name").focus();
   });
@@ -1590,27 +1687,7 @@ function bindStudio() {
 
   $("modal-confirm-save-btn")?.addEventListener("click", async () => {
     const quizName = ($("modal-quiz-name")?.value || "").trim();
-    if (!quizName) {
-      toast(t("msg.nameRequired"));
-      $("modal-quiz-name")?.focus();
-      return;
-    }
-    studioQuiz.title = quizName;
-    if ($("studio-quiz-title")) $("studio-quiz-title").value = quizName;
-    if (studioQuiz.id == null) studioQuiz.category = $("modal-quiz-category")?.value || "General";
-    if ($("prop-quiz-public")) {
-      studioQuiz.isPublic = $("prop-quiz-public").value === "true";
-    }
-    studioQuiz.status = "Ready";
-
-    try {
-      const saved = await Api.quizzes.save(studioQuiz);
-      if (saved && saved.id) studioQuiz.id = saved.id;
-      studioDirty = false;
-      if ($("studio-save-modal")) $("studio-save-modal").style.display = "none";
-      toast(t("msg.saved"));
-      showPage("quizzes");
-    } catch (err) { showError(err); }
+    await performStudioSave(quizName);
   });
 
   window.addEventListener("beforeunload", (e) => {
