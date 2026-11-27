@@ -121,7 +121,7 @@
       let err = {};
       try { err = raw ? JSON.parse(raw) : {}; } catch { err = raw; }
       let message = extractErrorMessage(err, res.status);
-      if (res.status === 403) message = "ليس لديك صلاحية (يجب أن يكون الحساب Creator أو Admin).";
+      if (res.status === 403) message = "ليس لديك صلاحية تنفيذ هذا الإجراء.";
       console.error(`HTTP ${res.status} ${method} ${url}`, err);
       throw new ApiError((err && err.code) || `HTTP_${res.status}`, message);
     }
@@ -509,7 +509,6 @@
     quizzes: {
       list: async () => Promise.all(toArray(await http("GET", "/Quizzes/mine")).map(fromSummary)),
       listPublic: async () => Promise.all(toArray(await http("GET", "/Quizzes/public")).map(fromSummary)),
-      // للأدمن فقط: كل الكويزات (Private + Public) من كل المستخدمين
       listAll: async () => Promise.all(toArray(await http("GET", "/Quizzes/all")).map(fromSummary)),
 
       get: async (id) => {
@@ -634,6 +633,82 @@
       saveGame: async () => null
     },
 
+    /* =====================================================================
+       CHURCHES, TEAM & ROLES, FOLLOW-UP GROUPS & REPORTS
+       ===================================================================== */
+    churches: {
+      // الكنائس
+      list: () => http("GET", "/Churches"),
+      myChurches: () => http("GET", "/Churches/my"),
+      get: (churchId) => http("GET", `/Churches/${churchId}`),
+      create: (data) => http("POST", "/Churches", data),
+      update: (churchId, data) => http("PUT", `/Churches/${churchId}`, data),
+      remove: (churchId) => http("DELETE", `/Churches/${churchId}`),
+
+      // الأعضاء
+      members: (churchId, stage = "") =>
+        http("GET", `/Churches/${churchId}/members${stage ? `?stage=${encodeURIComponent(stage)}` : ""}`),
+      addMember: (churchId, data) => http("POST", `/Churches/${churchId}/members`, data),
+      updateMember: (churchId, memberId, data) => http("PUT", `/Churches/${churchId}/members/${memberId}`, data),
+      removeMember: (churchId, memberId) => http("DELETE", `/Churches/${churchId}/members/${memberId}`),
+
+      // الحضور والغياب
+      attendance: (churchId, date = "", stage = "") => {
+        const p = new URLSearchParams();
+        if (date) p.append("date", date);
+        if (stage) p.append("stage", stage);
+        const q = p.toString() ? `?${p.toString()}` : "";
+        return http("GET", `/Churches/${churchId}/attendance${q}`);
+      },
+      recordAttendance: (churchId, payload) => http("POST", `/Churches/${churchId}/attendance`, payload),
+      absentees: (churchId, stage = "", weeks = 2) => {
+        const p = new URLSearchParams();
+        if (stage) p.append("stage", stage);
+        if (weeks) p.append("weeks", String(weeks));
+        const q = p.toString() ? `?${p.toString()}` : "";
+        return http("GET", `/Churches/${churchId}/absentees${q}`);
+      },
+
+      // 1. الفريق والأدوار ومراحل الخدمة
+      getTeam: (churchId) => http("GET", `/Churches/${churchId}/team`),
+      setMemberRole: (churchId, memberId, role, serviceStages = []) =>
+        http("PUT", `/Churches/${churchId}/members/${memberId}/role`, { role, serviceStages }),
+
+      // 2. مجموعات الافتقاد والتقسيم التلقائي
+      getGroups: (churchId, stage = "") =>
+        http("GET", `/Churches/${churchId}/groups${stage ? `?stage=${encodeURIComponent(stage)}` : ""}`),
+      createGroup: (churchId, data) => http("POST", `/Churches/${churchId}/groups`, data),
+      updateGroup: (churchId, groupId, data) => http("PUT", `/Churches/${churchId}/groups/${groupId}`, data),
+      deleteGroup: (churchId, groupId) => http("DELETE", `/Churches/${churchId}/groups/${groupId}`),
+      getGroupMembers: (churchId, groupId) => http("GET", `/Churches/${churchId}/groups/${groupId}/members`),
+      assignGroupMembers: (churchId, groupId, memberIds) =>
+        http("POST", `/Churches/${churchId}/groups/${groupId}/members`, { memberIds }),
+      removeGroupMembers: (churchId, groupId, memberIds) =>
+        http("POST", `/Churches/${churchId}/groups/${groupId}/members/remove`, { memberIds }),
+      autoSplitGroups: (churchId, stage, groupSize, onlyUnassigned = true) =>
+        http("POST", `/Churches/${churchId}/groups/auto-split`, {
+          stage,
+          groupSize: Number(groupSize),
+          onlyUnassigned: Boolean(onlyUnassigned)
+        }),
+
+      // 3. تقارير الافتقاد وافتقاد الخدام
+      submitFollowUpReport: (churchId, memberId, outcome, note) =>
+        http("POST", `/Churches/${churchId}/follow-up/reports`, { memberId, outcome, note }),
+      getFollowUpReports: (churchId, filters = {}) => {
+        const p = new URLSearchParams();
+        if (filters.memberId) p.append("memberId", filters.memberId);
+        if (filters.reporterUserId) p.append("reporterUserId", filters.reporterUserId);
+        if (filters.from) p.append("from", filters.from);
+        if (filters.to) p.append("to", filters.to);
+        const q = p.toString() ? `?${p.toString()}` : "";
+        return http("GET", `/Churches/${churchId}/follow-up/reports${q}`);
+      },
+      getServantsStatus: (churchId) => http("GET", `/Churches/${churchId}/follow-up/servants-status`),
+      getServantsFollowUp: (churchId, stage = "") =>
+        http("GET", `/Churches/${churchId}/follow-up/servants${stage ? `?stage=${encodeURIComponent(stage)}` : ""}`)
+    },
+
     settings: {
       get: async () => readJSON(KEYS.settings, {}),
       save: async (s) => { writeJSON(KEYS.settings, s); return s; }
@@ -675,8 +750,6 @@
         writeJSON(KEYS.game, { ...readJSON(KEYS.game, {}), status: "finished" });
       },
 
-      /* كل جلسات المدرّس المفتوحة (Waiting / Running) من السيرفر — بترجع array.
-         لو الـ endpoint مش موجود أو السيرفر مش متاح بترمي خطأ، والصفحة بترجع للجلسة المحفوظة محلياً. */
       async openSessions() {
         const rows = toArray(await http("GET", "/Games/my-active"));
         return rows
@@ -694,7 +767,6 @@
           .sort((a, b) => Number(b.sessionId || 0) - Number(a.sessionId || 0));
       },
 
-      /* بيخلّي الجلسة دي هي "الحالية" على الجهاز ده (اللوبي وصفحة اللعب بيقروا منها) */
       useSession(s) {
         const cur = readJSON(KEYS.game, null);
         if (!cur || String(cur.roomCode) !== String(s.roomCode)) writeJSON(KEYS.players, []);
@@ -717,7 +789,6 @@
         const info = await waitJoined;
         writeJSON(KEYS.reconnect, { pin: p, playerId: info.playerId, reconnectToken: info.reconnectToken, nickname: name, avatar });
 
-        // حفظ اللاعب في قايمة لاعبين الغرفة فوراً عشان يظهر لما ترجع اللوبي
         const cur = readJSON(KEYS.game, null);
         if (cur && String(cur.roomCode) === p) {
           const list = readJSON(KEYS.players, []);
@@ -744,7 +815,6 @@
         const cur = readJSON(KEYS.game, {});
         const sid = cur.sessionId ?? cur.id;
         const p = pin ?? cur.roomCode;
-        // leaderboard هو الـ endpoint الوحيد الموجود فعلاً في الباك، فبنجربه الأول
         const paths = [
           sid ? `/Games/sessions/${sid}/leaderboard` : null,
           sid ? `/Games/sessions/${sid}/players` : null,
@@ -998,4 +1068,38 @@
   };
 
   window.Api = Api;
+
+  // Aliases متوافقة مع churches.js
+  window.ChurchesAPI = {
+    getAll: () => Api.churches.list(),
+    getMyChurches: () => Api.churches.myChurches(),
+    getById: (id) => Api.churches.get(id),
+    create: (d) => Api.churches.create(d),
+    update: (id, d) => Api.churches.update(id, d),
+    delete: (id) => Api.churches.remove(id),
+    getMembers: (id, st) => Api.churches.members(id, st),
+    addMember: (id, d) => Api.churches.addMember(id, d),
+    updateMember: (id, mid, d) => Api.churches.updateMember(id, mid, d),
+    deleteMember: (id, mid) => Api.churches.removeMember(id, mid),
+    getAttendance: (id, date, st) => Api.churches.attendance(id, date, st),
+    recordAttendance: (id, p) => Api.churches.recordAttendance(id, p),
+    getAbsentees: (id, st, w) => Api.churches.absentees(id, st, w)
+  };
+
+  window.ChurchTeamAPI = {
+    getTeam: (cid) => Api.churches.getTeam(cid),
+    setMemberRole: (cid, mid, role, stages) => Api.churches.setMemberRole(cid, mid, role, stages),
+    getGroups: (cid, st) => Api.churches.getGroups(cid, st),
+    createGroup: (cid, d) => Api.churches.createGroup(cid, d),
+    updateGroup: (cid, gid, d) => Api.churches.updateGroup(cid, gid, d),
+    deleteGroup: (cid, gid) => Api.churches.deleteGroup(cid, gid),
+    getGroupMembers: (cid, gid) => Api.churches.getGroupMembers(cid, gid),
+    assignGroupMembers: (cid, gid, ids) => Api.churches.assignGroupMembers(cid, gid, ids),
+    removeGroupMembers: (cid, gid, ids) => Api.churches.removeGroupMembers(cid, gid, ids),
+    autoSplitGroups: (cid, st, size, onlyUnassigned) => Api.churches.autoSplitGroups(cid, st, size, onlyUnassigned),
+    submitFollowUpReport: (cid, mid, outcome, note) => Api.churches.submitFollowUpReport(cid, mid, outcome, note),
+    getFollowUpReports: (cid, f) => Api.churches.getFollowUpReports(cid, f),
+    getServantsStatus: (cid) => Api.churches.getServantsStatus(cid),
+    getServantsFollowUp: (cid, st) => Api.churches.getServantsFollowUp(cid, st)
+  };
 })();
