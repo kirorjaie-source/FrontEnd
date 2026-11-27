@@ -92,12 +92,14 @@ html, body { overflow-x: hidden; }
   .q-header { padding: 14px 16px; border-radius: 18px; margin-bottom: 12px; font-size: clamp(1.15rem, 5vw, 1.6rem); }
   .q-header::before, .q-header::after { display: none; }
 
-  .q-middle { flex-wrap: wrap; justify-content: space-between; gap: 10px; padding: 0; }
+  /* مايتضغطش الـ q-middle: كده لوجو Kokquiz كان بيطلع برّاه وتغطيه الاختيارات */
+  .screen-layout { overflow-y: auto; }
+  .q-middle { flex: 0 0 auto; flex-wrap: wrap; justify-content: space-between; gap: 10px; padding: 0; }
   .timer-wrapper, .answers-counter-wrapper { width: auto; }
   .timer-circle { width: 64px; height: 64px; border-width: 5px; font-size: 1.8rem; box-shadow: 0 6px 14px rgba(0,0,0,.4); }
   #q-answers-count { font-size: 2.6rem; }
   .answers-counter-wrapper small { font-size: .85rem; }
-  .q-media { order: 3; flex: 1 1 100%; width: 100%; height: auto; min-height: 0; max-height: 165px; padding: 6px 0; }
+  .q-media { order: 3; flex: 1 1 100%; width: 100%; height: auto; min-height: 0; max-height: 165px; min-height: 120px; padding: 6px 0; }
   .q-media img { max-height: 28vh; }
   .media-placeholder .kq-ph-logo { max-width: 170px; max-height: 75px; }
   .media-placeholder .kq-ph-cross { font-size: 1.25rem; }
@@ -155,4 +157,4 @@ html, body { overflow-x: hidden; }
 
   /* زرار Next */
   #btn-next { right: 14px !important; bottom: 14px !important; padding: 12px 26px !important; font-size: 1.05rem !important; }
-}
+             }
