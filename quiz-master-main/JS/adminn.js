@@ -1289,18 +1289,35 @@ async function openStudio(quizId = null) {
   showPage("create");
 }
 
+/* ✅ قايمة الأسئلة: فيها أزرار ▲ ▼ وإمكانية السحب (draggable) لتغيير الترتيب */
 function renderSlidesList() {
   const container = $("slides-list");
   if (!container) return;
+  const last = studioQuiz.questions.length - 1;
   container.innerHTML = studioQuiz.questions.map((q, idx) => `
-    <div class="slide-card ${idx === activeQuestionIndex ? "active" : ""}" data-slide-index="${idx}">
+    <div class="slide-card ${idx === activeQuestionIndex ? "active" : ""}" data-slide-index="${idx}" draggable="true">
       <div class="slide-header">
         <span>${idx + 1} ${q.type === "tf" ? t("slide.tf") : t("slide.quiz")}</span>
         <span>⏱ ${t("slide.sec", { n: q.timeLimit })}</span>
       </div>
       <div class="slide-title">${escapeHTML(q.text || t("slide.question"))}</div>
+      <div class="slide-move">
+        <button type="button" class="slide-move-btn" data-move="up" ${idx === 0 ? "disabled" : ""} aria-label="Move up">▲</button>
+        <button type="button" class="slide-move-btn" data-move="down" ${idx === last ? "disabled" : ""} aria-label="Move down">▼</button>
+      </div>
     </div>
   `).join("");
+}
+
+/* ✅ نقل سؤال من مكان لمكان */
+function moveQuestion(from, to) {
+  const qs = studioQuiz.questions;
+  if (from === to || from < 0 || to < 0 || from >= qs.length || to >= qs.length) return;
+  syncCurrentQuestionFromInputs();          // احفظ اللي مكتوب قبل النقل
+  const [item] = qs.splice(from, 1);
+  qs.splice(to, 0, item);
+  markDirty();
+  loadQuestionToCanvas(to);                 // السؤال المنقول يبقى هو المفتوح
 }
 
 function ensureTimeOption(seconds) {
@@ -1418,12 +1435,58 @@ function bindStudio() {
     loadQuestionToCanvas(studioQuiz.questions.length - 1);
   });
 
-  $("slides-list")?.addEventListener("click", (e) => {
+  /* ✅ قايمة الأسئلة: اختيار سؤال + أزرار ▲ ▼ + سحب وإفلات */
+  const slidesList = $("slides-list");
+
+  slidesList?.addEventListener("click", (e) => {
     const card = e.target.closest(".slide-card");
     if (!card) return;
+    const idx = Number(card.dataset.slideIndex);
+    const mv = e.target.closest(".slide-move-btn");
+    if (mv) {
+      if (mv.disabled) return;
+      moveQuestion(idx, mv.dataset.move === "up" ? idx - 1 : idx + 1);
+      return;
+    }
     syncCurrentQuestionFromInputs();
-    loadQuestionToCanvas(Number(card.dataset.slideIndex));
+    loadQuestionToCanvas(idx);
   });
+
+  let dragFrom = null;
+  const clearDragMarks = () => {
+    slidesList.querySelectorAll(".dragging,.drag-over").forEach((c) => c.classList.remove("dragging", "drag-over"));
+  };
+
+  slidesList?.addEventListener("dragstart", (e) => {
+    const card = e.target.closest(".slide-card");
+    if (!card) return;
+    dragFrom = Number(card.dataset.slideIndex);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", String(dragFrom));
+    card.classList.add("dragging");
+  });
+
+  slidesList?.addEventListener("dragover", (e) => {
+    if (dragFrom === null) return;
+    const card = e.target.closest(".slide-card");
+    if (!card) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    slidesList.querySelectorAll(".drag-over").forEach((c) => c.classList.remove("drag-over"));
+    card.classList.add("drag-over");
+  });
+
+  slidesList?.addEventListener("drop", (e) => {
+    if (dragFrom === null) return;
+    const card = e.target.closest(".slide-card");
+    e.preventDefault();
+    const from = dragFrom;
+    dragFrom = null;
+    clearDragMarks();
+    if (card) moveQuestion(from, Number(card.dataset.slideIndex));
+  });
+
+  slidesList?.addEventListener("dragend", () => { dragFrom = null; clearDragMarks(); });
 
   $("canvas-question-text")?.addEventListener("input", syncCurrentQuestionFromInputs);
   $("studio-quiz-title")?.addEventListener("input", markDirty);
@@ -1569,17 +1632,37 @@ function bindStudio() {
 let publicQuizzes = [];
 const publicQuizCache = new Map();
 
+function isAdminUser() {
+  try {
+    if (window.Api?.auth?.isAdmin) return !!Api.auth.isAdmin();
+    const s = (window.Api && Api.auth.getSession()) || JSON.parse(localStorage.getItem("churchQuizSession") || "{}");
+    const token = s.token || localStorage.getItem("token") || localStorage.getItem("churchQuizToken");
+    const c = token ? decodeJwt(token) : {};
+    const role = s.role || c.role || c["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || "";
+    return String(role).toLowerCase() === "admin" || role === 0 || role === "0";
+  } catch { return false; }
+}
+
 async function loadPublicQuizzes() {
   const hasPublic = typeof Api.quizzes.listPublic === "function";
+  const admin = isAdminUser() && typeof Api.quizzes.listAll === "function";
   const errors = [];
-  const [mine, pub] = await Promise.all([
+
+  // الأدمن: كل الكويزات (Private + Public). لو الـendpoint فشل نكمّل بالطريقة العادية.
+  const allP = admin
+    ? Api.quizzes.listAll().catch((e) => { console.warn("all failed, fallback", e); return null; })
+    : Promise.resolve(null);
+
+  const [mine, pub, all] = await Promise.all([
     Api.quizzes.list().catch((e) => { console.warn("mine failed", e); errors.push(e); return []; }),
-    hasPublic ? Api.quizzes.listPublic().catch((e) => { console.warn("public failed", e); errors.push(e); return []; }) : Promise.resolve([])
+    hasPublic ? Api.quizzes.listPublic().catch((e) => { console.warn("public failed", e); errors.push(e); return []; }) : Promise.resolve([]),
+    allP
   ]);
-  if (errors.length >= (hasPublic ? 2 : 1)) throw errors[0];
+  if (!Array.isArray(all) && errors.length >= (hasPublic ? 2 : 1)) throw errors[0];
 
   const byId = new Map();
-  [...(Array.isArray(mine) ? mine : []), ...(Array.isArray(pub) ? pub : [])].forEach((q) => byId.set(String(q.id), q));
+  [...(Array.isArray(mine) ? mine : []), ...(Array.isArray(pub) ? pub : []), ...(Array.isArray(all) ? all : [])]
+    .forEach((q) => byId.set(String(q.id), q));
   publicQuizzes = [...byId.values()].sort((a, b) => (Number(b.id) || 0) - (Number(a.id) || 0));
   publicQuizCache.clear();
   publicQuizzes.forEach((q) => publicQuizCache.set(String(q.id), q));

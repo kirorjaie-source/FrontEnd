@@ -509,6 +509,8 @@
     quizzes: {
       list: async () => Promise.all(toArray(await http("GET", "/Quizzes/mine")).map(fromSummary)),
       listPublic: async () => Promise.all(toArray(await http("GET", "/Quizzes/public")).map(fromSummary)),
+      // للأدمن فقط: كل الكويزات (Private + Public) من كل المستخدمين
+      listAll: async () => Promise.all(toArray(await http("GET", "/Quizzes/all")).map(fromSummary)),
 
       get: async (id) => {
         try {

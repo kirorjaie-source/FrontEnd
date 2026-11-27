@@ -67,13 +67,25 @@ body, html { margin: 0; padding: 0; height: 100%; font-family: 'Montserrat', san
 @keyframes phGlow { 0%,100% { transform: scale(1) rotate(-2deg); } 50% { transform: scale(1.06) rotate(2deg); } }
 @keyframes phCross { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-5px) scale(1.15); } }
 
-/* ---- سؤال بصورة: المستطيل الأبيض (وكلمة "حل") يختفي والصورة تكبر لوحدها لحد الاختيارات ---- */
+/* ---- سؤال بصورة: نص السؤال يفضل ظاهر (مصغّر) والصورة تكبر لحد الاختيارات ---- */
 .screen-layout.has-image { padding: 8px 20px 14px; position: relative; }
-.screen-layout.has-image .q-header { display: none; }
+
+/* ✅ التعديل: بدل display:none بقى الهيدر ظاهر بحجم مصغّر */
+.screen-layout.has-image .q-header {
+  display: block;
+  padding: 10px 24px;
+  border-radius: 18px;
+  border-bottom-width: 4px;
+  font-size: clamp(1.2rem, 2.4vw, 2rem);
+  margin-bottom: 8px;
+}
+.screen-layout.has-image .q-header::before,
+.screen-layout.has-image .q-header::after { display: none; }
+
 .screen-layout.has-image .q-middle { position: static; align-items: stretch; padding: 0; gap: 0; }
-/* التايمر وعدّاد الإجابات فوق ركن الصورة بدل ما ياخدوا مكان من عرضها */
+/* التايمر وعدّاد الإجابات فوق ركن الصورة (تحت نص السؤال) بدل ما ياخدوا مكان من عرضها */
 .screen-layout.has-image .timer-wrapper,
-.screen-layout.has-image .answers-counter-wrapper { position: absolute; top: 18px; z-index: 5; width: auto; }
+.screen-layout.has-image .answers-counter-wrapper { position: absolute; top: 84px; z-index: 5; width: auto; }
 .screen-layout.has-image .timer-wrapper { left: 28px; }
 .screen-layout.has-image .answers-counter-wrapper { right: 28px; text-shadow: 0 3px 10px rgba(0,0,0,.7); }
 .screen-layout.has-image .q-media {
