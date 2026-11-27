@@ -874,3 +874,6 @@ tbody tr:hover { background: #FBFCFE; }
 .quiz-card:has(.quiz-session-controls) .my-quiz-actions { gap: 10px; }
 .quiz-session-controls { margin-top: 8px !important; gap: 10px !important; flex-direction: column; }
 .quiz-session-controls .button { flex: 0 0 auto !important; width: 100%; padding: 11px 12px !important; font-size: 13px !important; }
+#kc-root .kc-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+}

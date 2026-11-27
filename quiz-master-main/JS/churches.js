@@ -24,9 +24,11 @@
   const toArr = (r) => (Array.isArray(r) ? r : r?.items || r?.data || r?.$values || []);
 
   /* ============================================================
-     ⚙ إعدادات الـ Enums — لازم تطابق الباك (Domain.Entities)
+     ⚙ إعدادات الـ Enums — مطابقة تماماً للباك (Domain.Contract)
      ChurchStage: KG=1, Primary=2, Preparatory=3, Secondary=4, University=5, External=6
-     ChurchRole: Member=0, Servant=1, Ameen=2
+     ChurchRole:
+       Member = 0, Ameen = 1, GeneralAmeen = 2, AssistantAmeen = 3,
+       Servant = 4, FollowUpServant = 5, Secretary = 6
      ============================================================ */
   const ORD_AR = ["أولى", "تانية", "تالتة", "رابعة", "خامسة", "سادسة"];
   const MAIN = [
@@ -38,7 +40,17 @@
     { v: 6, key: "external", ar: "خريجين", en: "Graduates", n: 0 }
   ];
   const STATUSES = ["Pending", "Approved", "Rejected", "Revoked"]; // MemberStatus
-  const ROLES = ["Member", "Servant", "Ameen"];                    // ChurchRole
+  const ROLE_DEFS = [
+    { v: 0, key: "Member", ar: "عضو", en: "Member", badge: "info", ico: "👤" },
+    { v: 1, key: "Ameen", ar: "أمين", en: "Ameen", badge: "ok", ico: "✝" },
+    { v: 2, key: "GeneralAmeen", ar: "أمين عام", en: "General Ameen", badge: "ok", ico: "👑" },
+    { v: 3, key: "AssistantAmeen", ar: "أمين مساعد", en: "Assistant Ameen", badge: "ok", ico: "⭐" },
+    { v: 4, key: "Servant", ar: "خادم", en: "Servant", badge: "warn", ico: "🤝" },
+    { v: 5, key: "FollowUpServant", ar: "خادم افتقاد", en: "Follow-Up Servant", badge: "warn", ico: "📞" },
+    { v: 6, key: "Secretary", ar: "سكرتير", en: "Secretary", badge: "info", ico: "📋" }
+  ];
+  const ROLES = ROLE_DEFS.map((r) => r.key);
+
   const OUTCOMES = [
     { v: "Reached", ar: "تم التواصل والرد", en: "Reached" },
     { v: "NoAnswer", ar: "لم يرد", en: "No Answer" },
@@ -136,10 +148,19 @@
     return `${H % 12 || 12}:${m || "00"} ${H >= 12 ? tr("م", "PM") : tr("ص", "AM")}`;
   };
   const statusKey = (v) => enumName(v, STATUSES).toLowerCase();
-  const roleKey = (v) => enumName(v, ROLES).toLowerCase();
+  const norm = (x) => String(x ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+
+  const findRole = (v) => {
+    if (v == null || v === "") return null;
+    if (!isNaN(Number(v))) return ROLE_DEFS.find((r) => r.v === Number(v)) || null;
+    return ROLE_DEFS.find((r) => norm(r.key) === norm(v)) || null;
+  };
+  const roleKey = (v) => {
+    const r = findRole(v);
+    return r ? r.key.toLowerCase() : enumName(v, ROLES).toLowerCase();
+  };
 
   /* ---- المراحل والصفوف ---- */
-  const norm = (x) => String(x ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
   const findStage = (v) => MAIN.find((s) => String(s.v) === String(v) || (v != null && v !== "" && s.key === norm(v)));
   const gradesOf = (v) => { const s = findStage(v); return s ? s.n : 0; };
   const stageLabel = (v, g) => {
@@ -174,17 +195,14 @@
     return l ? `<span class="kc-badge ${l[2]}">${isAr() ? l[0] : l[1]}</span>` : `<span class="kc-badge info">${esc(v ?? "—")}</span>`;
   }
   function roleLabel(v) {
-    const k = roleKey(v);
-    if (k.includes("ameen")) return tr("أمين خدمة", "Ameen");
-    if (k.includes("servant")) return tr("خادم", "Servant");
-    if (k === "member") return tr("عضو", "Member");
+    const r = findRole(v);
+    if (r) return isAr() ? r.ar : r.en;
     return enumName(v, ROLES) || "—";
   }
   function roleBadge(v) {
-    const k = roleKey(v);
-    if (k.includes("ameen")) return `<span class="kc-badge ok">✝ ${roleLabel(v)}</span>`;
-    if (k.includes("servant")) return `<span class="kc-badge warn">🤝 ${roleLabel(v)}</span>`;
-    return `<span class="kc-badge info">${roleLabel(v)}</span>`;
+    const r = findRole(v);
+    if (r) return `<span class="kc-badge ${r.badge}">${r.ico} ${isAr() ? r.ar : r.en}</span>`;
+    return `<span class="kc-badge info">${esc(roleLabel(v))}</span>`;
   }
   function outcomeBadge(v) {
     const o = OUTCOMES.find((x) => norm(x.v) === norm(v));
@@ -196,7 +214,7 @@
   const statusOptions = () => [{ value: "", label: tr("كل الحالات", "All statuses") }]
     .concat(STATUSES.map((n, i) => { const l = STATUS_LBL[n.toLowerCase()]; return { value: i, label: l ? (isAr() ? l[0] : l[1]) : n }; }));
   const roleOptions = () => [{ value: "", label: tr("كل الأدوار", "All roles") }]
-    .concat(ROLES.map((n, i) => ({ value: i, label: roleLabel(i) })));
+    .concat(ROLE_DEFS.map((r) => ({ value: r.v, label: isAr() ? r.ar : r.en })));
 
   const selHTML = (attrs, opts, val) => {
     let html = "";
@@ -262,8 +280,24 @@
   const selectable = () => (isAdmin() ? S.all : S.mine);
   const current = () => selectable().find((c) => String(c.id) === String(S.churchId)) || selectable()[0] || null;
   const isApprovedMember = (c) => !!(c && c.myStatus != null && statusKey(c.myStatus) === "approved");
-  const isServantOrAmeen = (c) => isAdmin() || (isApprovedMember(c) && (roleKey(c.myRole).includes("ameen") || roleKey(c.myRole).includes("servant")));
-  const canManage = (c) => isAdmin() || (isApprovedMember(c) && roleKey(c.myRole).includes("ameen"));
+
+  // أي دور قيادي أو خدمي غير Member العادي (Ameen=1, GeneralAmeen=2, AssistantAmeen=3, Servant=4, FollowUpServant=5, Secretary=6)
+  const isServantOrAmeen = (c) => {
+    if (isAdmin()) return true;
+    if (!isApprovedMember(c)) return false;
+    const r = findRole(c.myRole);
+    return r ? r.v >= 1 : roleKey(c.myRole) !== "member";
+  };
+
+  // الأدوار الإدارية (Ameen=1, GeneralAmeen=2, AssistantAmeen=3, Secretary=6)
+  const canManage = (c) => {
+    if (isAdmin()) return true;
+    if (!isApprovedMember(c)) return false;
+    const r = findRole(c.myRole);
+    if (r) return [1, 2, 3, 6].includes(r.v);
+    const k = roleKey(c.myRole);
+    return k.includes("ameen") || k.includes("secretary");
+  };
 
   async function loadChurches() {
     const [all, mine] = await Promise.all([api("/Churches"), api("/Churches/mine")]);
@@ -427,7 +461,7 @@
 
   /* ---------------- Panels ---------------- */
   const PANELS = {};
-  const lockedPanel = () => empty("🔒", tr("هذا القسم للأمين والأدمن فقط.", "This section is for Ameens and admins only."));
+  const lockedPanel = () => empty("🔒", tr("هذا القسم للأمناء والأدمن فقط.", "This section is for Ameens and admins only."));
   const servantLockedPanel = () => empty("🔒", tr("هذا القسم للخدام والأمناء والأدمن فقط.", "This section is for Servants, Ameens, and admins only."));
 
   // 1) كل الكنايس & كنايسي
@@ -471,7 +505,7 @@
         <div class="kc-meta">
           <span>📅 ${dayLabel(c.meetingDay)} ${esc(fmtTime(c.meetingTime))}</span>
           ${c.myStatus != null ? statusBadge(c.myStatus) : ""}
-          ${c.myRole != null && st === "approved" ? `<span class="kc-badge info">${roleLabel(c.myRole)}</span>` : ""}
+          ${c.myRole != null && st === "approved" ? roleBadge(c.myRole) : ""}
           ${counts}
         </div>
         <div class="kc-card-actions">${actions}</div>
@@ -500,7 +534,8 @@
 
     const rows = S.members.map((m, i) => {
       const st = statusKey(m.status);
-      const isTargetAmeen = roleKey(m.role).includes("ameen");
+      const rObj = findRole(m.role);
+      const isTargetAmeen = rObj ? [1, 2, 3].includes(rObj.v) : roleKey(m.role).includes("ameen");
       let acts = "";
       if (st === "pending") acts += `<button class="kc-mini ok" data-act="decide" data-do="approve" data-m="${m.id}">✓ ${tr("قبول", "Approve")}</button><button class="kc-mini danger" data-act="decide" data-do="reject" data-m="${m.id}">✕ ${tr("رفض", "Reject")}</button>`;
       else if (st === "approved") acts += `<button class="kc-mini danger" data-act="decide" data-do="revoke" data-m="${m.id}">⛔ ${tr("إلغاء العضوية", "Revoke")}</button>`;
@@ -595,7 +630,7 @@
 
     return head + `<div class="kc-cards">${S.groups.map((g) => {
       const count = g.membersCount ?? (Array.isArray(g.members) ? g.members.length : 0);
-      const servantName = g.servantName || g.leaderName || g.assignedServantName || tr("غير محدد", "Unassigned");
+      const servantName = g.followUpServantName || g.servantName || g.leaderName || g.assignedServantName || tr("غير محدد", "Unassigned");
       return `
         <article class="kc-church">
           <div class="kc-church-top">
@@ -606,7 +641,7 @@
             </div>
           </div>
           <div class="kc-meta">
-            <span class="kc-badge info">🤝 ${tr("الخادم:", "Servant:")} ${esc(servantName)}</span>
+            <span class="kc-badge info">📞 ${tr("خادم الافتقاد:", "Servant:")} ${esc(servantName)}</span>
             <span class="kc-badge ok">👥 ${count} ${tr("عضو", "members")}</span>
           </div>
           ${g.description ? `<p class="kc-desc">${esc(g.description)}</p>` : ""}
@@ -637,7 +672,6 @@
         </div>
       </div>`;
 
-    // أ) تبويب المطلوب افتقادهم
     if (S.fu.tab === "absent") {
       const q = S.fu.stage !== "" ? `?stage=${encodeURIComponent(S.fu.stage)}` : "";
       S.followups = toArr(await api(`/Churches/${c.id}/follow-up${q}`));
@@ -662,7 +696,6 @@
       return head + table([tr("الاسم", "Name"), tr("الموبايل", "Phone"), tr("واتساب", "WhatsApp"), tr("المرحلة", "Stage"), tr("آخر حضور", "Last attended"), tr("الغياب", "Absent"), tr("آخر افتقاد", "Last follow-up"), tr("آخر ملاحظة", "Last note"), tr("إجراء", "Action")], rows);
     }
 
-    // ب) تبويب سجل تقارير الافتقاد
     if (S.fu.tab === "reports") {
       const p = new URLSearchParams();
       if (S.fu.from) p.set("from", S.fu.from);
@@ -689,7 +722,6 @@
       return head + table(["#", tr("المخدوم", "Member"), tr("النتيجة", "Outcome"), tr("الملاحظة", "Note"), tr("الخادم", "Servant"), tr("التاريخ", "Date")], rows);
     }
 
-    // ج) تبويب متابعة وافتقاد الخدام (للأمين والأدمن)
     if (!manage) return tabs + lockedPanel();
     const q = S.fu.stage !== "" ? `?stage=${encodeURIComponent(S.fu.stage)}` : "";
     const [statusList, servantsFu] = await Promise.all([
@@ -702,10 +734,11 @@
     const statusSection = S.servantsStatus.length
       ? `<h4 style="margin:12px 0 8px">📊 ${tr("نشاط الخدام في الافتقاد", "Servants Follow-up Activity")}</h4>` +
         table(
-          [tr("الخادم", "Servant"), tr("الموبايل", "Phone"), tr("مراحل الخدمة", "Stages"), tr("عدد التقارير", "Reports"), tr("آخر افتقاد قام به", "Last Activity")],
+          [tr("الخادم", "Servant"), tr("الدور", "Role"), tr("الموبايل", "Phone"), tr("مراحل الخدمة", "Stages"), tr("عدد التقارير", "Reports"), tr("آخر افتقاد قام به", "Last Activity")],
           S.servantsStatus.map((s) => `
             <tr>
               <td><b>${esc(s.fullName || s.name)}</b></td>
+              <td>${roleBadge(s.role)}</td>
               <td>${phoneHTML(s.phone)}</td>
               <td>${stagesBadgesHTML(s.serviceStages)}</td>
               <td><span class="kc-badge info">${s.reportsCount ?? s.totalReports ?? 0}</span></td>
@@ -725,10 +758,11 @@
 
     const absentServantsBody = S.servantsFollowup.length
       ? table(
-          [tr("الخادم", "Servant"), tr("الموبايل", "Phone"), tr("واتساب", "WhatsApp"), tr("أيام الغياب", "Days Absent"), tr("آخر ملاحظة", "Last Note"), tr("إجراء", "Action")],
+          [tr("الخادم", "Servant"), tr("الدور", "Role"), tr("الموبايل", "Phone"), tr("واتساب", "WhatsApp"), tr("أيام الغياب", "Days Absent"), tr("آخر ملاحظة", "Last Note"), tr("إجراء", "Action")],
           S.servantsFollowup.map((m) => `
             <tr>
               <td><b>${esc(m.fullName)}</b></td>
+              <td>${roleBadge(m.role)}</td>
               <td>${phoneHTML(m.phone)}</td>
               <td>${waHTML(m.whatsAppPhone || m.phone)}</td>
               <td><span class="kc-badge warn">${m.daysAbsent ?? "—"} ${tr("يوم", "days")}</span></td>
@@ -778,11 +812,12 @@
     const ameensHead = `<div class="kc-head"><span class="kc-badge info">✝ ${tr("أمناء الخدمة:", "Ameens:")} ${S.ameens.length}</span>${admin ? `<button type="button" class="kc-btn primary" data-act="assign-ameen">＋ ${tr("تعيين أمين", "Assign Ameen")}</button>` : ""}</div>`;
     const ameensTable = S.ameens.length
       ? table(
-          ["#", tr("الاسم", "Name"), tr("الموبايل", "Phone"), tr("واتساب", "WhatsApp")].concat(admin ? [tr("إجراءات", "Actions")] : []),
+          ["#", tr("الاسم", "Name"), tr("الدور", "Role"), tr("الموبايل", "Phone"), tr("واتساب", "WhatsApp")].concat(admin ? [tr("إجراءات", "Actions")] : []),
           S.ameens.map((a, i) => `
             <tr>
               <td>${i + 1}</td>
               <td><b>${esc(a.fullName)}</b></td>
+              <td>${roleBadge(a.role ?? "GeneralAmeen")}</td>
               <td>${phoneHTML(a.phone)}</td>
               <td>${waHTML(a.whatsAppPhone)}</td>
               ${admin ? `<td class="kc-acts"><button class="kc-mini danger" data-act="remove-ameen" data-m="${a.memberId}">🗑 ${tr("إزالة", "Remove")}</button></td>` : ""}
@@ -790,7 +825,7 @@
         )
       : empty("✝", tr("لا يوجد أمناء لهذه الكنيسة.", "No Ameens for this church."));
 
-    const teamTitle = `<div class="kc-head" style="margin-top:18px"><span class="kc-badge warn">🤝 ${tr("فريق الخدام ومراحل الخدمة:", "Servants Team & Stages:")} ${S.team.length}</span></div>`;
+    const teamTitle = `<div class="kc-head" style="margin-top:18px"><span class="kc-badge warn">🤝 ${tr("فريق الخدمة والأدوار والمراحل:", "Service Team, Roles & Stages:")} ${S.team.length}</span></div>`;
     const teamTable = S.team.length
       ? table(
           ["#", tr("الاسم", "Name"), tr("الموبايل", "Phone"), tr("الدور", "Role"), tr("مراحل الخدمة", "Service Stages")].concat(manage ? [tr("إجراءات", "Actions")] : []),
@@ -806,7 +841,7 @@
             </tr>`;
           }).join("")
         )
-      : empty("🤝", tr("لا يوجد خدام معيّنون بعد. يمكنك ترقية أي عضو إلى خادم من تبويب «الأعضاء والطلبات».", "No servants assigned yet. Promote any member from “Members & Requests”."));
+      : empty("🤝", tr("لا يوجد فريق خدمة معيّن بعد. يمكنك تعيين الأدوار من تبويب «الأعضاء والطلبات».", "No team members assigned yet. Assign roles from “Members & Requests”."));
 
     return ameensHead + ameensTable + teamTitle + teamTable;
   };
@@ -821,7 +856,7 @@
           <h3>⚙ ${esc(c.name)}</h3>
           <div class="kc-meta">📅 ${dayLabel(c.meetingDay)} ${esc(fmtTime(c.meetingTime))}</div>
           <div class="kc-meta">📞 ${tr("الافتقاد بعد", "Follow-up after")} ${esc(c.followUpAfterDays ?? "—")} ${tr("يوم غياب", "days absent")}</div>
-          <div class="kc-note">${tr("تعديل إعدادات الكنيسة للأمين والأدمن فقط.", "Only Ameens and admins can edit church settings.")}</div>
+          <div class="kc-note">${tr("تعديل إعدادات الكنيسة للأمناء والأدمن فقط.", "Only Ameens and admins can edit church settings.")}</div>
         </div>`;
     }
     const days = DAY_NAMES.map((_, i) => ({ value: i, label: (isAr() ? DAYS_AR : DAY_NAMES)[i] }));
@@ -934,7 +969,7 @@
   function openRoleModal(member) {
     const c = current();
     const mid = member.memberId ?? member.id;
-    const curRoleIdx = ROLES.findIndex((r) => norm(r) === norm(enumName(member.role, ROLES)));
+    const rObj = findRole(member.role);
     openModal({
       title: tr("تحديد الدور ومراحل الخدمة", "Set Role & Service Stages"),
       sub: member.fullName,
@@ -943,8 +978,8 @@
           name: "role",
           label: tr("الدور في الكنيسة", "Church Role"),
           type: "select",
-          value: curRoleIdx > -1 ? curRoleIdx : 0,
-          options: ROLES.map((_, i) => ({ value: i, label: roleLabel(i) }))
+          value: rObj ? rObj.v : 0,
+          options: ROLE_DEFS.map((r) => ({ value: r.v, label: isAr() ? r.ar : r.en }))
         },
         {
           name: "serviceStages",
@@ -979,16 +1014,13 @@
       fields: [
         { name: "name", label: tr("اسم المجموعة", "Group Name"), value: group?.name || group?.title || "", required: true, maxlength: 100 },
         { name: "stage", label: tr("المرحلة", "Stage"), type: "stage", value: group?.stage || "", grade: group?.grade || "", allowEmpty: true },
-        { name: "servantMemberId", label: tr("الخادم المسؤول", "Assigned Servant"), type: "select", value: group?.servantMemberId ?? group?.leaderId ?? "", options: servantOpts },
-        { name: "description", label: tr("وصف / ملاحظات (اختياري)", "Description (optional)"), type: "textarea", value: group?.description || "", maxlength: 300 }
+        { name: "followUpServantMemberId", label: tr("خادم الافتقاد المسؤول", "Assigned Follow-Up Servant"), type: "select", value: group?.followUpServantMemberId ?? group?.servantMemberId ?? "", options: servantOpts }
       ],
       onSubmit: async (v) => {
         const payload = JSON.stringify({
           name: v.name,
           stage: v.stage === "" ? null : Number(v.stage),
-          grade: v.stage === "" ? null : gradeVal(v),
-          servantMemberId: v.servantMemberId === "" ? null : Number(v.servantMemberId),
-          description: v.description || null
+          followUpServantMemberId: v.followUpServantMemberId === "" ? null : Number(v.followUpServantMemberId)
         });
         if (group) await api(`/Churches/${c.id}/groups/${group.id}`, { method: "PUT", body: payload });
         else await api(`/Churches/${c.id}/groups`, { method: "POST", body: payload });
@@ -1306,7 +1338,7 @@
       const c = current();
       const g = S.groups.find((x) => String(x.id) === String(b.dataset.g));
       if (!g) return;
-      const q = new URLSearchParams({ status: "1" }); // Approved
+      const q = new URLSearchParams({ status: "1" });
       if (g.stage) q.set("stage", g.stage);
       const allApproved = toArr(await api(`/Churches/${c.id}/members?${q}`));
       openModal({
@@ -1353,7 +1385,7 @@
             body: JSON.stringify({
               memberId: /^\d+$/.test(String(mid)) ? Number(mid) : mid,
               outcome: v.outcome,
-              note: v.note || null
+              note: v.note || ""
             })
           });
           say(tr("تم تسجيل تقرير الافتقاد ✓", "Follow-up report saved ✓"));
