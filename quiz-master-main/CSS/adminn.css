@@ -869,3 +869,8 @@ tbody tr:hover { background: #FBFCFE; }
 /* كارت المسابقة اللي عليه جلسة مفتوحة: يطول عشان زراير Resume/End ما يتقصوش */
 .quiz-card:has(.quiz-session-controls) { aspect-ratio: auto; }
 .quiz-card:has(.quiz-session-controls) .quiz-card-body { flex: 0 0 auto; }
+/* مسافات زراير الجلسة (Resume / End) */
+.quiz-card:has(.quiz-session-controls) .quiz-card-body { gap: 12px; padding: 14px 16px 16px; }
+.quiz-card:has(.quiz-session-controls) .my-quiz-actions { gap: 10px; }
+.quiz-session-controls { margin-top: 8px !important; gap: 10px !important; flex-direction: column; }
+.quiz-session-controls .button { flex: 0 0 auto !important; width: 100%; padding: 11px 12px !important; font-size: 13px !important; }
