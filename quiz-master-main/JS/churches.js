@@ -47,7 +47,7 @@
     { k: "churches", icon: "⛪", ar: "كل الكنايس & كنايسي", en: "All & My Churches" },
     { k: "stages", icon: "🏫", ar: "مراحل الكنيسة", en: "Church Stages" },
     { k: "members", icon: "👥", ar: "الأعضاء والطلبات", en: "Members & Requests" },
-    { k: "team", icon: "🧑‍🏫", ar: "الفريق والأدوار", en: "Team & Roles" },
+    { k: "team", icon: "🤝", ar: "الفريق والأدوار", en: "Team & Roles" },
     { k: "attendance", icon: "✅", ar: "الغياب اليومي", en: "Daily Attendance" },
     { k: "followup", icon: "📞", ar: "الافتقاد", en: "Follow-up" },
     { k: "groups", icon: "🗂", ar: "مجموعات الافتقاد", en: "Follow-up Groups" },
@@ -137,7 +137,7 @@
   const norm = (x) => String(x ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
   const findStage = (v) => MAIN.find((s) => String(s.v) === String(v) || (v != null && v !== "" && s.key === norm(v)));
   // إعدادات مراحل الكنيسة الحالية (من الباك): { قيمة المرحلة: عدد السنين }
-  const STAGE_ICO = { 1: "🧸", 2: "📚", 3: "🎒", 4: "🎓", 5: "🏛", 6: "🤝" };
+  const STAGE_ICO = { 1: "🧸", 2: "📚", 3: "🎒", 4: "🧑‍🏫", 5: "🏛", 6: "🎓" };
   const gradesOf = (v) => {
     const s = findStage(v);
     if (!s) return 0;
@@ -904,8 +904,8 @@
       "اللي أعلى بس يقدر يغيّر اللي أقل. الأمين والمساعد ليهم مرحلة أو أكتر، والخادم وخادم الافتقاد مرحلة واحدة بالظبط.",
       "Only a higher role can change a lower one. Ameens/Assistants serve one or more stages; Servants/Follow-up servants exactly one."
     )}</div>
-      <div class="kc-head"><span class="kc-badge info">🧑‍🏫 ${S.team.length}</span>${canRole ? `<button type="button" class="kc-btn primary" data-act="promote">＋ ${tr("تعيين من المخدومين", "Assign from members")}</button>` : ""}</div>`;
-    if (!S.team.length) return head + empty("🧑‍🏫", tr("لا يوجد خدام بعد.", "No team members yet."));
+      <div class="kc-head"><span class="kc-badge info">🤝 ${S.team.length}</span>${canRole ? `<button type="button" class="kc-btn primary" data-act="promote">＋ ${tr("تعيين من المخدومين", "Assign from members")}</button>` : ""}</div>`;
+    if (!S.team.length) return head + empty("🤝", tr("لا يوجد خدام بعد.", "No team members yet."));
     const rows = S.team.map((m, i) => `
       <tr>
         <td>${i + 1}</td>
