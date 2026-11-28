@@ -1137,3 +1137,6 @@ html[data-theme="dark"] .kcx-opt.sel, [data-theme="dark"] .kcx-opt.sel { backgro
 .kc-same { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
 .kc-same input { width: 18px; height: 18px; accent-color: #d4a84b; }
 .kc-wa-ic { text-decoration: none; margin-inline-start: 6px; }
+
+.kc-locked { height: 46px; display: flex; align-items: center; padding: 0 14px; border-radius: 12px; border: 1.5px dashed #cbd5e1; background: rgba(148,163,184,.12); font-weight: 800; font-size: 14px; }
+html[data-theme="dark"] .kc-locked, [data-theme="dark"] .kc-locked { border-color: #24406b; color: #f0c86e; background: rgba(36,64,107,.25); }

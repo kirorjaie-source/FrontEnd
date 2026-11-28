@@ -308,6 +308,9 @@
     let input;
     if (f.type === "select") {
       input = selHTML(`id="${id}" name="${f.name}"`, f.options, v);
+    } else if (f.type === "stage" && f.locked) {
+      const st = findStage(f.value);
+      return `<div class="kc-field"><label>${esc(f.label)}</label><div class="kc-locked">${esc(stageLabel(st ? st.v : f.value, f.grade ? Number(f.grade) : 0))}</div><input type="hidden" name="stage" value="${esc(st ? st.v : f.value)}"><input type="hidden" name="grade" value="${esc(f.grade || "")}"></div>`;
     } else if (f.type === "stage") {
       const st = findStage(f.value);
       const sv = st ? st.v : "";
@@ -1204,7 +1207,7 @@
         fields: [
           phoneField(),
           waField(),
-          { name: "stage", label: tr("المرحلة", "Stage"), type: "stage", required: true, value: b.dataset.stage || "", grade: b.dataset.grade || "" }
+          { name: "stage", label: tr("المرحلة", "Stage"), type: "stage", required: true, value: b.dataset.stage || "", grade: b.dataset.grade || "", locked: !!b.dataset.stage && (!gradesOf(b.dataset.stage) || !!b.dataset.grade) }
         ],
         onSubmit: async (v) => {
           await api(`/Churches/${c.id}/join`, { method: "POST", body: JSON.stringify({ stage: Number(v.stage), grade: gradeVal(v), phone: v.phone, whatsAppPhone: v.whatsapp || null }) });
@@ -1275,7 +1278,7 @@
           },
           phoneField(),
           waField(),
-          { name: "stage", label: tr("المرحلة", "Stage"), type: "stage", required: true, value: b.dataset.stage || "", grade: b.dataset.grade || "" }
+          { name: "stage", label: tr("المرحلة", "Stage"), type: "stage", required: true, value: b.dataset.stage || "", grade: b.dataset.grade || "", locked: !!b.dataset.stage && (!gradesOf(b.dataset.stage) || !!b.dataset.grade) }
         ],
         onOpen: bindMemberEmailAutoFill,
         onSubmit: async (v) => {
