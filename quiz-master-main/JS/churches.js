@@ -915,6 +915,22 @@
   };
 
   // 5) الإيفنتس
+  const bookBtn = (ev) => {
+    if (!ev.contactType || !ev.contactValue) return "";
+    const t = String(ev.contactType).toLowerCase();
+    const v = ev.contactValue;
+    let btn = "";
+    if (t === "whatsapp") {
+      const msg = encodeURIComponent(tr(`أنا عاوز أحجز في: ${ev.title}`, `I'd like to book: ${ev.title}`));
+      btn = `<a class="kc-btn wa" href="https://wa.me/${waDigits(v)}?text=${msg}" target="_blank" rel="noopener noreferrer">💬 ${tr("احجز على واتساب", "Book on WhatsApp")}</a>`;
+    } else if (t === "phone") {
+      btn = `<a class="kc-btn gold" dir="ltr" href="tel:${esc(v)}">📞 ${tr("اتصل للحجز", "Call to book")} · ${esc(v)}</a>`;
+    } else if (t === "link" && /^https?:\/\//i.test(v)) {
+      btn = `<a class="kc-btn gold" href="${esc(v)}" target="_blank" rel="noopener noreferrer">🔗 ${tr("احجز / سجّل من هنا", "Book / register here")}</a>`;
+    }
+    return btn ? `<div class="kc-card-actions">${btn}</div>` : "";
+  };
+
   PANELS.events = async () => {
     const c = current();
     const manage = can("events", c);
@@ -929,6 +945,7 @@
         </div>
         ${ev.location ? `<p class="kc-desc">📍 ${esc(ev.location)}</p>` : ""}
         ${ev.description ? `<p class="kc-desc">${esc(ev.description)}</p>` : ""}
+        ${bookBtn(ev)}
         ${manage ? `<div class="kc-card-actions">
           <button type="button" class="kc-btn ghost" data-act="edit-event" data-e="${ev.id}">✎ ${tr("تعديل", "Edit")}</button>
           <button type="button" class="kc-btn danger" data-act="del-event" data-e="${ev.id}">🗑 ${tr("حذف", "Delete")}</button>
@@ -1536,15 +1553,39 @@
         { name: "location", label: tr("المكان", "Location"), value: ev && ev.location, maxlength: 160 },
         { name: "description", label: tr("الوصف", "Description"), type: "textarea", value: ev && ev.description, maxlength: 1000 },
         { name: "startsAt", label: tr("يبدأ", "Starts"), type: "datetime-local", value: ev ? toLocalInput(ev.startsAt) : "", required: true },
-        { name: "endsAt", label: tr("ينتهي (اختياري)", "Ends (optional)"), type: "datetime-local", value: ev ? toLocalInput(ev.endsAt) : "" }
+        { name: "endsAt", label: tr("ينتهي (اختياري)", "Ends (optional)"), type: "datetime-local", value: ev ? toLocalInput(ev.endsAt) : "" },
+        { name: "contactType", label: tr("وسيلة الحجز", "Booking method"), type: "select", value: ev && ev.contactType ? String(ev.contactType).toLowerCase() : "",
+          options: [
+            { value: "", label: tr("من غير حجز", "No booking") },
+            { value: "whatsapp", label: tr("واتساب (رقم)", "WhatsApp (number)") },
+            { value: "phone", label: tr("اتصال تليفون (رقم)", "Phone call (number)") },
+            { value: "link", label: tr("لينك (فورم / موقع)", "Link (form / site)") }
+          ] },
+        { name: "contactValue", label: tr("رقم الحجز / اللينك", "Booking number / link"), value: ev && ev.contactValue, maxlength: 500, ltr: true }
       ],
+      onOpen: (form) => {
+        const typ = form.elements.contactType, val = form.elements.contactValue;
+        const box = val.closest(".kc-field");
+        const sync = () => {
+          box.style.display = typ.value ? "" : "none";
+          if (!typ.value) val.value = "";
+          val.placeholder = typ.value === "link" ? "https://forms.gle/..." : "01xxxxxxxxx";
+          val.type = typ.value === "link" ? "url" : "tel";
+        };
+        typ.addEventListener("change", sync);
+        sync();
+      },
       onSubmit: async (v) => {
+        if (v.contactType && !v.contactValue) throw new Error(tr("اكتب رقم الحجز أو اللينك.", "Enter the booking number or link."));
+        if ((v.contactType === "whatsapp" || v.contactType === "phone") && !PHONE_RE.test(String(v.contactValue).replace(/\D/g, ""))) throw new Error(tr("رقم غير صحيح (11 رقم يبدأ بـ 01).", "Invalid number (11 digits starting with 01)."));
         const body = JSON.stringify({
           title: v.title,
           description: v.description || null,
           location: v.location || null,
           startsAt: withSeconds(v.startsAt),
-          endsAt: withSeconds(v.endsAt)
+          endsAt: withSeconds(v.endsAt),
+          contactType: v.contactType || null,
+          contactValue: v.contactType ? v.contactValue : null
         });
         if (ev) await api(`/Churches/${c.id}/events/${ev.id}`, { method: "PUT", body });
         else await api(`/Churches/${c.id}/events`, { method: "POST", body });
