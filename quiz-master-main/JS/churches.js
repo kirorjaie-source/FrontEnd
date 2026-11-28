@@ -227,7 +227,13 @@
     if (grp) html += "</optgroup>";
     return `<select ${attrs}>${html}</select>`;
   };
-  const phoneHTML = (p) => (p ? `<a class="kc-link" dir="ltr" href="tel:${esc(p)}">${esc(p)}</a>` : "—");
+  const phoneHTML = (p, wa) => {
+    if (!p) return "—";
+    let h = `<a class="kc-link" dir="ltr" href="tel:${esc(p)}">${esc(p)}</a>`;
+    const d = waDigits(wa || p);
+    if (d) h += ` <a class="kc-wa-ic" dir="ltr" title="${tr("واتساب", "WhatsApp")}${wa && wa !== p ? " " + esc(wa) : ""}" href="https://wa.me/${d}" target="_blank" rel="noopener noreferrer">💬</a>`;
+    return h;
+  };
   const waDigits = (p) => {
     let d = String(p || "").replace(/\D/g, "");
     if (/^0\d{10}$/.test(d)) d = "2" + d;
@@ -313,6 +319,10 @@
       input = "";
       return `<div class="kc-field"><label for="kcf-role">${tr("الدور", "Role")} *</label>${selHTML('id="kcf-role" name="role" data-role-sel', f.options, f.value ?? "")}</div>
         <div class="kc-field" data-stage-box style="display:none"><label data-stage-label></label><div class="kc-checks">${MAIN.map((s) => `<label class="kc-check"><input type="checkbox" name="svc" value="${s.v}" ${(f.stages || []).some((x) => findStage(x) && findStage(x).v === s.v) ? "checked" : ""}><span>${isAr() ? s.ar : s.en}</span></label>`).join("")}</div></div>`;
+    } else if (f.type === "wa") {
+      const same = !!f.same;
+      input = `<label class="kc-same"><input type="checkbox" data-wa-same ${same ? "checked" : ""}><span>${tr("نفس رقم التليفون", "Same as phone")}</span></label>`
+        + `<input id="${id}" name="${f.name}" type="tel" value="${same ? "" : esc(v)}" maxlength="11" dir="ltr" placeholder="01xxxxxxxxx" style="${same ? "display:none" : ""}">`;
     } else if (f.type === "file") {
       input = `<input id="${id}" name="${f.name}" type="file" accept="image/png,image/jpeg,image/webp" style="height:auto;padding:10px">`;
     } else if (f.type === "textarea") {
@@ -350,6 +360,12 @@
     const errBox = wrap.querySelector("#kc-modal-err");
     const first = form.querySelector("input:not([readonly]),select,textarea");
     if (first) first.focus();
+
+    form.querySelectorAll("[data-wa-same]").forEach((cb) => {
+      const inp = cb.closest(".kc-field").querySelector("input[type=tel]");
+      const sync = () => { if (cb.checked) inp.value = ""; inp.style.display = cb.checked ? "none" : ""; if (!cb.checked) inp.focus(); };
+      cb.addEventListener("change", sync);
+    });
 
     const mainSel = form.querySelector("[data-stage-main]");
     if (mainSel) {
@@ -440,6 +456,12 @@
   const phoneField = (value = "", required = true) => ({
     name: "phone", label: tr("رقم الموبايل", "Phone"), type: "tel", value, required, maxlength: 11, ltr: true, placeholder: "01xxxxxxxxx",
     pattern: PHONE_RE, patternMsg: tr("رقم الموبايل غير صحيح (11 رقم يبدأ بـ 01)", "Invalid phone (11 digits starting with 010/011/012/015).")
+  });
+
+  const waField = (phone = "", wa = "") => ({
+    name: "whatsapp", label: tr("رقم الواتساب", "WhatsApp number"), type: "wa",
+    value: wa, same: !wa || waDigits(wa) === waDigits(phone),
+    pattern: PHONE_RE, patternMsg: tr("رقم الواتساب غير صحيح (11 رقم يبدأ بـ 01)", "Invalid WhatsApp number (11 digits starting with 01).")
   });
 
   /* ---------------- Panels ---------------- */
@@ -636,7 +658,7 @@
       return `<tr>
         <td>${i + 1}</td>
         <td><b>${esc(m.fullName)}</b></td>
-        <td>${phoneHTML(m.phone)}</td>
+        <td>${phoneHTML(m.phone, m.whatsAppPhone)}</td>
         <td>${esc(m.email || "—")}</td>
         <td>${esc(stageLabel(m.stage, m.grade))}${m.pendingStage != null ? `<div class="kc-sub">⇄ ${tr("طلب نقل إلى", "Move request to")} <b>${esc(stageLabel(m.pendingStage, m.pendingGrade))}</b></div>` : ""}</td>
         <td>${roleBadge(m.role)}${stagesText(m.serviceStages) ? `<div class="kc-sub">${esc(stagesText(m.serviceStages))}</div>` : ""}</td>
@@ -679,7 +701,7 @@
       <tr class="${m.isPresent ? "present" : ""}">
         <td>${i + 1}</td>
         <td><b>${esc(m.fullName)}</b></td>
-        <td>${phoneHTML(m.phone)}</td>
+        <td>${phoneHTML(m.phone, m.whatsAppPhone)}</td>
         <td>${esc(stageLabel(m.stage, m.grade))}</td>
         <td>${roleBadge(m.role)}</td>
         <td>${manage
@@ -719,7 +741,7 @@
     const rows = S.followups.map((m) => `
       <tr>
         <td><b>${esc(m.fullName)}</b></td>
-        <td>${phoneHTML(m.phone)}</td>
+        <td>${phoneHTML(m.phone, m.whatsAppPhone)}</td>
         <td>${waHTML(m.whatsAppPhone)}</td>
         <td>${esc(stageLabel(m.stage, m.grade))}</td>
         <td>${esc(fmtDate(m.lastAttendedDate))}</td>
@@ -745,7 +767,7 @@
       return `<tr>
         <td><b>${esc(m.fullName)}</b></td>
         <td>${roleBadge(x.role)}</td>
-        <td>${phoneHTML(m.phone)}</td>
+        <td>${phoneHTML(m.phone, m.whatsAppPhone)}</td>
         <td>${waHTML(m.whatsAppPhone)}</td>
         <td>${esc(fmtDate(m.lastAttendedDate))}</td>
         <td><span class="kc-badge ${m.daysAbsent >= 28 ? "no" : "warn"}">${m.daysAbsent} ${tr("يوم", "days")}</span></td>
@@ -823,7 +845,7 @@
       <tr>
         <td>${i + 1}</td>
         <td><b>${esc(m.fullName)}</b></td>
-        <td>${phoneHTML(m.phone)}</td>
+        <td>${phoneHTML(m.phone, m.whatsAppPhone)}</td>
         <td>${roleBadge(m.role)}</td>
         <td>${esc(stagesText(m.serviceStages) || "—")}</td>
         ${canRole ? `<td class="kc-acts">${(isAdmin() || outranks(c, m.role)) ? `<button class="kc-mini" data-act="set-role" data-m="${m.id}">🎖 ${tr("تغيير الدور", "Change role")}</button>` : ""}</td>` : ""}
@@ -1181,10 +1203,11 @@
         title: tr("طلب انضمام", "Join request"), sub: c.name, submitLabel: tr("إرسال الطلب", "Send request"),
         fields: [
           phoneField(),
+          waField(),
           { name: "stage", label: tr("المرحلة", "Stage"), type: "stage", required: true, value: b.dataset.stage || "", grade: b.dataset.grade || "" }
         ],
         onSubmit: async (v) => {
-          await api(`/Churches/${c.id}/join`, { method: "POST", body: JSON.stringify({ stage: Number(v.stage), grade: gradeVal(v), phone: v.phone }) });
+          await api(`/Churches/${c.id}/join`, { method: "POST", body: JSON.stringify({ stage: Number(v.stage), grade: gradeVal(v), phone: v.phone, whatsAppPhone: v.whatsapp || null }) });
           say(tr("تم إرسال طلب الانضمام ✓", "Join request sent ✓"));
           reload();
         }
@@ -1200,12 +1223,13 @@
         fields: [
           { name: "fullName", label: tr("الاسم", "Full name"), maxlength: 100 },
           phoneField(),
+          waField(),
           { name: "stage", label: tr("المرحلة", "Stage"), type: "stage", allowEmpty: true, value: b.dataset.stage || "", grade: b.dataset.grade || "" }
         ],
         onSubmit: async (v) => {
           await api(`/Churches/${c.id}/my-profile`, {
             method: "PUT",
-            body: JSON.stringify({ phone: v.phone, stage: v.stage === "" ? null : Number(v.stage), grade: v.stage === "" ? null : gradeVal(v), fullName: v.fullName || null })
+            body: JSON.stringify({ phone: v.phone, whatsAppPhone: v.whatsapp || null, stage: v.stage === "" ? null : Number(v.stage), grade: v.stage === "" ? null : gradeVal(v), fullName: v.fullName || null })
           });
           const wasApproved = c.myStatus != null && statusKey(c.myStatus) === "approved";
           say(wasApproved && v.stage !== ""
@@ -1250,6 +1274,7 @@
             placeholder: tr("يتملأ تلقائياً لو الإيميل مسجل", "Auto-filled if email is registered")
           },
           phoneField(),
+          waField(),
           { name: "stage", label: tr("المرحلة", "Stage"), type: "stage", required: true, value: b.dataset.stage || "", grade: b.dataset.grade || "" }
         ],
         onOpen: bindMemberEmailAutoFill,
@@ -1263,6 +1288,7 @@
               fullName: v.fullName || null,
               email: v.email || null,
               phone: v.phone,
+              whatsAppPhone: v.whatsapp || null,
               stage: Number(v.stage),
               grade: gradeVal(v)
             })
@@ -1293,6 +1319,7 @@
           },
           { name: "fullName", label: tr("الاسم", "Full name"), value: m.fullName, required: true, maxlength: 100 },
           phoneField(m.phone),
+          waField(m.phone, m.whatsAppPhone),
           { name: "stage", label: tr("المرحلة", "Stage"), type: "stage", value: m.stage, grade: m.grade, required: true }
         ],
         onOpen: bindMemberEmailAutoFill,
@@ -1303,6 +1330,7 @@
               fullName: v.fullName,
               email: v.email || null,
               phone: v.phone,
+              whatsAppPhone: v.whatsapp || null,
               stage: Number(v.stage),
               grade: gradeVal(v)
             })
@@ -1553,7 +1581,102 @@
     });
   }
 
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+
+  /* ---------------- Custom dropdowns (replace the native select popup) ---------------- */
+  function enhanceSelect(sel) {
+    if (sel.dataset.kcx) return;
+    sel.dataset.kcx = "1";
+    sel.classList.add("kcx-native");
+    const dd = document.createElement("div");
+    dd.className = "kcx";
+    dd.innerHTML = `<button type="button" class="kcx-btn" aria-haspopup="listbox" aria-expanded="false"><span class="kcx-val"></span><svg class="kcx-arrow" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M5 7.5l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="kcx-list" role="listbox"></div>`;
+    sel.insertAdjacentElement("afterend", dd);
+    const btn = dd.querySelector(".kcx-btn");
+    const val = dd.querySelector(".kcx-val");
+    const list = dd.querySelector(".kcx-list");
+    if (sel.style.marginTop) dd.style.marginTop = sel.style.marginTop;
+
+    const close = () => { dd.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); list.style.cssText = ""; };
+    const open = () => {
+      document.querySelectorAll(".kcx.open").forEach((x) => { if (x !== dd) x.classList.remove("open"); });
+      dd.classList.add("open");
+      btn.setAttribute("aria-expanded", "true");
+      const r = btn.getBoundingClientRect();
+      const below = window.innerHeight - r.bottom - 12;
+      const above = r.top - 12;
+      const up = below < 180 && above > below;
+      const maxH = Math.max(120, Math.min(280, up ? above : below));
+      list.style.cssText = `position:fixed;left:${r.left}px;width:${r.width}px;max-height:${maxH}px;` + (up ? `bottom:${window.innerHeight - r.top + 6}px;` : `top:${r.bottom + 6}px;`);
+      const cur = list.querySelector(".sel");
+      if (cur) cur.scrollIntoView({ block: "nearest" });
+    };
+
+    const build = () => {
+      dd.style.display = sel.style.display === "none" ? "none" : "";
+      list.innerHTML = "";
+      let selected = null;
+      Array.from(sel.children).forEach((ch) => {
+        const add = (o, parent) => {
+          const it = document.createElement("div");
+          it.className = "kcx-opt" + (o.value === "" ? " ph" : "") + (o.selected ? " sel" : "");
+          it.setAttribute("role", "option");
+          it.dataset.v = o.value;
+          it.textContent = o.textContent;
+          if (o.selected) selected = o;
+          parent.appendChild(it);
+        };
+        if (ch.tagName === "OPTGROUP") {
+          const g = document.createElement("div");
+          g.className = "kcx-grp";
+          g.textContent = ch.label;
+          list.appendChild(g);
+          Array.from(ch.children).forEach((o) => add(o, list));
+        } else add(ch, list);
+      });
+      const o = selected || sel.options[sel.selectedIndex];
+      val.textContent = o ? o.textContent : "";
+      dd.classList.toggle("empty", !o || o.value === "");
+      btn.disabled = sel.disabled;
+    };
+    build();
+
+    btn.addEventListener("click", (e) => { e.preventDefault(); dd.classList.contains("open") ? close() : open(); });
+    list.addEventListener("click", (e) => {
+      const it = e.target.closest(".kcx-opt");
+      if (!it) return;
+      sel.value = it.dataset.v;
+      close();
+      build();
+      sel.dispatchEvent(new Event("change", { bubbles: true }));
+      btn.focus();
+    });
+    btn.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        const i = sel.selectedIndex + (e.key === "ArrowDown" ? 1 : -1);
+        if (i >= 0 && i < sel.options.length) { sel.selectedIndex = i; build(); sel.dispatchEvent(new Event("change", { bubbles: true })); }
+      }
+    });
+    sel.addEventListener("change", build);
+    new MutationObserver(build).observe(sel, { childList: true, subtree: true, attributes: true, attributeFilter: ["style", "disabled"] });
+    dd._close = close;
+  }
+
+  function enhanceAll() {
+    document.querySelectorAll("#kc-root select:not([data-kcx]), #kc-modal select:not([data-kcx])").forEach(enhanceSelect);
+  }
+  new MutationObserver(enhanceAll).observe(document.body, { childList: true, subtree: true });
+  document.addEventListener("click", (e) => {
+    document.querySelectorAll(".kcx.open").forEach((d) => { if (!d.contains(e.target) && d._close) d._close(); });
+  });
+  window.addEventListener("resize", () => document.querySelectorAll(".kcx.open").forEach((d) => d._close && d._close()));
+  document.addEventListener("scroll", (e) => {
+    if (e.target && e.target.closest && e.target.closest(".kcx-list")) return;
+    document.querySelectorAll(".kcx.open").forEach((d) => d._close && d._close());
+  }, true);
+  enhanceAll();
+
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") { document.querySelectorAll(".kcx.open").forEach((d) => d._close && d._close()); closeModal(); } });
 
   /* ---------------- Public hooks (adminn.js) ---------------- */
   window.KokChurches = {
