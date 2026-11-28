@@ -302,6 +302,16 @@
   /* ---------------- Modal ---------------- */
   function closeModal() { const m = $("kc-modal"); if (m) m.remove(); }
 
+  const CONTACT_TYPES = () => [
+    { value: "whatsapp", label: tr("واتساب (رقم)", "WhatsApp (number)") },
+    { value: "phone", label: tr("اتصال تليفون (رقم)", "Phone call (number)") },
+    { value: "link", label: tr("لينك (فورم / موقع)", "Link (form / site)") }
+  ];
+  const contactRowHTML = (type = "whatsapp", value = "") => {
+    const t = String(type || "whatsapp").toLowerCase();
+    return `<div class="kc-crow">${selHTML('data-c-type', CONTACT_TYPES(), t)}<input data-c-val dir="ltr" value="${esc(value)}" maxlength="500" placeholder="${t === "link" ? "https://forms.gle/..." : "01xxxxxxxxx"}"><button type="button" class="kc-x" data-c-del aria-label="Remove">✕</button></div>`;
+  };
+
   function fieldHTML(f) {
     const id = `kcf-${f.name}`;
     const v = f.value ?? "";
@@ -323,6 +333,8 @@
       return `<div class="kc-field"><label for="kcf-role">${tr("الدور", "Role")} *</label>${selHTML('id="kcf-role" name="role" data-role-sel', f.options, f.value ?? "")}</div>
         <div class="kc-field" data-stage-box style="display:none"><label data-stage-label></label><div class="kc-checks">${MAIN.map((s) => `<label class="kc-check"><input type="checkbox" name="svc" value="${s.v}" ${(f.stages || []).some((x) => findStage(x) && findStage(x).v === s.v) ? "checked" : ""}><span>${isAr() ? s.ar : s.en}</span></label>`).join("")}</div>
         <select name="svcgrade" data-svc-grade data-init="${esc(f.serviceGrade ?? "")}" style="display:none;margin-top:10px"></select></div>`;
+    } else if (f.type === "contacts") {
+      return `<div class="kc-field"><label>${esc(f.label)}</label><div class="kc-contacts" data-contacts>${(f.value || []).map((c) => contactRowHTML(c.type, c.value)).join("")}</div><button type="button" class="kc-mini" data-add-contact>＋ ${tr("إضافة وسيلة حجز", "Add booking method")}</button></div>`;
     } else if (f.type === "wa") {
       const same = !!f.same;
       input = `<label class="kc-same"><input type="checkbox" data-wa-same ${same ? "checked" : ""}><span>${tr("نفس رقم التليفون", "Same as phone")}</span></label>`
@@ -364,6 +376,20 @@
     const errBox = wrap.querySelector("#kc-modal-err");
     const first = form.querySelector("input:not([readonly]),select,textarea");
     if (first) first.focus();
+
+    const cBox = form.querySelector("[data-contacts]");
+    if (cBox) {
+      form.querySelector("[data-add-contact]").addEventListener("click", () => {
+        if (cBox.children.length >= 5) { errBox.textContent = tr("الحد الأقصى 5 وسائل حجز.", "Maximum 5 booking methods."); return; }
+        cBox.insertAdjacentHTML("beforeend", contactRowHTML("whatsapp", ""));
+      });
+      cBox.addEventListener("click", (e) => { const d = e.target.closest("[data-c-del]"); if (d) d.closest(".kc-crow").remove(); });
+      cBox.addEventListener("change", (e) => {
+        if (!e.target.matches("[data-c-type]")) return;
+        const inp = e.target.closest(".kc-crow").querySelector("[data-c-val]");
+        inp.placeholder = e.target.value === "link" ? "https://forms.gle/..." : "01xxxxxxxxx";
+      });
+    }
 
     form.querySelectorAll("[data-wa-same]").forEach((cb) => {
       const inp = cb.closest(".kc-field").querySelector("input[type=tel]");
@@ -425,6 +451,18 @@
       const vals = {};
       for (const f of fields) {
         if (f.type === "file") { vals[f.name] = form.elements[f.name].files[0] || null; continue; }
+        if (f.type === "contacts") {
+          const out = [];
+          for (const row of form.querySelectorAll(".kc-crow")) {
+            const t = row.querySelector("[data-c-type]").value;
+            const val = row.querySelector("[data-c-val]").value.trim();
+            if (!val) continue;
+            if ((t === "whatsapp" || t === "phone") && !PHONE_RE.test(val.replace(/\D/g, ""))) { errBox.textContent = tr("رقم غير صحيح (11 رقم يبدأ بـ 01).", "Invalid number (11 digits starting with 01)."); return; }
+            out.push({ type: t, value: val });
+          }
+          vals[f.name] = out;
+          continue;
+        }
         if (f.type === "rolestage") {
           const rk = (ROLES[Number(form.elements.role.value)] || "").toLowerCase();
           const svc = Array.from(form.querySelectorAll('input[name="svc"]:checked')).map((x) => Number(x.value));
@@ -916,19 +954,20 @@
 
   // 5) الإيفنتس
   const bookBtn = (ev) => {
-    if (!ev.contactType || !ev.contactValue) return "";
-    const t = String(ev.contactType).toLowerCase();
-    const v = ev.contactValue;
-    let btn = "";
-    if (t === "whatsapp") {
-      const msg = encodeURIComponent(tr(`أنا عاوز أحجز في: ${ev.title}`, `I'd like to book: ${ev.title}`));
-      btn = `<a class="kc-btn wa" href="https://wa.me/${waDigits(v)}?text=${msg}" target="_blank" rel="noopener noreferrer">💬 ${tr("احجز على واتساب", "Book on WhatsApp")}</a>`;
-    } else if (t === "phone") {
-      btn = `<a class="kc-btn gold" dir="ltr" href="tel:${esc(v)}">📞 ${tr("اتصل للحجز", "Call to book")} · ${esc(v)}</a>`;
-    } else if (t === "link" && /^https?:\/\//i.test(v)) {
-      btn = `<a class="kc-btn gold" href="${esc(v)}" target="_blank" rel="noopener noreferrer">🔗 ${tr("احجز / سجّل من هنا", "Book / register here")}</a>`;
-    }
-    return btn ? `<div class="kc-card-actions">${btn}</div>` : "";
+    const list = Array.isArray(ev.contacts) ? ev.contacts : [];
+    const btns = list.map((ct) => {
+      const t = String(ct.type || "").toLowerCase();
+      const v = ct.value || "";
+      if (!v) return "";
+      if (t === "whatsapp") {
+        const msg = encodeURIComponent(tr(`أنا عاوز أحجز في: ${ev.title}`, `I'd like to book: ${ev.title}`));
+        return `<a class="kc-btn wa" href="https://wa.me/${waDigits(v)}?text=${msg}" target="_blank" rel="noopener noreferrer">💬 ${tr("احجز على واتساب", "Book on WhatsApp")}</a>`;
+      }
+      if (t === "phone") return `<a class="kc-btn gold" dir="ltr" href="tel:${esc(v)}">📞 ${tr("اتصل للحجز", "Call to book")} · ${esc(v)}</a>`;
+      if (t === "link" && /^https?:\/\//i.test(v)) return `<a class="kc-btn gold" href="${esc(v)}" target="_blank" rel="noopener noreferrer">🔗 ${tr("احجز / سجّل من هنا", "Book / register here")}</a>`;
+      return "";
+    }).join("");
+    return btns ? `<div class="kc-card-actions">${btns}</div>` : "";
   };
 
   PANELS.events = async () => {
@@ -1554,38 +1593,16 @@
         { name: "description", label: tr("الوصف", "Description"), type: "textarea", value: ev && ev.description, maxlength: 1000 },
         { name: "startsAt", label: tr("يبدأ", "Starts"), type: "datetime-local", value: ev ? toLocalInput(ev.startsAt) : "", required: true },
         { name: "endsAt", label: tr("ينتهي (اختياري)", "Ends (optional)"), type: "datetime-local", value: ev ? toLocalInput(ev.endsAt) : "" },
-        { name: "contactType", label: tr("وسيلة الحجز", "Booking method"), type: "select", value: ev && ev.contactType ? String(ev.contactType).toLowerCase() : "",
-          options: [
-            { value: "", label: tr("من غير حجز", "No booking") },
-            { value: "whatsapp", label: tr("واتساب (رقم)", "WhatsApp (number)") },
-            { value: "phone", label: tr("اتصال تليفون (رقم)", "Phone call (number)") },
-            { value: "link", label: tr("لينك (فورم / موقع)", "Link (form / site)") }
-          ] },
-        { name: "contactValue", label: tr("رقم الحجز / اللينك", "Booking number / link"), value: ev && ev.contactValue, maxlength: 500, ltr: true }
+        { name: "contacts", label: tr("وسائل الحجز (اختياري — ممكن أكتر من واحدة)", "Booking methods (optional — add several)"), type: "contacts", value: ev && Array.isArray(ev.contacts) ? ev.contacts : [] }
       ],
-      onOpen: (form) => {
-        const typ = form.elements.contactType, val = form.elements.contactValue;
-        const box = val.closest(".kc-field");
-        const sync = () => {
-          box.style.display = typ.value ? "" : "none";
-          if (!typ.value) val.value = "";
-          val.placeholder = typ.value === "link" ? "https://forms.gle/..." : "01xxxxxxxxx";
-          val.type = typ.value === "link" ? "url" : "tel";
-        };
-        typ.addEventListener("change", sync);
-        sync();
-      },
       onSubmit: async (v) => {
-        if (v.contactType && !v.contactValue) throw new Error(tr("اكتب رقم الحجز أو اللينك.", "Enter the booking number or link."));
-        if ((v.contactType === "whatsapp" || v.contactType === "phone") && !PHONE_RE.test(String(v.contactValue).replace(/\D/g, ""))) throw new Error(tr("رقم غير صحيح (11 رقم يبدأ بـ 01).", "Invalid number (11 digits starting with 01)."));
         const body = JSON.stringify({
           title: v.title,
           description: v.description || null,
           location: v.location || null,
           startsAt: withSeconds(v.startsAt),
           endsAt: withSeconds(v.endsAt),
-          contactType: v.contactType || null,
-          contactValue: v.contactType ? v.contactValue : null
+          contacts: v.contacts || []
         });
         if (ev) await api(`/Churches/${c.id}/events/${ev.id}`, { method: "PUT", body });
         else await api(`/Churches/${c.id}/events`, { method: "POST", body });

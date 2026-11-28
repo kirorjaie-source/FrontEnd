@@ -1140,3 +1140,8 @@ html[data-theme="dark"] .kcx-opt.sel, [data-theme="dark"] .kcx-opt.sel { backgro
 
 .kc-locked { height: 46px; display: flex; align-items: center; padding: 0 14px; border-radius: 12px; border: 1.5px dashed #cbd5e1; background: rgba(148,163,184,.12); font-weight: 800; font-size: 14px; }
 html[data-theme="dark"] .kc-locked, [data-theme="dark"] .kc-locked { border-color: #24406b; color: #f0c86e; background: rgba(36,64,107,.25); }
+
+.kc-contacts { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+.kc-crow { display: grid; grid-template-columns: 150px 1fr auto; gap: 8px; align-items: center; }
+.kc-crow input { height: 46px; }
+@media (max-width: 520px) { .kc-crow { grid-template-columns: 1fr auto; } .kc-crow .kcx { grid-column: 1 / -1; } }
