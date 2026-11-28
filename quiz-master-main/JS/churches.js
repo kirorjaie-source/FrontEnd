@@ -503,22 +503,25 @@
     const manageBtn = can("stages", c) ? `<button type="button" class="kc-btn primary" data-act="manage-stages">⚙ ${tr("إدارة المراحل", "Manage stages")}</button>` : "";
     if (!S.cfgList.length) return `<div class="kc-head"><span></span>${manageBtn}</div>` + empty("🏫", tr("لا توجد مراحل.", "No stages."));
 
+    // مخدوم معتمد: يشوف مرحلته وسنته بس
+    const onlyMine = !admin && st === "approved" && myKey(c) === "member";
+    if (onlyMine && S.cfgList.length === 1 && S.stageSel == null) S.stageSel = String((findStage(S.cfgList[0].stage) || {}).v ?? "");
+
     // ---- الخطوة 2: جوه المرحلة — السنين ----
     const sel = S.stageSel != null ? findStage(S.stageSel) : null;
     const selCfg = sel ? S.cfgList.find((x) => (findStage(x.stage) || {}).v === sel.v) : null;
     if (sel && selCfg) {
       const n = Number(selCfg.gradesCount) || 0;
-      const years = n ? Array.from({ length: n }, (_, i) => i + 1) : [0];
+      let years = n ? Array.from({ length: n }, (_, i) => i + 1) : [0];
+      if (onlyMine && n && selCfg.myGrade != null) years = [Number(selCfg.myGrade)];
       const head = `<div class="kc-head">
-          <button type="button" class="kc-btn ghost" data-act="back-stages">← ${tr("كل المراحل", "All stages")}</button>
+          ${onlyMine ? "<span></span>" : `<button type="button" class="kc-btn ghost" data-act="back-stages">← ${tr("كل المراحل", "All stages")}</button>`}
           <span class="kc-badge info">${STAGE_ICO[sel.v] || "🏫"} ${isAr() ? sel.ar : sel.en} — ${esc(c.name)}</span>
         </div>`;
       const cards = years.map((g) => {
         let actions = "";
         if ((!st || st === "rejected" || st === "revoked")) actions += `<button type="button" class="kc-btn gold" data-act="join" data-id="${c.id}" data-stage="${sel.v}" data-grade="${g || ""}">${tr("انضم", "Join")}</button>`;
         if (st === "pending") actions += `<span class="kc-badge warn">⏳ ${tr("طلبك قيد المراجعة", "Request pending")}</span>`;
-        // عضو معتمد بالفعل: ينقل نفسه لمرحلة/سنة تانية من هنا
-        if (!admin && st === "approved" && myKey(c) === "member") actions += `<button type="button" class="kc-btn gold" data-act="my-profile" data-id="${c.id}" data-stage="${sel.v}" data-grade="${g || ""}">🔁 ${tr("انقلني لهنا", "Move me here")}</button>`;
         if (manage) actions += `<button type="button" class="kc-btn primary" data-act="add-member" data-stage="${sel.v}" data-grade="${g || ""}">＋ ${tr("إضافة عضو", "Add member")}</button>`;
         if (can("viewMembers", c)) actions += `<button type="button" class="kc-btn ghost" data-act="stage-members" data-stage="${sel.v}" data-grade="${g || ""}">👥 ${tr("الأعضاء", "Members")}</button>`;
         return `<article class="kc-church kc-stage">
@@ -539,7 +542,9 @@
       const sg = findStage(x.stage);
       if (!sg) return "";
       const n = Number(x.gradesCount) || 0;
-      const chips = n ? Array.from({ length: n }, (_, i) => `<span class="kc-chip">${esc(stageLabel(sg.v, i + 1))}</span>`).join("") : "";
+      const chips = n ? Array.from({ length: n }, (_, i) => i + 1)
+        .filter((g) => !(onlyMine && x.myGrade != null && g !== Number(x.myGrade)))
+        .map((g) => `<span class="kc-chip">${esc(stageLabel(sg.v, g))}</span>`).join("") : "";
       return `<article class="kc-church kc-stage kc-clickable" data-act="pick-stage" data-stage="${sg.v}">
         <div class="kc-church-top">
           <span class="kc-church-ico">${STAGE_ICO[sg.v] || "🏫"}</span>
@@ -620,6 +625,9 @@
       else if (st === "pending") acts += `<button class="kc-mini ok" data-act="decide" data-do="approve" data-m="${m.id}">✓ ${tr("قبول", "Approve")}</button><button class="kc-mini danger" data-act="decide" data-do="reject" data-m="${m.id}">✕ ${tr("رفض", "Reject")}</button>`;
       else if (st === "approved") acts += `<button class="kc-mini danger" data-act="decide" data-do="revoke" data-m="${m.id}">⛔ ${tr("إلغاء العضوية", "Revoke")}</button>`;
       else acts += `<button class="kc-mini ok" data-act="decide" data-do="approve" data-m="${m.id}">✓ ${tr("قبول", "Approve")}</button>`;
+      if (manage && !higher && m.pendingStage != null) {
+        acts += `<button class="kc-mini ok" data-act="move" data-do="approve" data-m="${m.id}">✓ ${tr("موافقة النقل", "Approve move")}</button><button class="kc-mini danger" data-act="move" data-do="reject" data-m="${m.id}">✕ ${tr("رفض النقل", "Reject move")}</button>`;
+      }
       if (manage && !higher) {
         acts += `<button class="kc-mini" data-act="edit-member" data-m="${m.id}">✎ ${tr("تعديل", "Edit")}</button>`;
         acts += `<button class="kc-mini danger" data-act="del-member" data-m="${m.id}">🗑 ${tr("حذف", "Delete")}</button>`;
@@ -630,7 +638,7 @@
         <td><b>${esc(m.fullName)}</b></td>
         <td>${phoneHTML(m.phone)}</td>
         <td>${esc(m.email || "—")}</td>
-        <td>${esc(stageLabel(m.stage, m.grade))}</td>
+        <td>${esc(stageLabel(m.stage, m.grade))}${m.pendingStage != null ? `<div class="kc-sub">⇄ ${tr("طلب نقل إلى", "Move request to")} <b>${esc(stageLabel(m.pendingStage, m.pendingGrade))}</b></div>` : ""}</td>
         <td>${roleBadge(m.role)}${stagesText(m.serviceStages) ? `<div class="kc-sub">${esc(stagesText(m.serviceStages))}</div>` : ""}</td>
         <td>${statusBadge(m.status)}</td>
         <td>${esc(fmtDate(m.requestedAt))}</td>
@@ -1199,9 +1207,19 @@
             method: "PUT",
             body: JSON.stringify({ phone: v.phone, stage: v.stage === "" ? null : Number(v.stage), grade: v.stage === "" ? null : gradeVal(v), fullName: v.fullName || null })
           });
-          say(tr("تم تحديث بياناتك ✓", "Profile updated ✓"));
+          const wasApproved = c.myStatus != null && statusKey(c.myStatus) === "approved";
+          say(wasApproved && v.stage !== ""
+            ? tr("تم تحديث بياناتك. طلب النقل مستني موافقة الأمين ✓", "Profile updated. Your move request is waiting for approval ✓")
+            : tr("تم تحديث بياناتك ✓", "Profile updated ✓"));
         }
       });
+    },
+
+    move: async (b) => {
+      const c = current();
+      await api(`/Churches/${c.id}/members/${b.dataset.m}/move/${b.dataset.do}`, { method: "POST" });
+      say(b.dataset.do === "approve" ? tr("تم نقل العضو ✓", "Member moved ✓") : tr("تم رفض طلب النقل", "Move request rejected"));
+      reload();
     },
 
     decide: async (b) => {
