@@ -512,8 +512,7 @@
       const head = `<div class="kc-head">
           <button type="button" class="kc-btn ghost" data-act="back-stages">← ${tr("كل المراحل", "All stages")}</button>
           <span class="kc-badge info">${STAGE_ICO[sel.v] || "🏫"} ${isAr() ? sel.ar : sel.en} — ${esc(c.name)}</span>
-        </div>
-        <div class="kc-hint">${n ? tr("اختار سنتك وادوس «انضم»، أو الأمين يضيفك يدوي.", "Pick your year and press Join, or an Ameen can add you manually.") : tr("المرحلة دي من غير صفوف.", "This stage has no grades.")}</div>`;
+        </div>`;
       const cards = years.map((g) => {
         let actions = "";
         if (!admin && (!st || st === "rejected" || st === "revoked")) actions += `<button type="button" class="kc-btn gold" data-act="join" data-id="${c.id}" data-stage="${sel.v}" data-grade="${g || ""}">${tr("انضم", "Join")}</button>`;

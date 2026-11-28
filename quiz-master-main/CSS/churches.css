@@ -1086,3 +1086,6 @@ html[data-theme="dark"] .kc-check input, [data-theme="dark"] .kc-check input { a
 html[data-theme="dark"] .kc-chip, [data-theme="dark"] .kc-chip { background: #0f223d; border-color: #1e3a5f; color: #e3b565; }
 html[data-theme="dark"] .kc-stagerow, [data-theme="dark"] .kc-stagerow { border-color: #1e3a5f; }
 html[data-theme="dark"] .kc-years input, [data-theme="dark"] .kc-years input { background: #0b192e; border-color: #1e3a5f; color: #f8fafc; }
+
+/* إخفاء رسائل التلميحات الصفراء */
+.kc-hint { display: none !important; }
