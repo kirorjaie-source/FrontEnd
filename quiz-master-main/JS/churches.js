@@ -230,7 +230,7 @@
   const phoneHTML = (p, wa) => {
     if (!p) return "—";
     let h = `<a class="kc-link" dir="ltr" href="tel:${esc(p)}">${esc(p)}</a>`;
-    const d = waDigits(wa || p);
+    const d = wa && wa !== p ? waDigits(wa) : "";
     if (d) h += ` <a class="kc-wa-ic" dir="ltr" title="${tr("واتساب", "WhatsApp")}${wa && wa !== p ? " " + esc(wa) : ""}" href="https://wa.me/${d}" target="_blank" rel="noopener noreferrer">💬</a>`;
     return h;
   };
@@ -549,11 +549,13 @@
         if (st === "pending") actions += `<span class="kc-badge warn">⏳ ${tr("طلبك قيد المراجعة", "Request pending")}</span>`;
         if (manage) actions += `<button type="button" class="kc-btn primary" data-act="add-member" data-stage="${sel.v}" data-grade="${g || ""}">＋ ${tr("إضافة عضو", "Add member")}</button>`;
         if (can("viewMembers", c)) actions += `<button type="button" class="kc-btn ghost" data-act="stage-members" data-stage="${sel.v}" data-grade="${g || ""}">👥 ${tr("الأعضاء", "Members")}</button>`;
+        const cnt = g ? ((selCfg.gradeCounts || {})[g] ?? 0) : (selCfg.membersCount ?? 0);
         return `<article class="kc-church kc-stage">
           <div class="kc-church-top">
             <span class="kc-church-ico">${STAGE_ICO[sel.v] || "🏫"}</span>
             <div><h3>${esc(g ? stageLabel(sel.v, g) : (isAr() ? sel.ar : sel.en))}</h3><small>${esc(c.name)}</small></div>
           </div>
+          <div class="kc-meta"><span class="kc-badge info">👥 ${cnt} ${tr("عضو", cnt === 1 ? "member" : "members")}</span></div>
           <div class="kc-card-actions">${actions}</div>
         </article>`;
       }).join("");
@@ -661,7 +663,8 @@
       return `<tr>
         <td>${i + 1}</td>
         <td><b>${esc(m.fullName)}</b></td>
-        <td>${phoneHTML(m.phone, m.whatsAppPhone)}</td>
+        <td>${phoneHTML(m.phone)}</td>
+        <td>${m.phone ? waHTML(m.whatsAppPhone || m.phone) : "—"}</td>
         <td>${esc(m.email || "—")}</td>
         <td>${esc(stageLabel(m.stage, m.grade))}${m.pendingStage != null ? `<div class="kc-sub">⇄ ${tr("طلب نقل إلى", "Move request to")} <b>${esc(stageLabel(m.pendingStage, m.pendingGrade))}</b></div>` : ""}</td>
         <td>${roleBadge(m.role)}${stagesText(m.serviceStages) ? `<div class="kc-sub">${esc(stagesText(m.serviceStages))}</div>` : ""}</td>
@@ -670,7 +673,7 @@
         ${manage ? `<td class="kc-acts">${acts}</td>` : ""}
       </tr>`;
     }).join("");
-    return filters + table(["#", tr("الاسم", "Name"), tr("الموبايل", "Phone"), tr("الإيميل", "Email"), tr("المرحلة", "Stage"), tr("الدور", "Role"), tr("الحالة", "Status"), tr("تاريخ الطلب", "Requested")].concat(manage ? [tr("إجراءات", "Actions")] : []), rows);
+    return filters + table(["#", tr("الاسم", "Name"), tr("الموبايل", "Phone"), tr("واتساب", "WhatsApp"), tr("الإيميل", "Email"), tr("المرحلة", "Stage"), tr("الدور", "Role"), tr("الحالة", "Status"), tr("تاريخ الطلب", "Requested")].concat(manage ? [tr("إجراءات", "Actions")] : []), rows);
   };
 
   // 3) الغياب اليومي
