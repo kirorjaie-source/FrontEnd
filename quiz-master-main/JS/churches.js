@@ -185,7 +185,7 @@
     return l ? (isAr() ? l[0] : l[1]) : (enumName(v, ROLES) || "—");
   }
   const roleBadge = (v) => { const k = roleKey(v); return `<span class="kc-badge ${k === "member" ? "" : "info"}">${esc(roleLabel(v))}</span>`; };
-  const stagesText = (arr) => (arr && arr.length ? arr.map((x) => stageLabel(x)).join("، ") : "");
+  const stagesText = (arr, g) => (arr && arr.length ? arr.map((x) => stageLabel(x, arr.length === 1 && g ? g : 0)).join("، ") : "");
 
   /* ---- الصلاحيات (مرآة لـ ChurchPermissions.cs في الباك — الباك هو اللي بيفرض فعلياً) ---- */
   const RANK = { generalameen: 50, ameen: 40, assistantameen: 30, secretary: 20, followupservant: 10, servant: 10, member: 0 };
@@ -321,7 +321,8 @@
     } else if (f.type === "rolestage") {
       input = "";
       return `<div class="kc-field"><label for="kcf-role">${tr("الدور", "Role")} *</label>${selHTML('id="kcf-role" name="role" data-role-sel', f.options, f.value ?? "")}</div>
-        <div class="kc-field" data-stage-box style="display:none"><label data-stage-label></label><div class="kc-checks">${MAIN.map((s) => `<label class="kc-check"><input type="checkbox" name="svc" value="${s.v}" ${(f.stages || []).some((x) => findStage(x) && findStage(x).v === s.v) ? "checked" : ""}><span>${isAr() ? s.ar : s.en}</span></label>`).join("")}</div></div>`;
+        <div class="kc-field" data-stage-box style="display:none"><label data-stage-label></label><div class="kc-checks">${MAIN.map((s) => `<label class="kc-check"><input type="checkbox" name="svc" value="${s.v}" ${(f.stages || []).some((x) => findStage(x) && findStage(x).v === s.v) ? "checked" : ""}><span>${isAr() ? s.ar : s.en}</span></label>`).join("")}</div>
+        <select name="svcgrade" data-svc-grade data-init="${esc(f.serviceGrade ?? "")}" style="display:none;margin-top:10px"></select></div>`;
     } else if (f.type === "wa") {
       const same = !!f.same;
       input = `<label class="kc-same"><input type="checkbox" data-wa-same ${same ? "checked" : ""}><span>${tr("نفس رقم التليفون", "Same as phone")}</span></label>`
@@ -386,15 +387,33 @@
       const sync = () => {
         const rk = (ROLES[Number(roleSel.value)] || "").toLowerCase();
         const multi = rk === AM || rk === AS;
-        const single = rk === SV || rk === FU;
+        const single = rk === SV || rk === FU || rk === SE;
         box.style.display = multi || single ? "" : "none";
-        lbl.textContent = multi ? tr("مراحل الخدمة (واحدة أو أكتر)", "Service stages (one or more)") : tr("مرحلة الخدمة (واحدة فقط)", "Service stage (one only)");
+        lbl.textContent = multi ? tr("مراحل الخدمة (واحدة أو أكتر)", "Service stages (one or more)")
+          : rk === SE ? tr("مرحلة السكرتارية (واحدة) — وممكن تحدد سنة بعينها", "Secretary stage (one) — optionally one year")
+          : tr("مرحلة الخدمة (واحدة فقط)", "Service stage (one only)");
         const inputs = box.querySelectorAll("input[name=svc]");
         if (single) {
           let seen = false;
           inputs.forEach((i) => { i.type = "radio"; if (i.checked) { if (seen) i.checked = false; seen = true; } });
         } else inputs.forEach((i) => { i.type = "checkbox"; });
+        syncGrade();
       };
+      const gradeSel = form.querySelector("[data-svc-grade]");
+      const syncGrade = () => {
+        if (!gradeSel) return;
+        const rk = (ROLES[Number(roleSel.value)] || "").toLowerCase();
+        const picked = box.querySelector("input[name=svc]:checked");
+        const n = rk === SE && picked ? gradesOf(Number(picked.value)) : 0;
+        if (!n) { gradeSel.style.display = "none"; gradeSel.value = ""; return; }
+        const keep = gradeSel.value || gradeSel.dataset.init || "";
+        let h = `<option value="">${tr("كل السنين (المرحلة كلها)", "All years (whole stage)")}</option>`;
+        for (let i = 1; i <= n; i++) h += `<option value="${i}" ${String(keep) === String(i) ? "selected" : ""}>${esc(stageLabel(Number(picked.value), i))}</option>`;
+        gradeSel.innerHTML = h;
+        gradeSel.dataset.init = "";
+        gradeSel.style.display = "";
+      };
+      box.addEventListener("change", (e) => { if (e.target.name === "svc") { gradeSel && (gradeSel.dataset.init = ""); if (gradeSel) gradeSel.value = ""; syncGrade(); } });
       roleSel.addEventListener("change", sync);
       sync();
     }
@@ -411,9 +430,11 @@
           const svc = Array.from(form.querySelectorAll('input[name="svc"]:checked')).map((x) => Number(x.value));
           if (form.elements.role.value === "") { errBox.textContent = tr("اختر الدور.", "Select a role."); return; }
           if ((rk === AM || rk === AS) && svc.length < 1) { errBox.textContent = tr("اختر مرحلة واحدة على الأقل.", "Select at least one stage."); return; }
-          if ((rk === SV || rk === FU) && svc.length !== 1) { errBox.textContent = tr("اختر مرحلة واحدة بالظبط.", "Select exactly one stage."); return; }
+          if ((rk === SV || rk === FU || rk === SE) && svc.length !== 1) { errBox.textContent = tr("اختر مرحلة واحدة بالظبط.", "Select exactly one stage."); return; }
           vals.role = Number(form.elements.role.value);
-          vals.stages = [AM, AS, SV, FU].includes(rk) ? svc : [];
+          vals.stages = [AM, AS, SE, SV, FU].includes(rk) ? svc : [];
+          const gs = form.elements.svcgrade;
+          vals.svcGrade = rk === SE && gs && gs.value ? Number(gs.value) : null;
           continue;
         }
         const v = String(form.elements[f.name].value || "").trim();
@@ -667,7 +688,7 @@
         <td>${m.phone ? waHTML(m.whatsAppPhone || m.phone) : "—"}</td>
         <td>${esc(m.email || "—")}</td>
         <td>${esc(stageLabel(m.stage, m.grade))}${m.pendingStage != null ? `<div class="kc-sub">⇄ ${tr("طلب نقل إلى", "Move request to")} <b>${esc(stageLabel(m.pendingStage, m.pendingGrade))}</b></div>` : ""}</td>
-        <td>${roleBadge(m.role)}${stagesText(m.serviceStages) ? `<div class="kc-sub">${esc(stagesText(m.serviceStages))}</div>` : ""}</td>
+        <td>${roleBadge(m.role)}${stagesText(m.serviceStages, m.serviceGrade) ? `<div class="kc-sub">${esc(stagesText(m.serviceStages, m.serviceGrade))}</div>` : ""}</td>
         <td>${statusBadge(m.status)}</td>
         <td>${esc(fmtDate(m.requestedAt))}</td>
         ${manage ? `<td class="kc-acts">${acts}</td>` : ""}
@@ -853,7 +874,7 @@
         <td><b>${esc(m.fullName)}</b></td>
         <td>${phoneHTML(m.phone, m.whatsAppPhone)}</td>
         <td>${roleBadge(m.role)}</td>
-        <td>${esc(stagesText(m.serviceStages) || "—")}</td>
+        <td>${esc(stagesText(m.serviceStages, m.serviceGrade) || "—")}</td>
         ${canRole ? `<td class="kc-acts">${(isAdmin() || outranks(c, m.role)) ? `<button class="kc-mini" data-act="set-role" data-m="${m.id}">🎖 ${tr("تغيير الدور", "Change role")}</button>` : ""}</td>` : ""}
       </tr>`).join("");
     return head + table(["#", tr("الاسم", "Name"), tr("الموبايل", "Phone"), tr("الدور", "Role"), tr("مراحل الخدمة", "Service stages")].concat(canRole ? [tr("إجراءات", "Actions")] : []), rows);
@@ -1066,7 +1087,7 @@
     const keys = assignableRoles(c);
     const opts = [{ value: "", label: tr("اختر الدور", "Select role") }].concat(keys.map((k) => ({ value: roleVal(k), label: roleLabel(roleVal(k)) })));
     const cur = m ? roleKey(m.role) : "";
-    return { name: "rolestage", type: "rolestage", options: opts, value: keys.includes(cur) ? roleVal(cur) : "", stages: m ? (m.serviceStages || []) : [] };
+    return { name: "rolestage", type: "rolestage", options: opts, value: keys.includes(cur) ? roleVal(cur) : "", stages: m ? (m.serviceStages || []) : [], serviceGrade: m ? m.serviceGrade : null };
   }
 
   async function groupModal(g) {
@@ -1404,7 +1425,7 @@
         title: tr("تغيير الدور", "Change role"), sub: m.fullName,
         fields: [roleStageField(c, m)],
         onSubmit: async (v) => {
-          await api(`/Churches/${c.id}/members/${m.id}/role`, { method: "PUT", body: JSON.stringify({ role: v.role, serviceStages: v.stages }) });
+          await api(`/Churches/${c.id}/members/${m.id}/role`, { method: "PUT", body: JSON.stringify({ role: v.role, serviceStages: v.stages, serviceGrade: v.svcGrade }) });
           say(tr("تم تحديث الدور ✓", "Role updated ✓"));
           reload();
         }
@@ -1423,7 +1444,7 @@
           roleStageField(c, null)
         ],
         onSubmit: async (v) => {
-          await api(`/Churches/${c.id}/members/${v.memberId}/role`, { method: "PUT", body: JSON.stringify({ role: v.role, serviceStages: v.stages }) });
+          await api(`/Churches/${c.id}/members/${v.memberId}/role`, { method: "PUT", body: JSON.stringify({ role: v.role, serviceStages: v.stages, serviceGrade: v.svcGrade }) });
           say(tr("تم التعيين ✓", "Assigned ✓"));
           reload();
         }
