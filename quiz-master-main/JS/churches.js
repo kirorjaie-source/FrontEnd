@@ -21,14 +21,11 @@
   const MAX_LOGO = 2 * 1024 * 1024; // 2MB
   const ORIGIN = API_BASE.replace(/\/api\/?$/, "");
   const logoSrc = (u) => (u ? (/^https?:/i.test(u) ? u : ORIGIN + u) : "");
-  const toArr = (r) => (Array.isArray(r) ? r : r?.items || r?.data || r?.$values || []);
 
   /* ============================================================
-     ⚙ إعدادات الـ Enums — مطابقة تماماً للباك (Domain.Contract)
+     ⚙ إعدادات الـ Enums — لازم تطابق الباك (Domain.Entities)
      ChurchStage: KG=1, Primary=2, Preparatory=3, Secondary=4, University=5, External=6
-     ChurchRole:
-       Member = 0, Ameen = 1, GeneralAmeen = 2, AssistantAmeen = 3,
-       Servant = 4, FollowUpServant = 5, Secretary = 6
+     n = عدد الصفوف جوه المرحلة (الصف بيتبعت في حقل grade لوحده)
      ============================================================ */
   const ORD_AR = ["أولى", "تانية", "تالتة", "رابعة", "خامسة", "سادسة"];
   const MAIN = [
@@ -40,23 +37,7 @@
     { v: 6, key: "external", ar: "خريجين", en: "Graduates", n: 0 }
   ];
   const STATUSES = ["Pending", "Approved", "Rejected", "Revoked"]; // MemberStatus
-  const ROLE_DEFS = [
-    { v: 0, key: "Member", ar: "عضو", en: "Member", badge: "info", ico: "👤" },
-    { v: 1, key: "Ameen", ar: "أمين", en: "Ameen", badge: "ok", ico: "✝" },
-    { v: 2, key: "GeneralAmeen", ar: "أمين عام", en: "General Ameen", badge: "ok", ico: "👑" },
-    { v: 3, key: "AssistantAmeen", ar: "أمين مساعد", en: "Assistant Ameen", badge: "ok", ico: "⭐" },
-    { v: 4, key: "Servant", ar: "خادم", en: "Servant", badge: "warn", ico: "🤝" },
-    { v: 5, key: "FollowUpServant", ar: "خادم افتقاد", en: "Follow-Up Servant", badge: "warn", ico: "📞" },
-    { v: 6, key: "Secretary", ar: "سكرتير", en: "Secretary", badge: "info", ico: "📋" }
-  ];
-  const ROLES = ROLE_DEFS.map((r) => r.key);
-
-  const OUTCOMES = [
-    { v: "Reached", ar: "تم التواصل والرد", en: "Reached" },
-    { v: "NoAnswer", ar: "لم يرد", en: "No Answer" },
-    { v: "Visited", ar: "زيارة منزلية", en: "Home Visit" },
-    { v: "MessageSent", ar: "تم إرسال رسالة", en: "Message Sent" }
-  ];
+  const ROLES = ["Member", "Ameen", "GeneralAmeen", "AssistantAmeen", "Servant", "FollowUpServant", "Secretary"]; // ChurchRole (الترتيب = قيمة الـenum)
   /* ============================================================ */
 
   const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -64,12 +45,14 @@
 
   const TILES = [
     { k: "churches", icon: "⛪", ar: "كل الكنايس & كنايسي", en: "All & My Churches" },
+    { k: "stages", icon: "🏫", ar: "مراحل الكنيسة", en: "Church Stages" },
     { k: "members", icon: "👥", ar: "الأعضاء والطلبات", en: "Members & Requests" },
+    { k: "team", icon: "🧑‍🏫", ar: "الفريق والأدوار", en: "Team & Roles" },
     { k: "attendance", icon: "✅", ar: "الغياب اليومي", en: "Daily Attendance" },
-    { k: "groups", icon: "🗂️", ar: "مجموعات الافتقاد", en: "Follow-up Groups" },
-    { k: "followup", icon: "📞", ar: "الافتقاد والتقارير", en: "Follow-up & Reports" },
+    { k: "followup", icon: "📞", ar: "الافتقاد", en: "Follow-up" },
+    { k: "groups", icon: "🗂", ar: "مجموعات الافتقاد", en: "Follow-up Groups" },
     { k: "events", icon: "📅", ar: "الإيفنتس", en: "Events" },
-    { k: "ameens", icon: "✝", ar: "الفريق وأمناء الخدمة", en: "Team & Ameens" },
+    { k: "ameens", icon: "✝", ar: "أمناء الخدمة", en: "Church Ameens" },
     { k: "settings", icon: "⚙", ar: "إعدادات الكنيسة", en: "Church Settings" }
   ];
 
@@ -148,35 +131,29 @@
     return `${H % 12 || 12}:${m || "00"} ${H >= 12 ? tr("م", "PM") : tr("ص", "AM")}`;
   };
   const statusKey = (v) => enumName(v, STATUSES).toLowerCase();
-  const norm = (x) => String(x ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
-
-  const findRole = (v) => {
-    if (v == null || v === "") return null;
-    if (!isNaN(Number(v))) return ROLE_DEFS.find((r) => r.v === Number(v)) || null;
-    return ROLE_DEFS.find((r) => norm(r.key) === norm(v)) || null;
-  };
-  const roleKey = (v) => {
-    const r = findRole(v);
-    return r ? r.key.toLowerCase() : enumName(v, ROLES).toLowerCase();
-  };
+  const roleKey = (v) => enumName(v, ROLES).toLowerCase();
 
   /* ---- المراحل والصفوف ---- */
+  const norm = (x) => String(x ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
   const findStage = (v) => MAIN.find((s) => String(s.v) === String(v) || (v != null && v !== "" && s.key === norm(v)));
-  const gradesOf = (v) => { const s = findStage(v); return s ? s.n : 0; };
+  // إعدادات مراحل الكنيسة الحالية (من الباك): { قيمة المرحلة: عدد السنين }
+  const STAGE_ICO = { 1: "🧸", 2: "📚", 3: "🎒", 4: "🎓", 5: "🏛", 6: "🤝" };
+  const gradesOf = (v) => {
+    const s = findStage(v);
+    if (!s) return 0;
+    if (S.cfg) return S.cfg[s.v] ?? 0;
+    return s.n;
+  };
+  const enabledStages = () => (S.cfg ? MAIN.filter((s) => s.v in S.cfg) : MAIN);
   const stageLabel = (v, g) => {
     const s = findStage(v);
     if (!s) return String(v ?? "—");
-    if (g && s.n) return isAr() ? `${ORD_AR[g - 1] || g} ${s.ar}` : `${s.en} ${g}`;
+    if (g && gradesOf(s.v)) return isAr() ? `${ORD_AR[g - 1] || g} ${s.ar}` : `${s.en} ${g}`;
     return isAr() ? s.ar : s.en;
-  };
-  const stagesBadgesHTML = (stages) => {
-    const arr = toArr(stages);
-    if (!arr.length) return `<span style="opacity:.65">${tr("الكل / غير محدد", "All / Unassigned")}</span>`;
-    return arr.map((st) => `<span class="kc-badge info" style="margin:2px">${esc(stageLabel(st))}</span>`).join(" ");
   };
   const stageOptions = (withAll) =>
     (withAll ? [{ value: "", label: tr("كل المراحل", "All stages") }] : [])
-      .concat(MAIN.map((s) => ({ value: s.v, label: isAr() ? s.ar : s.en })));
+      .concat(enabledStages().map((s) => ({ value: s.v, label: isAr() ? s.ar : s.en })));
   const gradeOptsHTML = (stageV, val) => {
     const n = gradesOf(stageV);
     let h = `<option value="">${tr("اختر الصف", "Select grade")}</option>`;
@@ -194,27 +171,46 @@
     const l = STATUS_LBL[statusKey(v)];
     return l ? `<span class="kc-badge ${l[2]}">${isAr() ? l[0] : l[1]}</span>` : `<span class="kc-badge info">${esc(v ?? "—")}</span>`;
   }
+  const ROLE_LBL = {
+    member: ["مخدوم", "Member"],
+    ameen: ["أمين", "Ameen"],
+    generalameen: ["أمين عام", "General Ameen"],
+    assistantameen: ["أمين مساعد", "Assistant Ameen"],
+    servant: ["خادم", "Servant"],
+    followupservant: ["خادم افتقاد", "Follow-up Servant"],
+    secretary: ["سكرتارية", "Secretary"]
+  };
   function roleLabel(v) {
-    const r = findRole(v);
-    if (r) return isAr() ? r.ar : r.en;
-    return enumName(v, ROLES) || "—";
+    const l = ROLE_LBL[roleKey(v)];
+    return l ? (isAr() ? l[0] : l[1]) : (enumName(v, ROLES) || "—");
   }
-  function roleBadge(v) {
-    const r = findRole(v);
-    if (r) return `<span class="kc-badge ${r.badge}">${r.ico} ${isAr() ? r.ar : r.en}</span>`;
-    return `<span class="kc-badge info">${esc(roleLabel(v))}</span>`;
-  }
-  function outcomeBadge(v) {
-    const o = OUTCOMES.find((x) => norm(x.v) === norm(v));
-    const lbl = o ? (isAr() ? o.ar : o.en) : (v || "—");
-    const cls = norm(v) === "noanswer" ? "warn" : "ok";
-    return `<span class="kc-badge ${cls}">${esc(lbl)}</span>`;
-  }
+  const roleBadge = (v) => { const k = roleKey(v); return `<span class="kc-badge ${k === "member" ? "" : "info"}">${esc(roleLabel(v))}</span>`; };
+  const stagesText = (arr) => (arr && arr.length ? arr.map((x) => stageLabel(x)).join("، ") : "");
 
+  /* ---- الصلاحيات (مرآة لـ ChurchPermissions.cs في الباك — الباك هو اللي بيفرض فعلياً) ---- */
+  const RANK = { generalameen: 50, ameen: 40, assistantameen: 30, secretary: 20, followupservant: 10, servant: 10, member: 0 };
+  const GA = "generalameen", AM = "ameen", AS = "assistantameen", SE = "secretary", SV = "servant", FU = "followupservant";
+  const MATRIX = {
+    roles: [GA, AM], approve: [GA, AM, AS], viewMembers: [GA, AM, AS, SE], attendance: [GA, AM, AS, SE, SV],
+    followUp: [GA, AM, AS, FU], followServants: [GA, AM, AS], stages: [GA], viewPhones: [GA, AM, AS, SE, FU],
+    events: [GA, AM, AS], groups: [GA, AM, AS], reports: [GA, AM, AS], settings: [GA, AM]
+  };
+  const myKey = (c) => (c && c.myStatus != null && statusKey(c.myStatus) === "approved" ? roleKey(c.myRole) : "");
+  const can = (k, c) => isAdmin() || !!(c && MATRIX[k].includes(myKey(c)));
+  const myRank = (c) => (isAdmin() ? 100 : RANK[myKey(c)] || 0);
+  const assignableRoles = (c) => {
+    if (isAdmin()) return [GA, AM, AS, SE, FU, SV, "member"];
+    const k = myKey(c);
+    if (k === GA) return [AM, AS, SE, FU, SV, "member"];
+    if (k === AM) return [FU, SV, "member"];
+    return [];
+  };
+  const outranks = (c, targetRole) => myRank(c) > (RANK[roleKey(targetRole)] || 0);
+  const roleVal = (key) => ROLES.findIndex((r) => r.toLowerCase() === key);
   const statusOptions = () => [{ value: "", label: tr("كل الحالات", "All statuses") }]
     .concat(STATUSES.map((n, i) => { const l = STATUS_LBL[n.toLowerCase()]; return { value: i, label: l ? (isAr() ? l[0] : l[1]) : n }; }));
   const roleOptions = () => [{ value: "", label: tr("كل الأدوار", "All roles") }]
-    .concat(ROLE_DEFS.map((r) => ({ value: r.v, label: isAr() ? r.ar : r.en })));
+    .concat(ROLES.map((n, i) => ({ value: i, label: roleLabel(i) })));
 
   const selHTML = (attrs, opts, val) => {
     let html = "";
@@ -246,8 +242,8 @@
     return d ? `<a class="kc-btn wa" href="https://wa.me/${d}" target="_blank" rel="noopener noreferrer">💬 ${tr("واتساب", "WhatsApp")}</a>` : "";
   };
   const followHint = (c) => `<div class="kc-hint">📞 ${tr(
-    `الافتقاد = متابعة الأعضاء اللي غابوا ${c.followUpAfterDays ?? "—"} يوم أو أكتر عن الاجتماع. كلّمهم أو ابعتلهم واتساب، وبعدها دوس «تم الافتقاد» وسجّل النتيجة والملاحظة.`,
-    `Follow-up = checking on members absent for ${c.followUpAfterDays ?? "—"}+ days. Call or WhatsApp them, then press “Done” and record the outcome.`
+    `الافتقاد = متابعة الأعضاء اللي غابوا ${c.followUpAfterDays ?? "—"} يوم أو أكتر عن الاجتماع. كلّمهم أو ابعتلهم واتساب، وبعدها دوس «تم الافتقاد» وسجّل ملاحظة.`,
+    `Follow-up = checking on members absent for ${c.followUpAfterDays ?? "—"}+ days. Call or WhatsApp them, then press “Done” and add a note.`
   )}</div>`;
   const empty = (icon, msg) => `<div class="kc-empty"><div>${icon}</div><b>${esc(msg)}</b></div>`;
   const table = (heads, rows) =>
@@ -263,46 +259,38 @@
     seq: 0,
     mf: { status: "", stage: "", role: "" },
     att: { date: todayStr(), stage: "" },
-    grp: { stage: "" },
-    fu: { tab: "absent", stage: "", from: "", to: "" },
+    fu: { stage: "", tab: "" },
+    gr: { stage: "" },
+    team: [],
+    groups: [],
+    cfg: null,
+    cfgList: [],
+    stageSel: null,
+    mfGrade: "",
     sheet: null,
     members: [],
-    groups: [],
-    team: [],
     events: [],
     ameens: [],
-    followups: [],
-    reports: [],
-    servantsStatus: [],
-    servantsFollowup: []
+    followups: []
   };
 
-  const selectable = () => (isAdmin() ? S.all : S.mine);
+  const selectable = () => (isAdmin() || S.view === "stages" ? S.all : S.mine);
   const current = () => selectable().find((c) => String(c.id) === String(S.churchId)) || selectable()[0] || null;
-  const isApprovedMember = (c) => !!(c && c.myStatus != null && statusKey(c.myStatus) === "approved");
-
-  // أي دور قيادي أو خدمي غير Member العادي (Ameen=1, GeneralAmeen=2, AssistantAmeen=3, Servant=4, FollowUpServant=5, Secretary=6)
-  const isServantOrAmeen = (c) => {
-    if (isAdmin()) return true;
-    if (!isApprovedMember(c)) return false;
-    const r = findRole(c.myRole);
-    return r ? r.v >= 1 : roleKey(c.myRole) !== "member";
-  };
-
-  // الأدوار الإدارية (Ameen=1, GeneralAmeen=2, AssistantAmeen=3, Secretary=6)
-  const canManage = (c) => {
-    if (isAdmin()) return true;
-    if (!isApprovedMember(c)) return false;
-    const r = findRole(c.myRole);
-    if (r) return [1, 2, 3, 6].includes(r.v);
-    const k = roleKey(c.myRole);
-    return k.includes("ameen") || k.includes("secretary");
-  };
+  const canManage = (c) => can("approve", c);
 
   async function loadChurches() {
     const [all, mine] = await Promise.all([api("/Churches"), api("/Churches/mine")]);
     S.all = all || [];
     S.mine = mine || [];
+  }
+
+  async function loadStageCfg(churchId) {
+    try {
+      const list = (await api(`/Churches/${churchId}/stages`)) || [];
+      S.cfgList = list;
+      S.cfg = {};
+      list.forEach((x) => { const st = findStage(x.stage); if (st) S.cfg[st.v] = Number(x.gradesCount) || 0; });
+    } catch { S.cfg = null; S.cfgList = []; }
   }
 
   /* ---------------- Modal ---------------- */
@@ -318,43 +306,19 @@
       const st = findStage(f.value);
       const sv = st ? st.v : "";
       const first = { value: "", label: f.allowEmpty ? tr("— بدون تغيير —", "— no change —") : tr("اختر المرحلة", "Select stage") };
-      const opts = [first].concat(MAIN.map((s) => ({ value: s.v, label: isAr() ? s.ar : s.en })));
+      const opts = [first].concat(enabledStages().map((s) => ({ value: s.v, label: isAr() ? s.ar : s.en })));
       input = selHTML(`id="${id}" name="stage" data-stage-main`, opts, sv)
         + `<select name="grade" data-stage-grade style="margin-top:8px;${gradesOf(sv) ? "" : "display:none"}">${gradeOptsHTML(sv, f.grade ?? "")}</select>`;
-    } else if (f.type === "stages-check") {
-      const selected = new Set(toArr(f.value).map((x) => { const st = findStage(x); return st ? String(st.v) : String(x); }));
-      input = `<div style="display:flex;flex-wrap:wrap;gap:8px;padding:6px 0">${MAIN.map((s) => `
-        <label style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid rgba(148,163,184,.35);border-radius:10px;cursor:pointer;font-weight:600">
-          <input type="checkbox" name="${f.name}" value="${s.v}" ${selected.has(String(s.v)) ? "checked" : ""}>
-          <span>${isAr() ? s.ar : s.en}</span>
-        </label>`).join("")}</div>`;
-    } else if (f.type === "members-check") {
-      const list = f.members || [];
-      if (!list.length) {
-        input = `<div class="kc-note">${tr("لا يوجد أعضاء متاحين للاختيار.", "No members available to select.")}</div>`;
-      } else {
-        input = `<div style="max-height:220px;overflow-y:auto;border:1px solid rgba(148,163,184,.3);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:6px">
-          ${list.map((m) => `
-            <label style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer">
-              <span style="display:inline-flex;align-items:center;gap:8px">
-                <input type="checkbox" name="${f.name}" value="${esc(m.id ?? m.memberId)}" ${f.checkedAll ? "checked" : ""}>
-                <b>${esc(m.fullName)}</b>
-              </span>
-              <small style="opacity:.75">${esc(stageLabel(m.stage, m.grade))}</small>
-            </label>`).join("")}
-        </div>`;
-      }
-    } else if (f.type === "checkbox") {
-      input = `<label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;padding:6px 0">
-        <input id="${id}" name="${f.name}" type="checkbox" ${f.checked ? "checked" : ""}>
-        <span>${esc(f.boxLabel || "")}</span>
-      </label>`;
+    } else if (f.type === "rolestage") {
+      input = "";
+      return `<div class="kc-field"><label for="kcf-role">${tr("الدور", "Role")} *</label>${selHTML('id="kcf-role" name="role" data-role-sel', f.options, f.value ?? "")}</div>
+        <div class="kc-field" data-stage-box style="display:none"><label data-stage-label></label><div class="kc-checks">${MAIN.map((s) => `<label class="kc-check"><input type="checkbox" name="svc" value="${s.v}" ${(f.stages || []).some((x) => findStage(x) && findStage(x).v === s.v) ? "checked" : ""}><span>${isAr() ? s.ar : s.en}</span></label>`).join("")}</div></div>`;
     } else if (f.type === "file") {
       input = `<input id="${id}" name="${f.name}" type="file" accept="image/png,image/jpeg,image/webp" style="height:auto;padding:10px">`;
     } else if (f.type === "textarea") {
       input = `<textarea id="${id}" name="${f.name}" ${f.maxlength ? `maxlength="${f.maxlength}"` : ""}>${esc(v)}</textarea>`;
     } else {
-      input = `<input id="${id}" name="${f.name}" type="${f.type || "text"}" value="${esc(v)}" ${f.min != null ? `min="${f.min}"` : ""} ${f.max != null ? `max="${f.max}"` : ""} ${f.maxlength ? `maxlength="${f.maxlength}"` : ""} ${f.ltr ? 'dir="ltr"' : ""} ${f.placeholder ? `placeholder="${esc(f.placeholder)}"` : ""} ${f.readonly ? "readonly" : ""}>`;
+      input = `<input id="${id}" name="${f.name}" type="${f.type || "text"}" value="${esc(v)}" ${f.maxlength ? `maxlength="${f.maxlength}"` : ""} ${f.ltr ? 'dir="ltr"' : ""} ${f.placeholder ? `placeholder="${esc(f.placeholder)}"` : ""} ${f.readonly ? "readonly" : ""}>`;
     }
     return `<div class="kc-field"><label for="${id}">${esc(f.label)}${f.required ? " *" : ""}</label>${input}</div>`;
   }
@@ -384,7 +348,7 @@
     wrap.addEventListener("click", (e) => { if (e.target === wrap || e.target.closest("[data-close]")) closeModal(); });
     const form = wrap.querySelector("form");
     const errBox = wrap.querySelector("#kc-modal-err");
-    const first = form.querySelector("input:not([readonly]):not([type=checkbox]),select,textarea");
+    const first = form.querySelector("input:not([readonly]),select,textarea");
     if (first) first.focus();
 
     const mainSel = form.querySelector("[data-stage-main]");
@@ -396,6 +360,26 @@
       });
     }
 
+    const roleSel = form.querySelector("[data-role-sel]");
+    if (roleSel) {
+      const box = form.querySelector("[data-stage-box]");
+      const lbl = form.querySelector("[data-stage-label]");
+      const sync = () => {
+        const rk = (ROLES[Number(roleSel.value)] || "").toLowerCase();
+        const multi = rk === AM || rk === AS;
+        const single = rk === SV || rk === FU;
+        box.style.display = multi || single ? "" : "none";
+        lbl.textContent = multi ? tr("مراحل الخدمة (واحدة أو أكتر)", "Service stages (one or more)") : tr("مرحلة الخدمة (واحدة فقط)", "Service stage (one only)");
+        const inputs = box.querySelectorAll("input[name=svc]");
+        if (single) {
+          let seen = false;
+          inputs.forEach((i) => { i.type = "radio"; if (i.checked) { if (seen) i.checked = false; seen = true; } });
+        } else inputs.forEach((i) => { i.type = "checkbox"; });
+      };
+      roleSel.addEventListener("change", sync);
+      sync();
+    }
+
     if (typeof onOpen === "function") onOpen(form, errBox);
 
     form.addEventListener("submit", async (e) => {
@@ -403,15 +387,14 @@
       const vals = {};
       for (const f of fields) {
         if (f.type === "file") { vals[f.name] = form.elements[f.name].files[0] || null; continue; }
-        if (f.type === "checkbox") { vals[f.name] = Boolean(form.elements[f.name]?.checked); continue; }
-        if (f.type === "stages-check" || f.type === "members-check") {
-          vals[f.name] = Array.from(form.querySelectorAll(`input[name="${f.name}"]:checked`)).map((el) =>
-            /^\d+$/.test(el.value) ? Number(el.value) : el.value
-          );
-          if (f.required && !vals[f.name].length) {
-            errBox.textContent = tr(`اختر عنصراً واحداً على الأقل في ${f.label}.`, `Select at least one item in ${f.label}.`);
-            return;
-          }
+        if (f.type === "rolestage") {
+          const rk = (ROLES[Number(form.elements.role.value)] || "").toLowerCase();
+          const svc = Array.from(form.querySelectorAll('input[name="svc"]:checked')).map((x) => Number(x.value));
+          if (form.elements.role.value === "") { errBox.textContent = tr("اختر الدور.", "Select a role."); return; }
+          if ((rk === AM || rk === AS) && svc.length < 1) { errBox.textContent = tr("اختر مرحلة واحدة على الأقل.", "Select at least one stage."); return; }
+          if ((rk === SV || rk === FU) && svc.length !== 1) { errBox.textContent = tr("اختر مرحلة واحدة بالظبط.", "Select exactly one stage."); return; }
+          vals.role = Number(form.elements.role.value);
+          vals.stages = [AM, AS, SV, FU].includes(rk) ? svc : [];
           continue;
         }
         const v = String(form.elements[f.name].value || "").trim();
@@ -461,8 +444,7 @@
 
   /* ---------------- Panels ---------------- */
   const PANELS = {};
-  const lockedPanel = () => empty("🔒", tr("هذا القسم للأمناء والأدمن فقط.", "This section is for Ameens and admins only."));
-  const servantLockedPanel = () => empty("🔒", tr("هذا القسم للخدام والأمناء والأدمن فقط.", "This section is for Servants, Ameens, and admins only."));
+  const lockedPanel = () => empty("🔒", tr("هذا القسم للأمين والأدمن فقط.", "This section is for Ameens and admins only."));
 
   // 1) كل الكنايس & كنايسي
   PANELS.churches = async () => {
@@ -485,7 +467,7 @@
     const admin = isAdmin();
     const st = c.myStatus == null ? "" : statusKey(c.myStatus);
     let actions = `<button type="button" class="kc-btn ghost" data-act="contact" data-id="${c.id}">📞 ${tr("التواصل", "Contact")}</button>`;
-    if (admin || st === "approved") actions += `<button type="button" class="kc-btn primary" data-act="open" data-id="${c.id}">${tr("فتح", "Open")}</button>`;
+    actions += `<button type="button" class="kc-btn primary" data-act="open" data-id="${c.id}">${tr("فتح", "Open")}</button>`;
     if (!admin && (!st || st === "rejected" || st === "revoked")) actions += `<button type="button" class="kc-btn gold" data-act="join" data-id="${c.id}">${tr("انضم", "Join")}</button>`;
     if (st === "approved") actions += `<button type="button" class="kc-btn ghost" data-act="my-profile" data-id="${c.id}">${tr("بياناتي", "My profile")}</button>`;
     if (admin) actions += `<button type="button" class="kc-btn ghost" data-act="edit-church" data-id="${c.id}">✎ ${tr("تعديل", "Edit")}</button>`;
@@ -505,21 +487,117 @@
         <div class="kc-meta">
           <span>📅 ${dayLabel(c.meetingDay)} ${esc(fmtTime(c.meetingTime))}</span>
           ${c.myStatus != null ? statusBadge(c.myStatus) : ""}
-          ${c.myRole != null && st === "approved" ? roleBadge(c.myRole) : ""}
+          ${c.myRole != null && st === "approved" ? `<span class="kc-badge info">${roleLabel(c.myRole)}</span>` : ""}
           ${counts}
         </div>
         <div class="kc-card-actions">${actions}</div>
       </article>`;
   }
 
+  // مراحل الكنيسة (الشاشة اللي بتظهر بعد دخول الكنيسة)
+  PANELS.stages = async () => {
+    const c = current();
+    const st = c.myStatus == null ? "" : statusKey(c.myStatus);
+    const admin = isAdmin();
+    const manage = can("approve", c);
+    const manageBtn = can("stages", c) ? `<button type="button" class="kc-btn primary" data-act="manage-stages">⚙ ${tr("إدارة المراحل", "Manage stages")}</button>` : "";
+    if (!S.cfgList.length) return `<div class="kc-head"><span></span>${manageBtn}</div>` + empty("🏫", tr("لا توجد مراحل.", "No stages."));
+
+    // ---- الخطوة 2: جوه المرحلة — السنين ----
+    const sel = S.stageSel != null ? findStage(S.stageSel) : null;
+    const selCfg = sel ? S.cfgList.find((x) => (findStage(x.stage) || {}).v === sel.v) : null;
+    if (sel && selCfg) {
+      const n = Number(selCfg.gradesCount) || 0;
+      const years = n ? Array.from({ length: n }, (_, i) => i + 1) : [0];
+      const head = `<div class="kc-head">
+          <button type="button" class="kc-btn ghost" data-act="back-stages">← ${tr("كل المراحل", "All stages")}</button>
+          <span class="kc-badge info">${STAGE_ICO[sel.v] || "🏫"} ${isAr() ? sel.ar : sel.en} — ${esc(c.name)}</span>
+        </div>
+        <div class="kc-hint">${n ? tr("اختار سنتك وادوس «انضم»، أو الأمين يضيفك يدوي.", "Pick your year and press Join, or an Ameen can add you manually.") : tr("المرحلة دي من غير صفوف.", "This stage has no grades.")}</div>`;
+      const cards = years.map((g) => {
+        let actions = "";
+        if (!admin && (!st || st === "rejected" || st === "revoked")) actions += `<button type="button" class="kc-btn gold" data-act="join" data-id="${c.id}" data-stage="${sel.v}" data-grade="${g || ""}">${tr("انضم", "Join")}</button>`;
+        if (st === "pending") actions += `<span class="kc-badge warn">⏳ ${tr("طلبك قيد المراجعة", "Request pending")}</span>`;
+        if (manage) actions += `<button type="button" class="kc-btn primary" data-act="add-member" data-stage="${sel.v}" data-grade="${g || ""}">＋ ${tr("إضافة عضو", "Add member")}</button>`;
+        if (can("viewMembers", c)) actions += `<button type="button" class="kc-btn ghost" data-act="stage-members" data-stage="${sel.v}" data-grade="${g || ""}">👥 ${tr("الأعضاء", "Members")}</button>`;
+        return `<article class="kc-church kc-stage">
+          <div class="kc-church-top">
+            <span class="kc-church-ico">${STAGE_ICO[sel.v] || "🏫"}</span>
+            <div><h3>${esc(g ? stageLabel(sel.v, g) : (isAr() ? sel.ar : sel.en))}</h3><small>${esc(c.name)}</small></div>
+          </div>
+          <div class="kc-card-actions">${actions}</div>
+        </article>`;
+      }).join("");
+      return head + `<div class="kc-cards">${cards}</div>`;
+    }
+
+    // ---- الخطوة 1: المراحل ----
+    const head = `<div class="kc-hint">🏫 ${tr("دي المراحل الموجودة في الكنيسة. افتح المرحلة واختار سنتك.", "These are the stages in this church. Open a stage and pick your year.")}</div>
+      <div class="kc-head"><span class="kc-badge info">${esc(c.name)}</span>${manageBtn}</div>`;
+    const cards = S.cfgList.map((x) => {
+      const sg = findStage(x.stage);
+      if (!sg) return "";
+      const n = Number(x.gradesCount) || 0;
+      const chips = n ? Array.from({ length: n }, (_, i) => `<span class="kc-chip">${esc(stageLabel(sg.v, i + 1))}</span>`).join("") : "";
+      return `<article class="kc-church kc-stage kc-clickable" data-act="pick-stage" data-stage="${sg.v}">
+        <div class="kc-church-top">
+          <span class="kc-church-ico">${STAGE_ICO[sg.v] || "🏫"}</span>
+          <div><h3>${isAr() ? sg.ar : sg.en}</h3><small>${n ? tr(`${n} سنين`, `${n} year(s)`) : tr("بدون صفوف", "No grades")}</small></div>
+        </div>
+        ${chips ? `<div class="kc-chips">${chips}</div>` : ""}
+        <div class="kc-meta"><span class="kc-badge info">👥 ${x.membersCount ?? 0}</span></div>
+        <div class="kc-card-actions"><button type="button" class="kc-btn primary" data-act="pick-stage" data-stage="${sg.v}">${tr("فتح المرحلة", "Open stage")} ←</button></div>
+      </article>`;
+    }).join("");
+    return head + `<div class="kc-cards">${cards}</div>`;
+  };
+
+  function manageStagesModal() {
+    const c = current();
+    const cur = S.cfg || {};
+    const rows = MAIN.map((sg) => `
+      <div class="kc-stagerow">
+        <label class="kc-check"><input type="checkbox" data-st-on="${sg.v}" ${sg.v in cur ? "checked" : ""}><span>${STAGE_ICO[sg.v]} ${isAr() ? sg.ar : sg.en}</span></label>
+        <label class="kc-years">${tr("عدد السنين", "Years")}
+          <input type="number" min="0" max="12" data-st-n="${sg.v}" value="${sg.v in cur ? cur[sg.v] : sg.n}">
+        </label>
+      </div>`).join("");
+    openInfo({
+      title: tr("إدارة مراحل الكنيسة", "Manage church stages"), sub: c.name,
+      html: `<p class="kc-sub">${tr("فعّل المراحل الموجودة في الكنيسة وحدد عدد سنين كل مرحلة (0 = من غير صفوف).", "Enable the stages in this church and set the number of years for each (0 = no grades).")}</p>
+        ${rows}
+        <div class="kc-err" id="kc-st-err"></div>
+        <div class="kc-actions"><button type="button" class="kc-btn ghost" data-close>${tr("إلغاء", "Cancel")}</button><button type="button" class="kc-btn primary" data-st-save>${tr("حفظ", "Save")}</button></div>`
+    });
+    const modal = $("kc-modal");
+    modal.addEventListener("click", async (e) => {
+      const btn = e.target.closest("[data-st-save]");
+      if (!btn) return;
+      const stages = [];
+      MAIN.forEach((sg) => {
+        if (modal.querySelector(`[data-st-on="${sg.v}"]`).checked) stages.push({ stage: sg.v, gradesCount: Math.max(0, Math.min(12, Number(modal.querySelector(`[data-st-n="${sg.v}"]`).value) || 0)) });
+      });
+      const err = modal.querySelector("#kc-st-err");
+      if (!stages.length) { err.textContent = tr("فعّل مرحلة واحدة على الأقل.", "Enable at least one stage."); return; }
+      btn.disabled = true;
+      try {
+        await api(`/Churches/${c.id}/stages`, { method: "PUT", body: JSON.stringify({ stages }) });
+        closeModal();
+        say(tr("تم حفظ المراحل ✓", "Stages saved ✓"));
+        reload();
+      } catch (ex) { err.textContent = ex.message; btn.disabled = false; }
+    });
+  }
+
   // 2) الأعضاء والطلبات
   PANELS.members = async () => {
     const c = current();
     const manage = canManage(c);
-    if (!manage) return lockedPanel();
+    if (!can("viewMembers", c)) return lockedPanel();
     const q = new URLSearchParams();
     Object.entries(S.mf).forEach(([k, v]) => { if (v !== "") q.set(k, v); });
     S.members = (await api(`/Churches/${c.id}/members${q.toString() ? "?" + q : ""}`)) || [];
+    if (S.mfGrade !== "") S.members = S.members.filter((m) => String(m.grade) === String(S.mfGrade));
 
     const filters = `
       <div class="kc-head">
@@ -528,45 +606,43 @@
           ${selHTML('data-filter="stage"', stageOptions(true), S.mf.stage)}
           ${selHTML('data-filter="role"', roleOptions(), S.mf.role)}
         </div>
+        ${S.mfGrade !== "" && S.mf.stage !== "" ? `<button type="button" class="kc-btn ghost" data-act="clear-grade">✕ ${esc(stageLabel(S.mf.stage, Number(S.mfGrade)))}</button>` : ""}
         ${manage ? `<button type="button" class="kc-btn primary" data-act="add-member">＋ ${tr("إضافة عضو", "Add member")}</button>` : ""}
       </div>`;
     if (!S.members.length) return filters + empty("👥", tr("لا يوجد أعضاء.", "No members found."));
 
     const rows = S.members.map((m, i) => {
       const st = statusKey(m.status);
-      const rObj = findRole(m.role);
-      const isTargetAmeen = rObj ? [1, 2, 3].includes(rObj.v) : roleKey(m.role).includes("ameen");
+      const higher = !isAdmin() && !outranks(c, m.role); // مفيش تعديل على نفس الرتبة أو أعلى
       let acts = "";
-      if (st === "pending") acts += `<button class="kc-mini ok" data-act="decide" data-do="approve" data-m="${m.id}">✓ ${tr("قبول", "Approve")}</button><button class="kc-mini danger" data-act="decide" data-do="reject" data-m="${m.id}">✕ ${tr("رفض", "Reject")}</button>`;
+      if (!manage) { /* عرض فقط */ }
+      else if (st === "pending") acts += `<button class="kc-mini ok" data-act="decide" data-do="approve" data-m="${m.id}">✓ ${tr("قبول", "Approve")}</button><button class="kc-mini danger" data-act="decide" data-do="reject" data-m="${m.id}">✕ ${tr("رفض", "Reject")}</button>`;
       else if (st === "approved") acts += `<button class="kc-mini danger" data-act="decide" data-do="revoke" data-m="${m.id}">⛔ ${tr("إلغاء العضوية", "Revoke")}</button>`;
       else acts += `<button class="kc-mini ok" data-act="decide" data-do="approve" data-m="${m.id}">✓ ${tr("قبول", "Approve")}</button>`;
-
-      if (st === "approved") {
-        acts += `<button class="kc-mini" data-act="set-role" data-m="${m.id}">🎖 ${tr("الدور", "Role")}</button>`;
-      }
-      if (!isTargetAmeen || isAdmin()) {
+      if (manage && !higher) {
         acts += `<button class="kc-mini" data-act="edit-member" data-m="${m.id}">✎ ${tr("تعديل", "Edit")}</button>`;
         acts += `<button class="kc-mini danger" data-act="del-member" data-m="${m.id}">🗑 ${tr("حذف", "Delete")}</button>`;
       }
+      if (can("roles", c) && st === "approved" && !higher && assignableRoles(c).length) acts += `<button class="kc-mini" data-act="set-role" data-m="${m.id}">🎖 ${tr("الدور", "Role")}</button>`;
       return `<tr>
         <td>${i + 1}</td>
         <td><b>${esc(m.fullName)}</b></td>
         <td>${phoneHTML(m.phone)}</td>
         <td>${esc(m.email || "—")}</td>
         <td>${esc(stageLabel(m.stage, m.grade))}</td>
-        <td>${roleBadge(m.role)}</td>
+        <td>${roleBadge(m.role)}${stagesText(m.serviceStages) ? `<div class="kc-sub">${esc(stagesText(m.serviceStages))}</div>` : ""}</td>
         <td>${statusBadge(m.status)}</td>
         <td>${esc(fmtDate(m.requestedAt))}</td>
-        <td class="kc-acts">${acts}</td>
+        ${manage ? `<td class="kc-acts">${acts}</td>` : ""}
       </tr>`;
     }).join("");
-    return filters + table(["#", tr("الاسم", "Name"), tr("الموبايل", "Phone"), tr("الإيميل", "Email"), tr("المرحلة", "Stage"), tr("الدور", "Role"), tr("الحالة", "Status"), tr("تاريخ الطلب", "Requested"), tr("إجراءات", "Actions")], rows);
+    return filters + table(["#", tr("الاسم", "Name"), tr("الموبايل", "Phone"), tr("الإيميل", "Email"), tr("المرحلة", "Stage"), tr("الدور", "Role"), tr("الحالة", "Status"), tr("تاريخ الطلب", "Requested")].concat(manage ? [tr("إجراءات", "Actions")] : []), rows);
   };
 
   // 3) الغياب اليومي
   PANELS.attendance = async () => {
     const c = current();
-    if (!isServantOrAmeen(c)) return servantLockedPanel();
+    if (!can("attendance", c)) return lockedPanel();
     const q = new URLSearchParams({ date: S.att.date });
     if (S.att.stage !== "") q.set("stage", S.att.stage);
     S.sheet = await api(`/Churches/${c.id}/attendance?${q}`);
@@ -575,7 +651,7 @@
 
   function attendanceHTML() {
     const s = S.sheet;
-    const allowEdit = isServantOrAmeen(current());
+    const manage = can("attendance", current());
     if (!s) return empty("✅", tr("لا توجد بيانات.", "No data."));
     const members = s.members || [];
     const head = `
@@ -596,189 +672,194 @@
         <td><b>${esc(m.fullName)}</b></td>
         <td>${phoneHTML(m.phone)}</td>
         <td>${esc(stageLabel(m.stage, m.grade))}</td>
-        <td>${roleLabel(m.role)}</td>
-        <td>${allowEdit
+        <td>${roleBadge(m.role)}</td>
+        <td>${manage
           ? `<button type="button" class="kc-toggle ${m.isPresent ? "on" : ""}" data-act="toggle-att" data-m="${m.memberId}">${m.isPresent ? "✅ " + tr("حاضر", "Present") : "⬜ " + tr("غائب", "Absent")}</button>`
           : `<span class="kc-badge ${m.isPresent ? "ok" : ""}">${m.isPresent ? "✅ " + tr("حاضر", "Present") : "⬜ " + tr("غائب", "Absent")}</span>`}</td>
       </tr>`).join("");
     return head + table(["#", tr("الاسم", "Name"), tr("الموبايل", "Phone"), tr("المرحلة", "Stage"), tr("الدور", "Role"), tr("الحضور", "Attendance")], rows);
   }
 
-  // 4) مجموعات الافتقاد والتقسيم التلقائي
-  PANELS.groups = async () => {
-    const c = current();
-    if (!isServantOrAmeen(c)) return servantLockedPanel();
-    const manage = canManage(c);
-    const q = S.grp.stage !== "" ? `?stage=${encodeURIComponent(S.grp.stage)}` : "";
-    S.groups = toArr(await api(`/Churches/${c.id}/groups${q}`));
+  // 4) الافتقاد — تبويبات: المخدومين / الخدام / التقارير / حالة خدام الافتقاد
+  const OUTCOMES = ["", "Contacted", "Visited", "NoAnswer"]; // FollowUpOutcome
+  const OUTCOME_LBL = {
+    contacted: ["تم الاتصال", "Contacted", "ok"],
+    visited: ["تمت الزيارة", "Visited", "ok"],
+    noanswer: ["لم يرد", "No answer", "warn"]
+  };
+  const outcomeBadge = (v) => {
+    const l = OUTCOME_LBL[norm(enumName(v, OUTCOMES))];
+    return l ? `<span class="kc-badge ${l[2]}">${isAr() ? l[0] : l[1]}</span>` : `<span class="kc-badge">${esc(v ?? "—")}</span>`;
+  };
+  const reportHint = () => `<div class="kc-hint">📞 ${tr(
+    "كلّم المخدوم أو ابعتله واتساب أو زوره، وبعدها سجّل تقرير الافتقاد: النتيجة + ملاحظة (إجباري). التقرير هو اللي بيثبت إنك افتقدت.",
+    "Call, WhatsApp or visit the member, then submit the follow-up report: outcome + note (mandatory). The report is what proves the follow-up was done."
+  )}</div>`;
 
-    const head = `
+  const FU_TABS = {};
+
+  FU_TABS.members = async (c) => {
+    const q = S.fu.stage !== "" ? `?stage=${encodeURIComponent(S.fu.stage)}` : "";
+    S.followups = (await api(`/Churches/${c.id}/follow-up${q}`)) || [];
+    const head = `${reportHint()}
       <div class="kc-head">
-        <div class="kc-filters">
-          ${selHTML('id="kc-grp-stage"', stageOptions(true), S.grp.stage)}
-          <span class="kc-badge info">🗂️ ${S.groups.length}</span>
-        </div>
-        ${manage ? `<div class="kc-actions" style="margin:0">
-          <button type="button" class="kc-btn gold" data-act="auto-split-groups">⚡ ${tr("تقسيم تلقائي", "Auto Split")}</button>
-          <button type="button" class="kc-btn primary" data-act="add-group">＋ ${tr("مجموعة جديدة", "New Group")}</button>
-        </div>` : ""}
+        <div class="kc-filters">${selHTML('id="kc-fu-stage"', stageOptions(true), S.fu.stage)}</div>
+        <span class="kc-badge warn">📞 ${S.followups.length}</span>
       </div>`;
-
-    if (!S.groups.length) {
-      return head + empty("🗂️", tr("لا توجد مجموعات افتقاد بعد. يمكنك إنشاء مجموعة أو استخدام التقسيم التلقائي.", "No follow-up groups yet. Create one or use Auto Split."));
-    }
-
-    return head + `<div class="kc-cards">${S.groups.map((g) => {
-      const count = g.membersCount ?? (Array.isArray(g.members) ? g.members.length : 0);
-      const servantName = g.followUpServantName || g.servantName || g.leaderName || g.assignedServantName || tr("غير محدد", "Unassigned");
-      return `
-        <article class="kc-church">
-          <div class="kc-church-top">
-            <span class="kc-church-ico">🗂️</span>
-            <div>
-              <h3>${esc(g.name || g.title || tr("مجموعة", "Group"))}</h3>
-              <small>${esc(stageLabel(g.stage))}${g.grade ? " — " + esc(stageLabel(g.stage, g.grade)) : ""}</small>
-            </div>
-          </div>
-          <div class="kc-meta">
-            <span class="kc-badge info">📞 ${tr("خادم الافتقاد:", "Servant:")} ${esc(servantName)}</span>
-            <span class="kc-badge ok">👥 ${count} ${tr("عضو", "members")}</span>
-          </div>
-          ${g.description ? `<p class="kc-desc">${esc(g.description)}</p>` : ""}
-          <div class="kc-card-actions">
-            <button type="button" class="kc-btn primary" data-act="view-group-members" data-g="${g.id}">👥 ${tr("الأعضاء", "Members")}</button>
-            ${manage ? `
-              <button type="button" class="kc-btn ghost" data-act="assign-group-members" data-g="${g.id}">＋ ${tr("إضافة أعضاء", "Add members")}</button>
-              <button type="button" class="kc-btn ghost" data-act="edit-group" data-g="${g.id}">✎ ${tr("تعديل", "Edit")}</button>
-              <button type="button" class="kc-btn danger" data-act="del-group" data-g="${g.id}">🗑 ${tr("حذف", "Delete")}</button>
-            ` : ""}
-          </div>
-        </article>`;
-    }).join("")}</div>`;
+    if (!S.followups.length) return head + empty("🙏", tr("مفيش حد محتاج افتقاد دلوقتي.", "No one needs follow-up right now."));
+    const rows = S.followups.map((m) => `
+      <tr>
+        <td><b>${esc(m.fullName)}</b></td>
+        <td>${phoneHTML(m.phone)}</td>
+        <td>${waHTML(m.whatsAppPhone)}</td>
+        <td>${esc(stageLabel(m.stage, m.grade))}</td>
+        <td>${esc(fmtDate(m.lastAttendedDate))}</td>
+        <td><span class="kc-badge ${m.daysAbsent >= 28 ? "no" : "warn"}">${m.daysAbsent} ${tr("يوم", "days")}</span></td>
+        <td>${esc(fmtDate(m.lastFollowUpAt))}</td>
+        <td class="kc-note-cell">${esc(m.lastNote || "—")}</td>
+        <td><button type="button" class="kc-mini ok" data-act="report-followup" data-src="members" data-m="${m.memberId}">📝 ${tr("تقرير افتقاد", "Report")}</button></td>
+      </tr>`).join("");
+    return head + table([tr("الاسم", "Name"), tr("الموبايل", "Phone"), tr("واتساب", "WhatsApp"), tr("المرحلة", "Stage"), tr("آخر حضور", "Last attended"), tr("الغياب", "Absent"), tr("آخر افتقاد", "Last follow-up"), tr("آخر ملاحظة", "Last note"), tr("إجراء", "Action")], rows);
   };
 
-  // 5) الافتقاد والتقارير وافتقاد الخدام
+  FU_TABS.servants = async (c) => {
+    const q = S.fu.stage !== "" ? `?stage=${encodeURIComponent(S.fu.stage)}` : "";
+    S.fuServants = (await api(`/Churches/${c.id}/follow-up/servants${q}`)) || [];
+    const head = `<div class="kc-hint">🧑‍🏫 ${tr("افتقاد الخدام والسكرتارية نفسهم — بيتسجّل بنفس التقرير الإجباري.", "Follow-up of servants and secretaries — recorded with the same mandatory report.")}</div>
+      <div class="kc-head">
+        <div class="kc-filters">${selHTML('id="kc-fu-stage"', stageOptions(true), S.fu.stage)}</div>
+        <span class="kc-badge warn">📞 ${S.fuServants.length}</span>
+      </div>`;
+    if (!S.fuServants.length) return head + empty("🙏", tr("مفيش خدام محتاجين افتقاد.", "No servants need follow-up."));
+    const rows = S.fuServants.map((x) => {
+      const m = x.info || {};
+      return `<tr>
+        <td><b>${esc(m.fullName)}</b></td>
+        <td>${roleBadge(x.role)}</td>
+        <td>${phoneHTML(m.phone)}</td>
+        <td>${waHTML(m.whatsAppPhone)}</td>
+        <td>${esc(fmtDate(m.lastAttendedDate))}</td>
+        <td><span class="kc-badge ${m.daysAbsent >= 28 ? "no" : "warn"}">${m.daysAbsent} ${tr("يوم", "days")}</span></td>
+        <td>${esc(fmtDate(m.lastFollowUpAt))}</td>
+        <td><button type="button" class="kc-mini ok" data-act="report-followup" data-src="servants" data-m="${m.memberId}">📝 ${tr("تقرير افتقاد", "Report")}</button></td>
+      </tr>`;
+    }).join("");
+    return head + table([tr("الاسم", "Name"), tr("الدور", "Role"), tr("الموبايل", "Phone"), tr("واتساب", "WhatsApp"), tr("آخر حضور", "Last attended"), tr("الغياب", "Absent"), tr("آخر افتقاد", "Last follow-up"), tr("إجراء", "Action")], rows);
+  };
+
+  FU_TABS.reports = async (c) => {
+    const list = ((await api(`/Churches/${c.id}/follow-up/reports`)) || []).slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const head = `<div class="kc-head"><span class="kc-badge info">📝 ${list.length}</span></div>`;
+    if (!list.length) return head + empty("📝", tr("لا توجد تقارير لسه.", "No reports yet."));
+    const rows = list.map((r) => `
+      <tr>
+        <td>${esc(fmtDateTime(r.createdAt))}</td>
+        <td><b>${esc(r.memberName)}</b><div class="kc-sub">${esc(roleLabel(r.memberRole))} · ${esc(stageLabel(r.memberStage))}</div></td>
+        <td>${esc(r.reporterName || "—")}</td>
+        <td>${outcomeBadge(r.outcome)}</td>
+        <td class="kc-note-cell">${esc(r.note || "")}</td>
+      </tr>`).join("");
+    return head + table([tr("التاريخ", "Date"), tr("المفتقَد", "Member"), tr("خادم الافتقاد", "Reporter"), tr("النتيجة", "Outcome"), tr("الملاحظة", "Note")], rows);
+  };
+
+  FU_TABS.status = async (c) => {
+    const list = (await api(`/Churches/${c.id}/follow-up/servants-status`)) || [];
+    const head = `<div class="kc-hint">📊 ${tr("كل خادم افتقاد: عنده كام مخدوم غايب، افتقد منهم كام، ولسه كام.", "Per follow-up servant: absent members, how many were followed up, and how many are pending.")}</div>
+      <div class="kc-head"><span class="kc-badge info">🧑‍🏫 ${list.length}</span></div>`;
+    if (!list.length) return head + empty("🧑‍🏫", tr("لا يوجد خدام افتقاد.", "No follow-up servants."));
+    const rows = list.map((s) => {
+      const pct = s.absentCount ? Math.round((s.followedCount / s.absentCount) * 100) : 100;
+      return `<tr>
+        <td><b>${esc(s.fullName)}</b></td>
+        <td>${phoneHTML(s.phone)}</td>
+        <td>${s.serviceStage != null ? esc(stageLabel(s.serviceStage)) : "—"}</td>
+        <td>${s.groupsCount}</td>
+        <td>${s.membersCount}</td>
+        <td><span class="kc-badge ${s.absentCount ? "warn" : "ok"}">${s.absentCount}</span></td>
+        <td><span class="kc-badge ok">${s.followedCount}</span></td>
+        <td><span class="kc-badge ${s.pendingCount ? "no" : "ok"}">${s.pendingCount}</span></td>
+        <td style="min-width:130px"><div class="kc-progress"><i style="width:${pct}%"></i></div><small>${pct}%</small></td>
+        <td>${esc(fmtDate(s.lastReportAt))}</td>
+      </tr>`;
+    }).join("");
+    return head + table([tr("الاسم", "Name"), tr("الموبايل", "Phone"), tr("المرحلة", "Stage"), tr("مجموعات", "Groups"), tr("مخدومين", "Members"), tr("غايبين", "Absent"), tr("افتقد", "Done"), tr("لسه", "Pending"), tr("التقدّم", "Progress"), tr("آخر تقرير", "Last report")], rows);
+  };
+
   PANELS.followup = async () => {
     const c = current();
-    if (!isServantOrAmeen(c)) return servantLockedPanel();
-    const manage = canManage(c);
-
-    const tabs = `
-      <div class="kc-head">
-        <div class="kc-seg">
-          <button type="button" data-futab="absent" class="${S.fu.tab === "absent" ? "on" : ""}">📞 ${tr("المطلوب افتقادهم", "Needs Follow-up")}</button>
-          <button type="button" data-futab="reports" class="${S.fu.tab === "reports" ? "on" : ""}">📋 ${tr("سجل التقارير", "Reports Log")}</button>
-          ${manage ? `<button type="button" data-futab="servants" class="${S.fu.tab === "servants" ? "on" : ""}">🤝 ${tr("متابعة وافتقاد الخدام", "Servants Follow-up")}</button>` : ""}
-        </div>
-      </div>`;
-
-    if (S.fu.tab === "absent") {
-      const q = S.fu.stage !== "" ? `?stage=${encodeURIComponent(S.fu.stage)}` : "";
-      S.followups = toArr(await api(`/Churches/${c.id}/follow-up${q}`));
-      const head = tabs + followHint(c) + `
-        <div class="kc-head">
-          <div class="kc-filters">${selHTML('id="kc-fu-stage"', stageOptions(true), S.fu.stage)}</div>
-          <span class="kc-badge warn">📞 ${S.followups.length}</span>
-        </div>`;
-      if (!S.followups.length) return head + empty("🙏", tr("مفيش حد محتاج افتقاد دلوقتي.", "No one needs follow-up right now."));
-      const rows = S.followups.map((m) => `
-        <tr>
-          <td><b>${esc(m.fullName)}</b></td>
-          <td>${phoneHTML(m.phone)}</td>
-          <td>${waHTML(m.whatsAppPhone)}</td>
-          <td>${esc(stageLabel(m.stage, m.grade))}</td>
-          <td>${esc(fmtDate(m.lastAttendedDate))}</td>
-          <td><span class="kc-badge ${m.daysAbsent >= 28 ? "no" : "warn"}">${m.daysAbsent} ${tr("يوم", "days")}</span></td>
-          <td>${esc(fmtDate(m.lastFollowUpAt))}</td>
-          <td class="kc-note-cell">${esc(m.lastNote || "—")}</td>
-          <td><button type="button" class="kc-mini ok" data-act="do-followup" data-m="${m.memberId}">📞 ${tr("تم الافتقاد", "Done")}</button></td>
-        </tr>`).join("");
-      return head + table([tr("الاسم", "Name"), tr("الموبايل", "Phone"), tr("واتساب", "WhatsApp"), tr("المرحلة", "Stage"), tr("آخر حضور", "Last attended"), tr("الغياب", "Absent"), tr("آخر افتقاد", "Last follow-up"), tr("آخر ملاحظة", "Last note"), tr("إجراء", "Action")], rows);
-    }
-
-    if (S.fu.tab === "reports") {
-      const p = new URLSearchParams();
-      if (S.fu.from) p.set("from", S.fu.from);
-      if (S.fu.to) p.set("to", S.fu.to);
-      S.reports = toArr(await api(`/Churches/${c.id}/follow-up/reports${p.toString() ? "?" + p : ""}`));
-      const head = tabs + `
-        <div class="kc-head">
-          <div class="kc-filters">
-            <label style="display:inline-flex;align-items:center;gap:6px">${tr("من", "From")} <input type="date" id="kc-fu-from" value="${esc(S.fu.from)}"></label>
-            <label style="display:inline-flex;align-items:center;gap:6px">${tr("إلى", "To")} <input type="date" id="kc-fu-to" value="${esc(S.fu.to)}"></label>
-          </div>
-          <span class="kc-badge info">📋 ${S.reports.length}</span>
-        </div>`;
-      if (!S.reports.length) return head + empty("📋", tr("لا توجد تقارير افتقاد مسجلة في هذه الفترة.", "No follow-up reports recorded in this period."));
-      const rows = S.reports.map((r, i) => `
-        <tr>
-          <td>${i + 1}</td>
-          <td><b>${esc(r.memberName || r.fullName || "—")}</b></td>
-          <td>${outcomeBadge(r.outcome)}</td>
-          <td class="kc-note-cell">${esc(r.note || "—")}</td>
-          <td>${esc(r.reporterName || r.servantName || "—")}</td>
-          <td>${esc(fmtDateTime(r.createdAt || r.reportedAt || r.date))}</td>
-        </tr>`).join("");
-      return head + table(["#", tr("المخدوم", "Member"), tr("النتيجة", "Outcome"), tr("الملاحظة", "Note"), tr("الخادم", "Servant"), tr("التاريخ", "Date")], rows);
-    }
-
-    if (!manage) return tabs + lockedPanel();
-    const q = S.fu.stage !== "" ? `?stage=${encodeURIComponent(S.fu.stage)}` : "";
-    const [statusList, servantsFu] = await Promise.all([
-      api(`/Churches/${c.id}/follow-up/servants-status`).catch(() => []),
-      api(`/Churches/${c.id}/follow-up/servants${q}`).catch(() => [])
-    ]);
-    S.servantsStatus = toArr(statusList);
-    S.servantsFollowup = toArr(servantsFu);
-
-    const statusSection = S.servantsStatus.length
-      ? `<h4 style="margin:12px 0 8px">📊 ${tr("نشاط الخدام في الافتقاد", "Servants Follow-up Activity")}</h4>` +
-        table(
-          [tr("الخادم", "Servant"), tr("الدور", "Role"), tr("الموبايل", "Phone"), tr("مراحل الخدمة", "Stages"), tr("عدد التقارير", "Reports"), tr("آخر افتقاد قام به", "Last Activity")],
-          S.servantsStatus.map((s) => `
-            <tr>
-              <td><b>${esc(s.fullName || s.name)}</b></td>
-              <td>${roleBadge(s.role)}</td>
-              <td>${phoneHTML(s.phone)}</td>
-              <td>${stagesBadgesHTML(s.serviceStages)}</td>
-              <td><span class="kc-badge info">${s.reportsCount ?? s.totalReports ?? 0}</span></td>
-              <td>${esc(fmtDateTime(s.lastReportAt || s.lastFollowUpAt))}</td>
-            </tr>`).join("")
-        )
-      : "";
-
-    const absentServantsHead = `
-      <div class="kc-head" style="margin-top:16px">
-        <div class="kc-filters">
-          <b>🤝 ${tr("خدام غائبون ويحتاجون افتقاد", "Absent Servants Needing Follow-up")}</b>
-          ${selHTML('id="kc-fu-stage"', stageOptions(true), S.fu.stage)}
-        </div>
-        <span class="kc-badge warn">${S.servantsFollowup.length}</span>
-      </div>`;
-
-    const absentServantsBody = S.servantsFollowup.length
-      ? table(
-          [tr("الخادم", "Servant"), tr("الدور", "Role"), tr("الموبايل", "Phone"), tr("واتساب", "WhatsApp"), tr("أيام الغياب", "Days Absent"), tr("آخر ملاحظة", "Last Note"), tr("إجراء", "Action")],
-          S.servantsFollowup.map((m) => `
-            <tr>
-              <td><b>${esc(m.fullName)}</b></td>
-              <td>${roleBadge(m.role)}</td>
-              <td>${phoneHTML(m.phone)}</td>
-              <td>${waHTML(m.whatsAppPhone || m.phone)}</td>
-              <td><span class="kc-badge warn">${m.daysAbsent ?? "—"} ${tr("يوم", "days")}</span></td>
-              <td class="kc-note-cell">${esc(m.lastNote || "—")}</td>
-              <td><button type="button" class="kc-mini ok" data-act="do-followup" data-m="${m.memberId || m.id}">📞 ${tr("تسجيل افتقاد", "Record")}</button></td>
-            </tr>`).join("")
-        )
-      : empty("🙏", tr("جميع الخدام منتظمون ولا يوجد خادم يحتاج افتقاد حالياً.", "All servants are active; no servant needs follow-up right now."));
-
-    return tabs + statusSection + absentServantsHead + absentServantsBody;
+    const tabs = [];
+    if (can("followUp", c)) tabs.push(["members", "👥", tr("المخدومين", "Members")]);
+    if (can("followServants", c)) tabs.push(["servants", "🧑‍🏫", tr("الخدام", "Servants")]);
+    if (can("followUp", c) || can("reports", c)) tabs.push(["reports", "📝", tr("التقارير", "Reports")]);
+    if (can("reports", c)) tabs.push(["status", "📊", tr("حالة خدام الافتقاد", "Servants status")]);
+    if (!tabs.length) return lockedPanel();
+    if (!tabs.some((t) => t[0] === S.fu.tab)) S.fu.tab = tabs[0][0];
+    const seg = `<div class="kc-head"><div class="kc-seg kc-seg-wrap">${tabs.map((t) => `<button type="button" data-futab="${t[0]}" class="${S.fu.tab === t[0] ? "on" : ""}">${t[1]} ${t[2]}</button>`).join("")}</div></div>`;
+    return seg + (await FU_TABS[S.fu.tab](c));
   };
 
-  // 6) الإيفنتس
+  // الفريق والأدوار
+  PANELS.team = async () => {
+    const c = current();
+    if (!can("viewMembers", c)) return lockedPanel();
+    S.team = (await api(`/Churches/${c.id}/team`)) || [];
+    const canRole = can("roles", c) && assignableRoles(c).length > 0;
+    const head = `<div class="kc-hint">🧑‍🏫 ${tr(
+      "اللي أعلى بس يقدر يغيّر اللي أقل. الأمين والمساعد ليهم مرحلة أو أكتر، والخادم وخادم الافتقاد مرحلة واحدة بالظبط.",
+      "Only a higher role can change a lower one. Ameens/Assistants serve one or more stages; Servants/Follow-up servants exactly one."
+    )}</div>
+      <div class="kc-head"><span class="kc-badge info">🧑‍🏫 ${S.team.length}</span>${canRole ? `<button type="button" class="kc-btn primary" data-act="promote">＋ ${tr("تعيين من المخدومين", "Assign from members")}</button>` : ""}</div>`;
+    if (!S.team.length) return head + empty("🧑‍🏫", tr("لا يوجد خدام بعد.", "No team members yet."));
+    const rows = S.team.map((m, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td><b>${esc(m.fullName)}</b></td>
+        <td>${phoneHTML(m.phone)}</td>
+        <td>${roleBadge(m.role)}</td>
+        <td>${esc(stagesText(m.serviceStages) || "—")}</td>
+        ${canRole ? `<td class="kc-acts">${(isAdmin() || outranks(c, m.role)) ? `<button class="kc-mini" data-act="set-role" data-m="${m.id}">🎖 ${tr("تغيير الدور", "Change role")}</button>` : ""}</td>` : ""}
+      </tr>`).join("");
+    return head + table(["#", tr("الاسم", "Name"), tr("الموبايل", "Phone"), tr("الدور", "Role"), tr("مراحل الخدمة", "Service stages")].concat(canRole ? [tr("إجراءات", "Actions")] : []), rows);
+  };
+
+  // مجموعات الافتقاد
+  PANELS.groups = async () => {
+    const c = current();
+    if (!can("groups", c)) return lockedPanel();
+    const q = S.gr.stage !== "" ? `?stage=${encodeURIComponent(S.gr.stage)}` : "";
+    S.groups = (await api(`/Churches/${c.id}/groups${q}`)) || [];
+    const head = `<div class="kc-hint">🗂 ${tr(
+      "قسّم مخدومين المرحلة لمجموعات (مثلاً 25 في المجموعة) وعيّن لكل مجموعة خادم افتقاد مسؤول عنها. خادم الافتقاد بيشوف مجموعاته بس.",
+      "Split a stage's members into groups (e.g. 25 each) and assign a follow-up servant to each. A follow-up servant only sees his own groups."
+    )}</div>
+      <div class="kc-head">
+        <div class="kc-filters">${selHTML('id="kc-gr-stage"', stageOptions(true), S.gr.stage)}</div>
+        <div class="kc-filters">
+          <button type="button" class="kc-btn gold" data-act="auto-split">⚡ ${tr("تقسيم تلقائي", "Auto split")}</button>
+          <button type="button" class="kc-btn primary" data-act="add-group">＋ ${tr("مجموعة", "Group")}</button>
+        </div>
+      </div>`;
+    if (!S.groups.length) return head + empty("🗂", tr("لا توجد مجموعات.", "No groups yet."));
+    const rows = S.groups.map((g, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td><b>${esc(g.name)}</b></td>
+        <td>${esc(stageLabel(g.stage))}</td>
+        <td>${g.followUpServantName ? `🧑‍🏫 ${esc(g.followUpServantName)}` : `<span class="kc-badge warn">${tr("بدون خادم", "No servant")}</span>`}</td>
+        <td><span class="kc-badge info">👥 ${g.membersCount}</span></td>
+        <td class="kc-acts">
+          <button class="kc-mini" data-act="group-members" data-g="${g.id}">👥 ${tr("المخدومين", "Members")}</button>
+          <button class="kc-mini" data-act="edit-group" data-g="${g.id}">✎ ${tr("تعديل", "Edit")}</button>
+          <button class="kc-mini danger" data-act="del-group" data-g="${g.id}">🗑 ${tr("حذف", "Delete")}</button>
+        </td>
+      </tr>`).join("");
+    return head + table(["#", tr("المجموعة", "Group"), tr("المرحلة", "Stage"), tr("خادم الافتقاد", "Follow-up servant"), tr("العدد", "Members"), tr("إجراءات", "Actions")], rows);
+  };
+
+  // 5) الإيفنتس
   PANELS.events = async () => {
     const c = current();
-    const manage = canManage(c);
+    const manage = can("events", c);
     S.events = ((await api(`/Churches/${c.id}/events`)) || []).slice().sort((a, b) => new Date(a.startsAt) - new Date(b.startsAt));
     const head = manage ? `<div class="kc-head"><span></span><button type="button" class="kc-btn primary" data-act="add-event">＋ ${tr("إضافة إيفنت", "Add event")}</button></div>` : "";
     if (!S.events.length) return head + empty("📅", tr("لا توجد إيفنتس.", "No events yet."));
@@ -797,66 +878,35 @@
       </article>`).join("")}</div>`;
   };
 
-  // 7) الفريق وأمناء الخدمة ومراحل الخدمة
+  // 6) أمناء الخدمة
   PANELS.ameens = async () => {
     const c = current();
+    S.ameens = (await api(`/Churches/${c.id}/ameens`)) || [];
     const admin = isAdmin();
-    const manage = canManage(c);
-    const [ameensRes, teamRes] = await Promise.all([
-      api(`/Churches/${c.id}/ameens`).catch(() => []),
-      api(`/Churches/${c.id}/team`).catch(() => [])
-    ]);
-    S.ameens = toArr(ameensRes);
-    S.team = toArr(teamRes);
-
-    const ameensHead = `<div class="kc-head"><span class="kc-badge info">✝ ${tr("أمناء الخدمة:", "Ameens:")} ${S.ameens.length}</span>${admin ? `<button type="button" class="kc-btn primary" data-act="assign-ameen">＋ ${tr("تعيين أمين", "Assign Ameen")}</button>` : ""}</div>`;
-    const ameensTable = S.ameens.length
-      ? table(
-          ["#", tr("الاسم", "Name"), tr("الدور", "Role"), tr("الموبايل", "Phone"), tr("واتساب", "WhatsApp")].concat(admin ? [tr("إجراءات", "Actions")] : []),
-          S.ameens.map((a, i) => `
-            <tr>
-              <td>${i + 1}</td>
-              <td><b>${esc(a.fullName)}</b></td>
-              <td>${roleBadge(a.role ?? "GeneralAmeen")}</td>
-              <td>${phoneHTML(a.phone)}</td>
-              <td>${waHTML(a.whatsAppPhone)}</td>
-              ${admin ? `<td class="kc-acts"><button class="kc-mini danger" data-act="remove-ameen" data-m="${a.memberId}">🗑 ${tr("إزالة", "Remove")}</button></td>` : ""}
-            </tr>`).join("")
-        )
-      : empty("✝", tr("لا يوجد أمناء لهذه الكنيسة.", "No Ameens for this church."));
-
-    const teamTitle = `<div class="kc-head" style="margin-top:18px"><span class="kc-badge warn">🤝 ${tr("فريق الخدمة والأدوار والمراحل:", "Service Team, Roles & Stages:")} ${S.team.length}</span></div>`;
-    const teamTable = S.team.length
-      ? table(
-          ["#", tr("الاسم", "Name"), tr("الموبايل", "Phone"), tr("الدور", "Role"), tr("مراحل الخدمة", "Service Stages")].concat(manage ? [tr("إجراءات", "Actions")] : []),
-          S.team.map((t, i) => {
-            const mid = t.memberId ?? t.id;
-            return `<tr>
-              <td>${i + 1}</td>
-              <td><b>${esc(t.fullName)}</b></td>
-              <td>${phoneHTML(t.phone)}</td>
-              <td>${roleBadge(t.role)}</td>
-              <td>${stagesBadgesHTML(t.serviceStages)}</td>
-              ${manage ? `<td class="kc-acts"><button class="kc-mini" data-act="set-team-role" data-m="${mid}">✎ ${tr("الدور والمراحل", "Role & Stages")}</button></td>` : ""}
-            </tr>`;
-          }).join("")
-        )
-      : empty("🤝", tr("لا يوجد فريق خدمة معيّن بعد. يمكنك تعيين الأدوار من تبويب «الأعضاء والطلبات».", "No team members assigned yet. Assign roles from “Members & Requests”."));
-
-    return ameensHead + ameensTable + teamTitle + teamTable;
+    const head = `<div class="kc-head"><span class="kc-badge info">✝ ${S.ameens.length}</span>${admin ? `<button type="button" class="kc-btn primary" data-act="assign-ameen">＋ ${tr("تعيين أمين", "Assign Ameen")}</button>` : ""}</div>`;
+    if (!S.ameens.length) return head + empty("✝", tr("لا يوجد أمناء لهذه الكنيسة.", "No Ameens for this church."));
+    const rows = S.ameens.map((a, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td><b>${esc(a.fullName)}</b></td>
+        <td>${phoneHTML(a.phone)}</td>
+        <td>${waHTML(a.whatsAppPhone)}</td>
+        ${admin ? `<td class="kc-acts"><button class="kc-mini danger" data-act="remove-ameen" data-m="${a.memberId}">🗑 ${tr("إزالة", "Remove")}</button></td>` : ""}
+      </tr>`).join("");
+    return head + table(["#", tr("الاسم", "Name"), tr("الموبايل", "Phone"), tr("واتساب", "WhatsApp")].concat(admin ? [tr("إجراءات", "Actions")] : []), rows);
   };
 
-  // 8) إعدادات الكنيسة
+  // 7) إعدادات الكنيسة
   PANELS.settings = async () => {
     await loadChurches();
     const c = current();
-    if (!canManage(c)) {
+    if (!can("settings", c)) {
       return `
         <div class="kc-card kc-settings">
           <h3>⚙ ${esc(c.name)}</h3>
           <div class="kc-meta">📅 ${dayLabel(c.meetingDay)} ${esc(fmtTime(c.meetingTime))}</div>
           <div class="kc-meta">📞 ${tr("الافتقاد بعد", "Follow-up after")} ${esc(c.followUpAfterDays ?? "—")} ${tr("يوم غياب", "days absent")}</div>
-          <div class="kc-note">${tr("تعديل إعدادات الكنيسة للأمناء والأدمن فقط.", "Only Ameens and admins can edit church settings.")}</div>
+          <div class="kc-note">${tr("تعديل إعدادات الاجتماع للأمين والأمين العام والأدمن فقط.", "Only the Ameen, General Ameen and admins can edit meeting settings.")}</div>
         </div>`;
     }
     const days = DAY_NAMES.map((_, i) => ({ value: i, label: (isAr() ? DAYS_AR : DAY_NAMES)[i] }));
@@ -887,7 +937,13 @@
 
   /* ---------------- Render ---------------- */
   function tilesHTML() {
-    return `<div class="kc-tiles">${TILES.map((t) => `
+    const c = current();
+    const gate = { members: "viewMembers", team: "viewMembers", attendance: "attendance", groups: "groups" };
+    const tiles = TILES.filter((t) => {
+      if (t.k === "followup") return can("followUp", c) || can("followServants", c);
+      return !gate[t.k] || can(gate[t.k], c);
+    });
+    return `<div class="kc-tiles">${tiles.map((t) => `
       <button type="button" class="kc-tile ${S.view === t.k ? "active" : ""}" data-tile="${t.k}">
         <span class="ico">${t.icon}</span><b>${isAr() ? t.ar : t.en}</b>
       </button>`).join("")}</div>`;
@@ -915,6 +971,7 @@
     if (S.view !== "churches" && !current()) { panel.innerHTML = ""; return; }
     panel.innerHTML = `<div class="kc-loading">${tr("جاري التحميل...", "Loading...")}</div>`;
     try {
+      if (S.view !== "churches") await loadStageCfg(current().id);
       const html = await PANELS[S.view]();
       if (my === S.seq) panel.innerHTML = html;
     } catch (err) {
@@ -948,6 +1005,7 @@
   const churchBody = (v) => JSON.stringify({ name: v.name, city: v.city || null, description: v.description || null });
   const gradeVal = (v) => (v.grade ? Number(v.grade) : null);
 
+  // ربط خانة الإيميل والاسم في مودال العضو: لو أدمن وكتب إيميل مسجل يجلب اسمه تلقائي
   async function bindMemberEmailAutoFill(form) {
     const emailInp = form.elements.email;
     const nameInp = form.elements.fullName;
@@ -966,67 +1024,74 @@
     });
   }
 
-  function openRoleModal(member) {
+  /* ---------------- الأدوار والمجموعات (مساعدات) ---------------- */
+  function roleStageField(c, m) {
+    const keys = assignableRoles(c);
+    const opts = [{ value: "", label: tr("اختر الدور", "Select role") }].concat(keys.map((k) => ({ value: roleVal(k), label: roleLabel(roleVal(k)) })));
+    const cur = m ? roleKey(m.role) : "";
+    return { name: "rolestage", type: "rolestage", options: opts, value: keys.includes(cur) ? roleVal(cur) : "", stages: m ? (m.serviceStages || []) : [] };
+  }
+
+  async function groupModal(g) {
     const c = current();
-    const mid = member.memberId ?? member.id;
-    const rObj = findRole(member.role);
+    const team = (await api(`/Churches/${c.id}/team`)) || [];
+    const fus = team.filter((t) => roleKey(t.role) === FU);
+    const cur = g ? findStage(g.stage) : findStage(S.gr.stage);
     openModal({
-      title: tr("تحديد الدور ومراحل الخدمة", "Set Role & Service Stages"),
-      sub: member.fullName,
+      title: g ? tr("تعديل مجموعة", "Edit group") : tr("مجموعة جديدة", "New group"), sub: c.name,
       fields: [
-        {
-          name: "role",
-          label: tr("الدور في الكنيسة", "Church Role"),
-          type: "select",
-          value: rObj ? rObj.v : 0,
-          options: ROLE_DEFS.map((r) => ({ value: r.v, label: isAr() ? r.ar : r.en }))
-        },
-        {
-          name: "serviceStages",
-          label: tr("مراحل الخدمة (للخادم والأمين)", "Service Stages (for Servant / Ameen)"),
-          type: "stages-check",
-          value: member.serviceStages || []
-        }
+        { name: "stage", label: tr("المرحلة", "Stage"), type: "select", required: true, value: cur ? cur.v : "",
+          options: [{ value: "", label: tr("اختر المرحلة", "Select stage") }].concat(MAIN.map((s) => ({ value: s.v, label: isAr() ? s.ar : s.en }))) },
+        { name: "name", label: tr("اسم المجموعة", "Group name"), value: g ? g.name : "", required: true, maxlength: 80 },
+        { name: "servant", label: tr("خادم الافتقاد المسؤول", "Follow-up servant"), type: "select", value: g && g.followUpServantMemberId != null ? g.followUpServantMemberId : "",
+          options: [{ value: "", label: tr("— بدون —", "— none —") }].concat(fus.map((t) => ({ value: t.id, label: `${t.fullName}${stagesText(t.serviceStages) ? " — " + stagesText(t.serviceStages) : ""}` }))) }
       ],
       onSubmit: async (v) => {
-        await api(`/Churches/${c.id}/members/${mid}/role`, {
-          method: "PUT",
-          body: JSON.stringify({
-            role: Number(v.role),
-            serviceStages: v.serviceStages
-          })
-        });
-        say(tr("تم تحديث الدور ومراحل الخدمة ✓", "Role & stages updated ✓"));
+        const body = JSON.stringify({ stage: Number(v.stage), name: v.name, followUpServantMemberId: v.servant ? Number(v.servant) : null });
+        if (g) await api(`/Churches/${c.id}/groups/${g.id}`, { method: "PUT", body });
+        else await api(`/Churches/${c.id}/groups`, { method: "POST", body });
+        say(tr("تم الحفظ ✓", "Saved ✓"));
         reload();
       }
     });
   }
 
-  async function openGroupModal(group = null) {
+  async function groupMembersModal(g) {
     const c = current();
-    const team = S.team.length ? S.team : toArr(await api(`/Churches/${c.id}/team`).catch(() => []));
-    const servantOpts = [{ value: "", label: tr("— بدون خادم محدد —", "— No assigned servant —") }].concat(
-      team.map((t) => ({ value: t.memberId ?? t.id, label: `${t.fullName} (${roleLabel(t.role)})` }))
-    );
-    openModal({
-      title: group ? tr("تعديل مجموعة افتقاد", "Edit Follow-up Group") : tr("إنشاء مجموعة افتقاد", "Create Follow-up Group"),
-      sub: c.name,
-      fields: [
-        { name: "name", label: tr("اسم المجموعة", "Group Name"), value: group?.name || group?.title || "", required: true, maxlength: 100 },
-        { name: "stage", label: tr("المرحلة", "Stage"), type: "stage", value: group?.stage || "", grade: group?.grade || "", allowEmpty: true },
-        { name: "followUpServantMemberId", label: tr("خادم الافتقاد المسؤول", "Assigned Follow-Up Servant"), type: "select", value: group?.followUpServantMemberId ?? group?.servantMemberId ?? "", options: servantOpts }
-      ],
-      onSubmit: async (v) => {
-        const payload = JSON.stringify({
-          name: v.name,
-          stage: v.stage === "" ? null : Number(v.stage),
-          followUpServantMemberId: v.followUpServantMemberId === "" ? null : Number(v.followUpServantMemberId)
-        });
-        if (group) await api(`/Churches/${c.id}/groups/${group.id}`, { method: "PUT", body: payload });
-        else await api(`/Churches/${c.id}/groups`, { method: "POST", body: payload });
-        say(tr("تم حفظ المجموعة ✓", "Group saved ✓"));
-        reload();
-      }
+    const sv = (findStage(g.stage) || {}).v;
+    const [mine, pool] = await Promise.all([
+      api(`/Churches/${c.id}/groups/${g.id}/members`),
+      api(`/Churches/${c.id}/members?status=1&role=0${sv ? "&stage=" + sv : ""}`)
+    ]);
+    const inGroup = new Set((mine || []).map((x) => x.id));
+    const avail = (pool || []).filter((x) => !inGroup.has(x.id));
+    const html = `
+      <div class="kc-gm">
+        <h4>${tr("أعضاء المجموعة", "Group members")} (${(mine || []).length})</h4>
+        ${(mine || []).length ? `<ul class="kc-gm-list">${mine.map((m) => `<li><span><b>${esc(m.fullName)}</b> <small>${esc(m.phone || "")}</small></span><button type="button" class="kc-mini danger" data-gm-remove="${m.id}">✕ ${tr("شيل", "Remove")}</button></li>`).join("")}</ul>` : `<div class="kc-sub">${tr("المجموعة فاضية.", "The group is empty.")}</div>`}
+        <h4>${tr("إضافة مخدومين", "Add members")} (${avail.length})</h4>
+        ${avail.length ? `<ul class="kc-gm-list">${avail.map((m) => `<li><label class="kc-check"><input type="checkbox" value="${m.id}" data-gm-pick><span><b>${esc(m.fullName)}</b> <small>${esc(stageLabel(m.stage, m.grade))}</small></span></label>${m.followUpGroupId != null ? `<span class="kc-badge warn">${tr("في مجموعة أخرى", "In another group")}</span>` : ""}</li>`).join("")}</ul>
+        <div class="kc-actions"><button type="button" class="kc-btn primary" data-gm-add>＋ ${tr("إضافة المحدّدين", "Add selected")}</button></div>` : `<div class="kc-sub">${tr("مفيش مخدومين متاحين في المرحلة دي.", "No available members in this stage.")}</div>`}
+      </div>`;
+    openInfo({ title: g.name, sub: stageLabel(g.stage), html });
+    const modal = $("kc-modal");
+    modal.addEventListener("click", async (e) => {
+      const rm = e.target.closest("[data-gm-remove]");
+      const add = e.target.closest("[data-gm-add]");
+      if (!rm && !add) return;
+      try {
+        if (rm) {
+          await api(`/Churches/${c.id}/groups/${g.id}/members/remove`, { method: "POST", body: JSON.stringify({ memberIds: [Number(rm.dataset.gmRemove)] }) });
+        } else {
+          const ids = Array.from(modal.querySelectorAll("[data-gm-pick]:checked")).map((i) => Number(i.value));
+          if (!ids.length) { say(tr("اختر مخدومين الأول.", "Select members first.")); return; }
+          await api(`/Churches/${c.id}/groups/${g.id}/members`, { method: "POST", body: JSON.stringify({ memberIds: ids }) });
+        }
+        S.groups = (await api(`/Churches/${c.id}/groups${S.gr.stage !== "" ? "?stage=" + encodeURIComponent(S.gr.stage) : ""}`)) || S.groups;
+        const fresh = S.groups.find((x) => x.id === g.id) || g;
+        await groupMembersModal(fresh);
+        loadPanel();
+      } catch (err) { showErr(err); }
     });
   }
 
@@ -1078,22 +1143,36 @@
       });
     },
 
+    "manage-stages": async () => manageStagesModal(),
+
+    "pick-stage": async (b) => { S.stageSel = b.dataset.stage; loadPanel(); },
+    "back-stages": async () => { S.stageSel = null; loadPanel(); },
+    "clear-grade": async () => { S.mfGrade = ""; loadPanel(); },
+
+    "stage-members": async (b) => {
+      S.mfGrade = b.dataset.grade || "";
+      S.mf.stage = b.dataset.stage || "";
+      S.view = "members";
+      render();
+    },
+
     open: async (b) => {
       S.churchId = b.dataset.id;
       localStorage.setItem("kcChurch", String(S.churchId));
-      const c = churchById(S.churchId);
-      S.view = canManage(c) ? "members" : (isServantOrAmeen(c) ? "attendance" : "events");
+      S.stageSel = null;
+      S.view = "stages";
       render();
     },
 
     join: async (b) => {
       const c = churchById(b.dataset.id);
       if (!c) return;
+      await loadStageCfg(c.id);
       openModal({
         title: tr("طلب انضمام", "Join request"), sub: c.name, submitLabel: tr("إرسال الطلب", "Send request"),
         fields: [
           phoneField(),
-          { name: "stage", label: tr("المرحلة", "Stage"), type: "stage", required: true }
+          { name: "stage", label: tr("المرحلة", "Stage"), type: "stage", required: true, value: b.dataset.stage || "", grade: b.dataset.grade || "" }
         ],
         onSubmit: async (v) => {
           await api(`/Churches/${c.id}/join`, { method: "POST", body: JSON.stringify({ stage: Number(v.stage), grade: gradeVal(v), phone: v.phone }) });
@@ -1106,6 +1185,7 @@
     "my-profile": async (b) => {
       const c = churchById(b.dataset.id);
       if (!c) return;
+      await loadStageCfg(c.id);
       openModal({
         title: tr("بياناتي في الكنيسة", "My church profile"), sub: c.name,
         fields: [
@@ -1130,17 +1210,7 @@
       reload();
     },
 
-    "set-role": async (b) => {
-      const m = S.members.find((x) => String(x.id) === String(b.dataset.m));
-      if (m) openRoleModal(m);
-    },
-
-    "set-team-role": async (b) => {
-      const t = S.team.find((x) => String(x.memberId ?? x.id) === String(b.dataset.m));
-      if (t) openRoleModal(t);
-    },
-
-    "add-member": async () => {
+    "add-member": async (b) => {
       const c = current();
       openModal({
         title: tr("إضافة عضو", "Add member"), sub: c.name,
@@ -1161,7 +1231,7 @@
             placeholder: tr("يتملأ تلقائياً لو الإيميل مسجل", "Auto-filled if email is registered")
           },
           phoneField(),
-          { name: "stage", label: tr("المرحلة", "Stage"), type: "stage", required: true }
+          { name: "stage", label: tr("المرحلة", "Stage"), type: "stage", required: true, value: b.dataset.stage || "", grade: b.dataset.grade || "" }
         ],
         onOpen: bindMemberEmailAutoFill,
         onSubmit: async (v) => {
@@ -1252,143 +1322,94 @@
       } catch (err) { b.disabled = false; throw err; }
     },
 
-    /* ---- مجموعات الافتقاد ---- */
-    "add-group": async () => openGroupModal(null),
-    "edit-group": async (b) => {
-      const g = S.groups.find((x) => String(x.id) === String(b.dataset.g));
-      if (g) openGroupModal(g);
-    },
-    "del-group": async (b) => {
+    "report-followup": async (b) => {
       const c = current();
-      const g = S.groups.find((x) => String(x.id) === String(b.dataset.g));
-      if (!g || !confirm(tr(`حذف مجموعة «${g.name || g.title}»؟`, `Delete group "${g.name || g.title}"?`))) return;
-      await api(`/Churches/${c.id}/groups/${g.id}`, { method: "DELETE" });
-      say(tr("تم حذف المجموعة ✓", "Group deleted ✓"));
-      reload();
-    },
-    "auto-split-groups": async () => {
-      const c = current();
+      const list = b.dataset.src === "servants" ? (S.fuServants || []).map((x) => x.info || {}) : S.followups;
+      const m = list.find((x) => String(x.memberId) === String(b.dataset.m));
+      if (!m) return;
       openModal({
-        title: tr("تقسيم مجموعات الافتقاد تلقائياً", "Auto-Split Follow-up Groups"),
-        sub: c.name,
-        submitLabel: tr("بدء التقسيم", "Split Now"),
+        title: tr("تقرير افتقاد", "Follow-up report"), sub: m.fullName, submitLabel: tr("إرسال التقرير", "Submit report"),
         fields: [
-          { name: "stage", label: tr("المرحلة", "Stage"), type: "stage", required: true },
-          { name: "groupSize", label: tr("عدد الأعضاء في كل مجموعة", "Members per group"), type: "number", value: 10, min: 2, max: 100, required: true },
-          { name: "onlyUnassigned", label: tr("نطاق التقسيم", "Scope"), type: "checkbox", checked: true, boxLabel: tr("تقسيم الأعضاء غير الموزعين على مجموعات فقط", "Only split unassigned members") }
+          { name: "outcome", label: tr("نتيجة الافتقاد", "Outcome"), type: "select", required: true, value: 1,
+            options: [1, 2, 3].map((i) => { const l = OUTCOME_LBL[norm(OUTCOMES[i])]; return { value: i, label: isAr() ? l[0] : l[1] }; }) },
+          { name: "note", label: tr("ملاحظة التقرير (إجباري)", "Report note (mandatory)"), type: "textarea", required: true, maxlength: 1000,
+            pattern: /^[\s\S]{3,}$/, patternMsg: tr("اكتب ملاحظة (3 حروف على الأقل).", "Write a note (at least 3 characters).") }
         ],
         onSubmit: async (v) => {
-          await api(`/Churches/${c.id}/groups/auto-split`, {
-            method: "POST",
-            body: JSON.stringify({
-              stage: Number(v.stage),
-              groupSize: Number(v.groupSize),
-              onlyUnassigned: v.onlyUnassigned
-            })
-          });
-          say(tr("تم تقسيم المجموعات تلقائياً ✓", "Groups auto-split successfully ✓"));
-          reload();
-        }
-      });
-    },
-    "view-group-members": async (b) => {
-      const c = current();
-      const g = S.groups.find((x) => String(x.id) === String(b.dataset.g));
-      if (!g) return;
-      const members = toArr(await api(`/Churches/${c.id}/groups/${g.id}/members`));
-      const manage = canManage(c);
-      if (!members.length) {
-        openInfo({
-          title: g.name || tr("أعضاء المجموعة", "Group Members"),
-          sub: stageLabel(g.stage),
-          html: empty("👥", tr("لا يوجد أعضاء في هذه المجموعة بعد.", "No members in this group yet."))
-        });
-        return;
-      }
-      if (manage) {
-        openModal({
-          title: `${tr("أعضاء:", "Members:")} ${g.name || ""}`,
-          sub: tr("حدد الأعضاء لإزالتهم من المجموعة", "Select members to remove from group"),
-          submitLabel: tr("إزالة المحددين", "Remove Selected"),
-          fields: [
-            { name: "memberIds", label: tr("الأعضاء الحاليون", "Current Members"), type: "members-check", members, required: true }
-          ],
-          onSubmit: async (v) => {
-            await api(`/Churches/${c.id}/groups/${g.id}/members/remove`, {
-              method: "POST",
-              body: JSON.stringify({ memberIds: v.memberIds })
-            });
-            say(tr("تمت إزالة الأعضاء المحددين ✓", "Selected members removed ✓"));
-            reload();
-          }
-        });
-      } else {
-        openInfo({
-          title: g.name || tr("أعضاء المجموعة", "Group Members"),
-          sub: stageLabel(g.stage),
-          html: members.map((m) => `
-            <div class="kc-contact">
-              <div class="kc-contact-name">👤 ${esc(m.fullName)} <small style="opacity:.7">(${esc(stageLabel(m.stage, m.grade))})</small></div>
-              <div class="kc-contact-actions">${phoneHTML(m.phone)} ${waBtn(m.phone)}</div>
-            </div>`).join("")
-        });
-      }
-    },
-    "assign-group-members": async (b) => {
-      const c = current();
-      const g = S.groups.find((x) => String(x.id) === String(b.dataset.g));
-      if (!g) return;
-      const q = new URLSearchParams({ status: "1" });
-      if (g.stage) q.set("stage", g.stage);
-      const allApproved = toArr(await api(`/Churches/${c.id}/members?${q}`));
-      openModal({
-        title: `${tr("إضافة أعضاء إلى:", "Add members to:")} ${g.name || ""}`,
-        sub: stageLabel(g.stage),
-        submitLabel: tr("إضافة المحددين", "Assign Selected"),
-        fields: [
-          { name: "memberIds", label: tr("اختر الأعضاء", "Select Members"), type: "members-check", members: allApproved, required: true }
-        ],
-        onSubmit: async (v) => {
-          await api(`/Churches/${c.id}/groups/${g.id}/members`, {
-            method: "POST",
-            body: JSON.stringify({ memberIds: v.memberIds })
-          });
-          say(tr("تمت إضافة الأعضاء للمجموعة ✓", "Members assigned to group ✓"));
+          await api(`/Churches/${c.id}/follow-up/reports`, { method: "POST", body: JSON.stringify({ memberId: Number(m.memberId), outcome: Number(v.outcome), note: v.note }) });
+          say(tr("تم تسجيل تقرير الافتقاد ✓", "Follow-up report saved ✓"));
           reload();
         }
       });
     },
 
-    /* ---- تسجيل الافتقاد وتقاريره ---- */
-    "do-followup": async (b) => {
+    "set-role": async (b) => {
       const c = current();
-      const mid = b.dataset.m;
-      const m = S.followups.find((x) => String(x.memberId) === String(mid))
-        || S.servantsFollowup.find((x) => String(x.memberId ?? x.id) === String(mid));
+      const m = S.members.find((x) => String(x.id) === String(b.dataset.m)) || S.team.find((x) => String(x.id) === String(b.dataset.m));
+      if (!m) return;
       openModal({
-        title: tr("تسجيل تقرير افتقاد", "Record Follow-up Report"),
-        sub: m ? m.fullName : "",
+        title: tr("تغيير الدور", "Change role"), sub: m.fullName,
+        fields: [roleStageField(c, m)],
+        onSubmit: async (v) => {
+          await api(`/Churches/${c.id}/members/${m.id}/role`, { method: "PUT", body: JSON.stringify({ role: v.role, serviceStages: v.stages }) });
+          say(tr("تم تحديث الدور ✓", "Role updated ✓"));
+          reload();
+        }
+      });
+    },
+
+    promote: async () => {
+      const c = current();
+      const list = (await api(`/Churches/${c.id}/members?status=1&role=0`)) || [];
+      if (!list.length) throw new Error(tr("مفيش مخدومين معتمدين لتعيينهم.", "No approved members to assign."));
+      openModal({
+        title: tr("تعيين خادم", "Assign team member"), sub: c.name,
         fields: [
-          {
-            name: "outcome",
-            label: tr("نتيجة الافتقاد", "Follow-up Outcome"),
-            type: "select",
-            value: "Reached",
-            required: true,
-            options: OUTCOMES.map((o) => ({ value: o.v, label: isAr() ? o.ar : o.en }))
-          },
-          { name: "note", label: tr("ملاحظة (اختياري)", "Note (optional)"), type: "textarea", maxlength: 500 }
+          { name: "memberId", label: tr("العضو", "Member"), type: "select", required: true,
+            options: [{ value: "", label: tr("اختر العضو", "Select member") }].concat(list.map((m) => ({ value: m.id, label: `${m.fullName} — ${stageLabel(m.stage, m.grade)}` }))) },
+          roleStageField(c, null)
         ],
         onSubmit: async (v) => {
-          await api(`/Churches/${c.id}/follow-up/reports`, {
-            method: "POST",
-            body: JSON.stringify({
-              memberId: /^\d+$/.test(String(mid)) ? Number(mid) : mid,
-              outcome: v.outcome,
-              note: v.note || ""
-            })
-          });
-          say(tr("تم تسجيل تقرير الافتقاد ✓", "Follow-up report saved ✓"));
+          await api(`/Churches/${c.id}/members/${v.memberId}/role`, { method: "PUT", body: JSON.stringify({ role: v.role, serviceStages: v.stages }) });
+          say(tr("تم التعيين ✓", "Assigned ✓"));
+          reload();
+        }
+      });
+    },
+
+    "add-group": async () => groupModal(null),
+    "edit-group": async (b) => groupModal(S.groups.find((x) => String(x.id) === String(b.dataset.g))),
+
+    "del-group": async (b) => {
+      const c = current();
+      const g = S.groups.find((x) => String(x.id) === String(b.dataset.g));
+      if (!g || !confirm(tr(`حذف المجموعة «${g.name}»؟ (المخدومين هيفضلوا في الكنيسة)`, `Delete group "${g.name}"? (members stay in the church)`))) return;
+      await api(`/Churches/${c.id}/groups/${g.id}`, { method: "DELETE" });
+      say(tr("تم الحذف ✓", "Deleted ✓"));
+      reload();
+    },
+
+    "group-members": async (b) => {
+      const g = S.groups.find((x) => String(x.id) === String(b.dataset.g));
+      if (g) await groupMembersModal(g);
+    },
+
+    "auto-split": async () => {
+      const c = current();
+      openModal({
+        title: tr("تقسيم تلقائي لمجموعات", "Auto-split into groups"), sub: c.name, submitLabel: tr("قسّم", "Split"),
+        fields: [
+          { name: "stage", label: tr("المرحلة", "Stage"), type: "select", required: true, value: S.gr.stage,
+            options: [{ value: "", label: tr("اختر المرحلة", "Select stage") }].concat(stageOptions(false)) },
+          { name: "size", label: tr("عدد المخدومين في المجموعة (5 – 200)", "Members per group (5 – 200)"), type: "number", value: 25, required: true },
+          { name: "only", label: tr("مين يتقسّم؟", "Who to split?"), type: "select", value: "1",
+            options: [{ value: "1", label: tr("اللي مالهمش مجموعة بس", "Only members without a group") }, { value: "0", label: tr("كل المرحلة (إعادة توزيع)", "Whole stage (redistribute)") }] }
+        ],
+        onSubmit: async (v) => {
+          const size = Number(v.size);
+          if (!(size >= 5 && size <= 200)) throw new Error(tr("العدد لازم يكون بين 5 و 200.", "Size must be between 5 and 200."));
+          const res = await api(`/Churches/${c.id}/groups/auto-split`, { method: "POST", body: JSON.stringify({ stage: Number(v.stage), groupSize: size, onlyUnassigned: v.only === "1" }) });
+          say(tr(`تم إنشاء/تحديث ${Array.isArray(res) ? res.length : ""} مجموعة ✓`, `${Array.isArray(res) ? res.length : ""} group(s) created/updated ✓`));
           reload();
         }
       });
@@ -1466,11 +1487,11 @@
       const tile = e.target.closest("[data-tile]");
       if (tile) { S.view = tile.dataset.tile; render(); return; }
 
+      const ft = e.target.closest("[data-futab]");
+      if (ft) { S.fu.tab = ft.dataset.futab; loadPanel(); return; }
+
       const sc = e.target.closest("[data-scope]");
       if (sc) { S.scope = sc.dataset.scope; loadPanel(); return; }
-
-      const futab = e.target.closest("[data-futab]");
-      if (futab) { S.fu.tab = futab.dataset.futab; loadPanel(); return; }
 
       const b = e.target.closest("[data-act]");
       if (!b) return;
@@ -1480,14 +1501,12 @@
 
     r0.addEventListener("change", (e) => {
       const t = e.target;
-      if (t.id === "kc-church-select") { S.churchId = t.value; localStorage.setItem("kcChurch", t.value); loadPanel(); return; }
-      if (t.dataset && t.dataset.filter) { S.mf[t.dataset.filter] = t.value; loadPanel(); return; }
+      if (t.id === "kc-church-select") { S.churchId = t.value; S.stageSel = null; localStorage.setItem("kcChurch", t.value); render(); return; }
+      if (t.dataset && t.dataset.filter) { S.mf[t.dataset.filter] = t.value; if (t.dataset.filter === "stage") S.mfGrade = ""; loadPanel(); return; }
       if (t.id === "kc-att-date") { S.att.date = t.value || todayStr(); loadPanel(); return; }
       if (t.id === "kc-att-stage") { S.att.stage = t.value; loadPanel(); return; }
-      if (t.id === "kc-grp-stage") { S.grp.stage = t.value; loadPanel(); return; }
       if (t.id === "kc-fu-stage") { S.fu.stage = t.value; loadPanel(); return; }
-      if (t.id === "kc-fu-from") { S.fu.from = t.value; loadPanel(); return; }
-      if (t.id === "kc-fu-to") { S.fu.to = t.value; loadPanel(); }
+      if (t.id === "kc-gr-stage") { S.gr.stage = t.value; loadPanel(); }
     });
 
     r0.addEventListener("submit", async (e) => {

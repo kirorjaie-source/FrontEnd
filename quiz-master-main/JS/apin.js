@@ -28,6 +28,96 @@
     reconnect: "churchQuizReconnect"
   };
 
+  /* ===========================================================================
+     تجديد التوكن تلقائياً: توكن دخول قصير (30 دقيقة) + توكن تجديد طويل (30 يوم)
+     بيشتغل على أي fetch رايح لـ API_BASE (apin / adminn / churches / manage-roles) من غير ما نعدّل فيهم.
+     =========================================================================== */
+  const REFRESH_KEY = "refreshToken";
+  (function installAuthFetch() {
+    if (window.__kokAuth) return;
+    const nativeFetch = window.fetch.bind(window);
+    const API = CONFIG.API_BASE;
+    const b64 = (t) => JSON.parse(atob(t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    const expMs = (t) => { try { return b64(t).exp * 1000; } catch { return 0; } };
+    const getAccess = () => localStorage.getItem(CONFIG.TOKEN_KEY) || localStorage.getItem("churchQuizToken") || "";
+    const setAccess = (t) => {
+      localStorage.setItem(CONFIG.TOKEN_KEY, t);
+      localStorage.setItem("churchQuizToken", t);
+      try {
+        const sess = JSON.parse(localStorage.getItem(KEYS.session) || "null");
+        if (sess) { sess.token = t; localStorage.setItem(KEYS.session, JSON.stringify(sess)); }
+      } catch { /* ignore */ }
+    };
+    const goLogin = () => {
+      [CONFIG.TOKEN_KEY, "churchQuizToken", REFRESH_KEY, KEYS.session, KEYS.game, KEYS.players, KEYS.reconnect]
+        .forEach((k) => localStorage.removeItem(k));
+      if (!/loginn\.html/i.test(location.pathname)) location.href = "loginn.html";
+      return new Promise(() => { /* الصفحة بتتحوّل */ });
+    };
+
+    let inflight = null;
+    /** "ok" | "net" (مفيش اتصال) | "dead" (التجديد مرفوض) | "none" (مفيش refresh token) */
+    function refresh() {
+      const used = localStorage.getItem(REFRESH_KEY);
+      if (!used) return Promise.resolve("none");
+      if (inflight) return inflight;
+      inflight = (async () => {
+        try {
+          const res = await nativeFetch(API + "/Auth/refresh", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ refreshToken: used })
+          });
+          if (res.ok) {
+            const d = await res.json();
+            setAccess(d.token);
+            localStorage.setItem(REFRESH_KEY, d.refreshToken);
+            return "ok";
+          }
+          // تاب تاني ممكن يكون جدّد قبلنا
+          const now = localStorage.getItem(REFRESH_KEY);
+          if (now && now !== used) return "ok";
+          return res.status === 401 || res.status === 400 ? "dead" : "net";
+        } catch { return "net"; }
+        finally { setTimeout(() => { inflight = null; }, 0); }
+      })();
+      return inflight;
+    }
+
+    async function ensureFresh() {
+      const t = getAccess();
+      if (localStorage.getItem(REFRESH_KEY) && (!t || expMs(t) - Date.now() < 60000)) {
+        if ((await refresh()) === "dead") await goLogin();
+      }
+      return getAccess();
+    }
+
+    const isAuthEndpoint = (u) => /\/Auth\/(login|register|refresh|logout|confirm-email|resend-confirmation)/i.test(u);
+    const withAuth = (init) => {
+      const h = new Headers((init && init.headers) || {});
+      const t = getAccess();
+      if (t) h.set("Authorization", "Bearer " + t);
+      return { ...(init || {}), headers: h };
+    };
+
+    window.fetch = async function (input, init) {
+      if (typeof input !== "string" || !input.startsWith(API) || isAuthEndpoint(input) || !localStorage.getItem(REFRESH_KEY)) {
+        return nativeFetch(input, init);
+      }
+      await ensureFresh();
+      let res = await nativeFetch(input, withAuth(init));
+      if (res.status === 401) {
+        const r = await refresh();
+        if (r === "ok") res = await nativeFetch(input, withAuth(init));
+        else if (r === "dead") return goLogin();
+      }
+      return res;
+    };
+
+    window.__kokAuth = { refresh, ensureFresh, getAccess };
+  })();
+
+
   class ApiError extends Error {
     constructor(code, message) {
       super(message || code);
@@ -479,6 +569,7 @@
           localStorage.setItem(CONFIG.TOKEN_KEY, token);
           localStorage.setItem("churchQuizToken", token);
         }
+        if (res.refreshToken) localStorage.setItem(REFRESH_KEY, res.refreshToken);
         const session = {
           ...(res.user || res),
           token,
@@ -912,7 +1003,10 @@
 
       this._conn = new signalR.HubConnectionBuilder()
         .withUrl(CONFIG.HUB_URL, {
-          accessTokenFactory: () => localStorage.getItem(CONFIG.TOKEN_KEY) || localStorage.getItem("churchQuizToken") || ""
+          accessTokenFactory: async () => {
+            try { if (window.__kokAuth) return await window.__kokAuth.ensureFresh(); } catch { /* ignore */ }
+            return localStorage.getItem(CONFIG.TOKEN_KEY) || localStorage.getItem("churchQuizToken") || "";
+          }
         })
         .withAutomaticReconnect()
         .build();
@@ -1047,6 +1141,11 @@
         return null;
       },
       logout() {
+        try {
+          const rt = localStorage.getItem(REFRESH_KEY);
+          if (rt) fetch(CONFIG.API_BASE + "/Auth/logout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ refreshToken: rt }), keepalive: true }).catch(() => {});
+        } catch { /* ignore */ }
+        localStorage.removeItem(REFRESH_KEY);
         localStorage.removeItem(CONFIG.TOKEN_KEY);
         localStorage.removeItem("churchQuizToken");
         localStorage.removeItem(KEYS.session);

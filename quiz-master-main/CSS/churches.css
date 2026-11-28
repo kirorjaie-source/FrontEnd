@@ -9,7 +9,7 @@
 /* ---- Tiles (مربعات الاختيارات) ---- */
 .kc-tiles {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: 10px;
   margin-bottom: 24px;
 }
@@ -1050,3 +1050,39 @@ html[data-theme="dark"] .kc-hint,
     padding: 18px;
   }
 }
+
+/* ============================================================
+   الأدوار والفريق ومجموعات الافتقاد
+   ============================================================ */
+.kc-sub { font-size: 12.5px; color: #64748b; margin-top: 3px; font-weight: 600; }
+.kc-seg-wrap { flex-wrap: wrap; border-radius: 18px; }
+.kc-seg-wrap button { padding: 9px 16px; font-size: 14px; }
+
+.kc-checks { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+.kc-check { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 14px; background: #fff; color: #0f172a; }
+.kc-check input { width: 18px; height: 18px; flex: none; margin: 0; accent-color: #173d70; }
+
+.kc-progress { height: 9px; border-radius: 999px; background: #e2e8f0; overflow: hidden; }
+.kc-progress i { display: block; height: 100%; background: linear-gradient(90deg, #16a34a, #4ade80); border-radius: 999px; }
+
+.kc-gm h4 { margin: 14px 0 8px; font-size: 15px; font-weight: 800; }
+.kc-gm-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 260px; overflow: auto; }
+.kc-gm-list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; color: #0f172a; }
+.kc-gm-list small { color: #64748b; font-weight: 600; }
+
+html[data-theme="dark"] .kc-sub, [data-theme="dark"] .kc-sub { color: #94a3b8; }
+html[data-theme="dark"] .kc-check, [data-theme="dark"] .kc-check,
+html[data-theme="dark"] .kc-gm-list li, [data-theme="dark"] .kc-gm-list li { background: #0b192e; border-color: #1e3a5f; color: #f8fafc; }
+html[data-theme="dark"] .kc-gm-list small, [data-theme="dark"] .kc-gm-list small { color: #94a3b8; }
+html[data-theme="dark"] .kc-progress, [data-theme="dark"] .kc-progress { background: #1e3a5f; }
+html[data-theme="dark"] .kc-check input, [data-theme="dark"] .kc-check input { accent-color: #e3b565; }
+
+/* مراحل الكنيسة */
+.kc-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.kc-chip { padding: 4px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 700; background: #e0edff; color: #1d4ed8; border: 1px solid #bfd4ff; }
+.kc-stagerow { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid #e2e8f0; }
+.kc-years { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; }
+.kc-years input { width: 70px; height: 38px; border-radius: 8px; border: 1.5px solid #cbd5e1; text-align: center; font-family: inherit; font-size: 15px; }
+html[data-theme="dark"] .kc-chip, [data-theme="dark"] .kc-chip { background: #0f223d; border-color: #1e3a5f; color: #e3b565; }
+html[data-theme="dark"] .kc-stagerow, [data-theme="dark"] .kc-stagerow { border-color: #1e3a5f; }
+html[data-theme="dark"] .kc-years input, [data-theme="dark"] .kc-years input { background: #0b192e; border-color: #1e3a5f; color: #f8fafc; }
