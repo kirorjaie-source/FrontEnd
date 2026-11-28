@@ -515,8 +515,10 @@
         </div>`;
       const cards = years.map((g) => {
         let actions = "";
-        if (!admin && (!st || st === "rejected" || st === "revoked")) actions += `<button type="button" class="kc-btn gold" data-act="join" data-id="${c.id}" data-stage="${sel.v}" data-grade="${g || ""}">${tr("انضم", "Join")}</button>`;
+        if ((!st || st === "rejected" || st === "revoked")) actions += `<button type="button" class="kc-btn gold" data-act="join" data-id="${c.id}" data-stage="${sel.v}" data-grade="${g || ""}">${tr("انضم", "Join")}</button>`;
         if (st === "pending") actions += `<span class="kc-badge warn">⏳ ${tr("طلبك قيد المراجعة", "Request pending")}</span>`;
+        // عضو معتمد بالفعل: ينقل نفسه لمرحلة/سنة تانية من هنا
+        if (!admin && st === "approved" && myKey(c) === "member") actions += `<button type="button" class="kc-btn gold" data-act="my-profile" data-id="${c.id}" data-stage="${sel.v}" data-grade="${g || ""}">🔁 ${tr("انقلني لهنا", "Move me here")}</button>`;
         if (manage) actions += `<button type="button" class="kc-btn primary" data-act="add-member" data-stage="${sel.v}" data-grade="${g || ""}">＋ ${tr("إضافة عضو", "Add member")}</button>`;
         if (can("viewMembers", c)) actions += `<button type="button" class="kc-btn ghost" data-act="stage-members" data-stage="${sel.v}" data-grade="${g || ""}">👥 ${tr("الأعضاء", "Members")}</button>`;
         return `<article class="kc-church kc-stage">
@@ -1190,7 +1192,7 @@
         fields: [
           { name: "fullName", label: tr("الاسم", "Full name"), maxlength: 100 },
           phoneField(),
-          { name: "stage", label: tr("المرحلة", "Stage"), type: "stage", allowEmpty: true }
+          { name: "stage", label: tr("المرحلة", "Stage"), type: "stage", allowEmpty: true, value: b.dataset.stage || "", grade: b.dataset.grade || "" }
         ],
         onSubmit: async (v) => {
           await api(`/Churches/${c.id}/my-profile`, {
